@@ -3,7 +3,7 @@ import inspect
 import _util
 
 VALID_TEST_FUNCTION_SIGNATURES = []
-class _ValidSignatureExamples(object):
+class _ValidTestSignatures(object):
     def test(self, fixtures):
         pass
     VALID_TEST_FUNCTION_SIGNATURES.append(inspect.getargspec(test))
@@ -29,33 +29,25 @@ class TestBase(object):
     enumerated by the test system.
     '''
 
-    # Use a metaclass to keep track of all derived tests
+    # Use a metaclass to keep track of all derived tests and assert that test
+    # classes have the correct signature.
     __metaclass__ = _TestBaseMetaclass
 
-    def __init__(self, setup=None, teardown=None):
+    def __init__(self, fixtures=[]):
         '''
-        :param setup: Function to be performed before the test case.
-        The test case will recieve the setup return value as an argument.
-
-        :param teardown: Function to be performed after the test case.
-        Teardown recieves the result of the test case as an argument.
         '''
-        pass
-
-    def require_fixture(self):
-        '''
-        Add a given fixture to the list of required fixtures for this
-        test.
-        '''
-
+        self.fixtures = fixtures
 
 class TestFunction(TestBase):
     '''
     Class which wraps functions to use as a test case.
     '''
-    #TODO
+    def __init__(self, test, fixtures=[]):
+        super(TestFunction, self).__init__(fixtures=fixtures)
+        self._test_function = test
+
     def test(self, fixtures):
-        pass
+        self._test_function(self, fixtures)
 
 
 def testfunction():

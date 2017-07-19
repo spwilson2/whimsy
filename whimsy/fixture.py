@@ -35,7 +35,7 @@ class CacheLevel:
 
 class Fixture(object):
     '''Base Class for a test Fixture'''
-    def __init__(self, cached=None, lazy_init=True):
+    def __init__(self, teardown=None, setup=None, cached=None, lazy_init=True):
         '''
         :param lazy_init: If True, wait until test cases that use this fixture
         are ran to setup this fixture. Otherwise init the fixture before the
@@ -46,11 +46,15 @@ class Fixture(object):
         '''
         self._requires = []
         self._required_by = []
-        pass
 
-    def import(self):
-        '''Import the given fixture for use.'''
-        pass
+        if teardown is not None:
+            self.teardown = teardown
+        if setup is not None:
+            self.setup = setup
+
+    #def import(self):
+    #    '''Import the given fixture for use.'''
+    #    pass
 
     def require(self, other_fixture):
         self._required_by

@@ -1,7 +1,10 @@
+import os
+import subprocess
+
 import whimsy.test as test
 import whimsy.fixture as fixture
-
-import subprocess
+import whimsy.runner as runner
+import whimsy.loader as loader
 
 class MakeFixture(fixture.Fixture):
     '''
@@ -11,24 +14,42 @@ class MakeFixture(fixture.Fixture):
     '''
     def __init__(self, *args, **kwargs):
         super(MakeFixture, self).__init__(*args, **kwargs)
+        self.targets = []
+
+    def add_target(self, target):
+        self.targets.append(target)
 
     def setup(self):
-        pass
+        targets = set(self.targets)
+        command = ['make']
+        command.extend(targets)
+        subprocess.check_call(command)
 
     def teardown(self):
         pass
 
+# The singleton make fixture we'll use for all targets.
 make_fixture = MakeFixture(lazy_init=False)
 
-class MakeTargetFixture(fixture.Fixture):
-    def __init__(self, *args, **kwargs):
-        super(MakeTargetFixture, self).__init__(*args, **kwargs)
-        self._requires.append(make_fixture)
+class MakeTarget(fixture.Fixture):
+
+    def __init__(self, target, *args, **kwargs):
+        super(MakeTarget, self).__init__(*args, **kwargs)
+        self.target = target
+
+        # Add our self to the required targets of the main MakeFixture
+        make_fixture.add_target(self)
 
 
+fixtures = [
+    MakeTarget('first-target'),
+    MakeTarget('second-target'),
+]
 
 
-class SimpleTest(test.TestBase):
-    fixtures = []
-    def test(self, fixtures):
-        pass
+def simple_test(test, fixtures):
+    # TODO: Check that our fixtures were created.
+    print 'Simple Test!!'
+    assert True
+
+test.TestFunction(simple_test, fixtures=fixtures)
