@@ -20,14 +20,19 @@ class MakeFixture(fixture.Fixture):
     def add_target(self, target):
         self.targets.append(target)
 
+    @fixture.cacheresult
     def setup(self):
+        super(MakeFixture, self).setup()
         targets = set(self.targets)
         command = ['make']
-        command.extend(targets)
+        command.extend([target.target for target in targets])
+        print('Executing command:')
+        print(command)
         subprocess.check_call(command)
 
     def teardown(self):
         pass
+
 
 # The singleton make fixture we'll use for all targets.
 make_fixture = MakeFixture(lazy_init=False)
@@ -41,11 +46,19 @@ class MakeTarget(fixture.Fixture):
         # Add our self to the required targets of the main MakeFixture
         make_fixture.add_target(self)
 
+    def setup(self):
+        fixture.Fixture.setup(self)
+        make_fixture.setup()
+        return self
 
-fixtures = [
-    MakeTarget('first-target'),
-    MakeTarget('second-target'),
-]
+
+first_fixture = {
+    'first-target': MakeTarget('first-target'),
+}
+
+second_fixture = {
+    'second-target': MakeTarget('second-target'),
+}
 
 
 def simple_test(test, fixtures):
@@ -54,4 +67,7 @@ def simple_test(test, fixtures):
     assert True
 
 print('running code in simple2-test.py')
-test.TestFunction(simple_test, fixtures=fixtures)
+TESTS = [
+    test.TestFunction(simple_test, fixtures=second_fixture),
+    test.TestFunction(simple_test, fixtures=first_fixture)
+]

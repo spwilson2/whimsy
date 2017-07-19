@@ -20,4 +20,4 @@ for f in files:
     testloader.load_file(f)
 
 testrunner = runner.Runner()
-testrunner.run_all(testloader.top_level_suite)
+testrunner.run_suite(testloader.top_level_suite)

@@ -33,6 +33,26 @@ class CacheLevel:
     Case = _inc.next()
 
 
+class CachedResult(object):
+    def __init__(self, *args, **kwargs):
+        self.result = None
+        self.args = args
+        self.kwargs = kwargs
+    def __eq__(self, other):
+        return self.args == other.args \
+                and self.kwargs == other.kwargs
+
+def cacheresult(function):
+    # We use a list since it's impossible to hash the kwargs
+    results = []
+    def cacheresultwrapper(*args, **kwargs):
+        result = CachedResult(*args,**kwargs)
+        if result not in results:
+            result.result = function(*args, **kwargs)
+        results.append(result)
+        return result.result
+    return cacheresultwrapper
+
 class Fixture(object):
     '''Base Class for a test Fixture'''
     def __init__(self, teardown=None, setup=None, cached=None, lazy_init=True):
@@ -52,9 +72,18 @@ class Fixture(object):
         if setup is not None:
             self.setup = setup
 
-    #def import(self):
-    #    '''Import the given fixture for use.'''
-    #    pass
-
     def require(self, other_fixture):
         self._required_by
+
+    def setup(self):
+        '''
+        Automatically call setup of fixtures we require and return their
+        results.
+        '''
+        setup_fixtures = []
+        for fixture in self._requires:
+            setup_fixtures.append(fixture.setup())
+        return setup_fixtures
+
+    def teardown(self):
+        '''Empty method, meant to be overriden if fixture requires teardown.'''

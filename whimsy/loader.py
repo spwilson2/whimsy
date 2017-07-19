@@ -11,6 +11,7 @@ default_filepath_regex = re.compile(r'.*[-_]test.py$')
 def default_filepath_filter(filepath):
     return True if default_filepath_regex.match(filepath) else False
 
+
 class TestLoader(object):
     '''
     Base class for discovering tests.
@@ -41,14 +42,11 @@ class TestLoader(object):
         Loads the given path for tests collecting suites and tests and placing
         them into the top_level_suite.
         '''
-        old_tests = set(test.TestBase.list_all())
+        old_tests = set(test.TestCase.list_all())
         # NOTE: There isn't a way to prevent reloading of test modules that
         # are imported by other test modules. It's up to users to never import
         # a test module.
         module = imp.load_source('test_file', path)
 
-        #TODO: Collect test suites as well as just tests.
-
-        new_tests = set(test.TestBase.list_all()) - old_tests
+        new_tests = module.TESTS
         self.top_level_suite.add_items(*new_tests)
-

@@ -16,7 +16,7 @@ def _check_test_signature(metaclass, clsname, bases, dct):
 
     return metaclass, clsname, bases, dct
 
-class TestBase(object):
+class TestCase(object):
     '''
     Test Base Class.
 
@@ -28,18 +28,18 @@ class TestBase(object):
     # classes have the correct signature.
     instances = []
 
-    def __init__(self, fixtures=[]):
+    def __init__(self, fixtures={}):
         '''
         '''
         self.fixtures = fixtures
-        TestBase.instances.append(self)
+        TestCase.instances.append(self)
 
     @staticmethod
     def list_all():
-        return TestBase.instances
+        return TestCase.instances
 
 
-class TestFunction(TestBase):
+class TestFunction(TestCase):
     '''
     Class which wraps functions to use as a test case.
     '''
@@ -65,14 +65,14 @@ def tag():
 
 if __name__ == '__main__':
     print('Self-test')
-    print('Test that we can create a dereived tests from TestBase.')
-    class NewBase(TestBase):
+    print('Test that we can create a dereived tests from TestCase.')
+    class NewBase(TestCase):
         def test(self, fixtures):
             pass
 
     print('Test that a test must have the test method defined.')
     try:
-        class NewBase(TestBase):
+        class NewBase(TestCase):
             pass
     except:
         pass
