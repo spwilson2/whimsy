@@ -1,4 +1,4 @@
-import suite
+import whimsy.suite as suite
 
 class Runner(object):
     '''

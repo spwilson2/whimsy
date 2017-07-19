@@ -57,4 +57,3 @@ class TestSuite(object):
         return recursive_check(self)
 
 TestSuite.top_level = TestSuite('Whimsy Test Suite')
-print('Imported test suite')

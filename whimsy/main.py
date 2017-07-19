@@ -7,8 +7,8 @@ Discovers and runs all tests from a given root directory.
 
 import argparse
 
-import loader
-import runner
+import whimsy.loader as loader
+import whimsy.runner as runner
 
 parser = argparse.ArgumentParser()
 parser.add_argument('directory')
