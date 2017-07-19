@@ -17,13 +17,10 @@ class MakeFixture(fixture.Fixture):
         super(MakeFixture, self).__init__(*args, **kwargs)
         self.targets = []
 
-    def add_target(self, target):
-        self.targets.append(target)
-
     @fixture.cacheresult
     def setup(self):
         super(MakeFixture, self).setup()
-        targets = set(self.targets)
+        targets = set(self.required_by)
         command = ['make']
         command.extend([target.target for target in targets])
         print('Executing command:')
@@ -44,7 +41,8 @@ class MakeTarget(fixture.Fixture):
         self.target = target
 
         # Add our self to the required targets of the main MakeFixture
-        make_fixture.add_target(self)
+        #make_fixture.add_target(self)
+        self.require(make_fixture)
 
     def setup(self):
         fixture.Fixture.setup(self)
@@ -66,8 +64,13 @@ def simple_test(test, fixtures):
     print 'Simple Test!!'
     assert True
 
+def simple_fail_test(test, fixtures):
+    assert False
+    pass
+
 print('running code in simple2-test.py')
 TESTS = [
     test.TestFunction(simple_test, fixtures=second_fixture),
-    test.TestFunction(simple_test, fixtures=first_fixture)
+    test.TestFunction(simple_test, fixtures=first_fixture),
+    test.TestFunction(simple_fail_test),
 ]

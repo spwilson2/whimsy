@@ -42,10 +42,14 @@ class TestLoader(object):
         Loads the given path for tests collecting suites and tests and placing
         them into the top_level_suite.
         '''
-        old_tests = set(test.TestCase.list_all())
         # NOTE: There isn't a way to prevent reloading of test modules that
         # are imported by other test modules. It's up to users to never import
         # a test module.
+        #
+        # The implication for this is that we can't use a simple class
+        # variable to keep track of instances of tests with __init__ if they
+        # were to import a place were tests were defined. So instead we
+        # require users to create a variable 'TESTS' in each test file.
         module = imp.load_source('test_file', path)
 
         new_tests = module.TESTS

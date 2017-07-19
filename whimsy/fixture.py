@@ -64,8 +64,8 @@ class Fixture(object):
         :var requires: List of fixtures which require this Fixture.
         :var required_by: List of fixtures this Fixture requires.
         '''
-        self._requires = []
-        self._required_by = []
+        self.requires = []
+        self.required_by = []
 
         if teardown is not None:
             self.teardown = teardown
@@ -73,7 +73,8 @@ class Fixture(object):
             self.setup = setup
 
     def require(self, other_fixture):
-        self._required_by
+        self.requires.append(other_fixture)
+        other_fixture.required_by.append(self)
 
     def setup(self):
         '''
@@ -81,7 +82,7 @@ class Fixture(object):
         results.
         '''
         setup_fixtures = []
-        for fixture in self._requires:
+        for fixture in self.requires:
             setup_fixtures.append(fixture.setup())
         return setup_fixtures
 
