@@ -1,3 +1,4 @@
+print('in test2')
 import os
 import subprocess
 
@@ -52,5 +53,5 @@ def simple_test(test, fixtures):
     print 'Simple Test!!'
     assert True
 
-print('running code in simple-test.py')
+print('running code in simple2-test.py')
 test.TestFunction(simple_test, fixtures=fixtures)

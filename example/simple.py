@@ -55,6 +55,7 @@ def simple_test(test, fixtures):
 testloader = loader.TestLoader()
 files = testloader.discover_files(os.path.dirname(os.path.abspath(__name__)))
 for f in files:
+    print(f)
     testloader.load_file(f)
 
 testrunner = runner.Runner()

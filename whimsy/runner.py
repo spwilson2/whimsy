@@ -12,4 +12,4 @@ class Runner(object):
         expected to request certain tags to be run. This will just run all
         tests collected in the top_level test suite.
         '''
-        print(suite.TestSuite.get_all())
+        print(suite.TestSuite.list_all())

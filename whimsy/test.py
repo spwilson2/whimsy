@@ -1,6 +1,5 @@
 import abc
 import inspect
-import _util
 
 VALID_TEST_FUNCTION_SIGNATURES = []
 class _ValidTestSignatures(object):
@@ -17,10 +16,6 @@ def _check_test_signature(metaclass, clsname, bases, dct):
 
     return metaclass, clsname, bases, dct
 
-_TestBaseMetaclass = _util.create_collector_metaclass(
-        '_TestBaseMetaclass',
-        callback=_check_test_signature)
-
 class TestBase(object):
     '''
     Test Base Class.
@@ -31,12 +26,18 @@ class TestBase(object):
 
     # Use a metaclass to keep track of all derived tests and assert that test
     # classes have the correct signature.
-    __metaclass__ = _TestBaseMetaclass
+    instances = []
 
     def __init__(self, fixtures=[]):
         '''
         '''
         self.fixtures = fixtures
+        TestBase.instances.append(self)
+
+    @staticmethod
+    def list_all():
+        return TestBase.instances
+
 
 class TestFunction(TestBase):
     '''
@@ -49,6 +50,7 @@ class TestFunction(TestBase):
     def test(self, fixtures):
         self._test_function(self, fixtures)
 
+#TestFunction('')
 
 def testfunction():
     '''Decorator used to mark a function as a test case.'''

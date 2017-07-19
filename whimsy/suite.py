@@ -1,16 +1,11 @@
 # Suites should have ability to be parallelized...
 # Suites should provide fixtures for their contained test cases..
 # How?
-import _util
-
-_TestSuiteMetaclass = _util.create_collector_metaclass('TestSuite',
-                                                       save_inheritors=False,
-                                                       save_instances=True)
 
 class TestSuite(object):
     '''An object containing a collection of tests or other test suites.'''
-    __metaclass__ = _TestSuiteMetaclass
     top_level = None
+    __instances = []
 
     def __init__(self, name, *items):
         '''
@@ -25,6 +20,7 @@ class TestSuite(object):
         self.items = list()
         self.add_items(*items)
         self.name = name
+        TestSuite.__instances.append(self)
 
     def add_items(self, *items):
         '''Add the given items (TestCases or TestSuites) to this collection'''
@@ -37,10 +33,10 @@ class TestSuite(object):
         '''
         pass
 
-    @staticmethod
-    def get_all():
+    @classmethod
+    def list_all(cls):
         '''Return all instances of this class.'''
-        return _TestSuiteMetaclass.__instances__
+        return cls.__instances
 
     def _detect_cycle(self):
         '''
@@ -61,3 +57,4 @@ class TestSuite(object):
         return recursive_check(self)
 
 TestSuite.top_level = TestSuite('Whimsy Test Suite')
+print('Imported test suite')
