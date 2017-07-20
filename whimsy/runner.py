@@ -76,20 +76,20 @@ class Runner(object):
         fixtures = fixtures.copy()
         fixtures.update(test.fixtures)
 
-        saved_stdout = sys.stdout
-        saved_stderr = sys.stderr
+        #saved_stdout = sys.stdout
+        #saved_stderr = sys.stderr
+        ## Create a log to store the test output in.
+        ## TODO: Change default logging level
+        #log = logging.getLogger(__name__)
+        #log.setLevel(logging.DEBUG)
 
-        # Create a log to store the test output in.
-        log = logging.getLogger(__name__)
-        log.setLevel(logging.DEBUG)
+        ## Redirect log back to stdout so when we redirect it to the log we
+        ## still see it in the console.
+        #log.addHandler(logging.StreamHandler(saved_stdout))
 
-        # Redirect log back to stdout so when we redirect it to the log we
-        # still see it in the console.
-        log.addHandler(logging.StreamHandler(saved_stdout))
-
-        # Redirect stdout and stderr to logger for the test.
-        sys.stdout = logger.StreamToLogger(log, logging.INFO)
-        sys.stderr = logger.StreamToLogger(log, logging.WARN)
+        ## Redirect stdout and stderr to logger for the test.
+        #sys.stdout = logger.StreamToLogger(log, logging.INFO)
+        #sys.stderr = logger.StreamToLogger(log, logging.WARN)
 
 
         result.timer.start()
@@ -103,8 +103,8 @@ class Runner(object):
             result.result = whimsy.result.Result.PASS
 
         # Restore stdout and stderr
-        sys.stdout = saved_stdout
-        sys.stderr = saved_stderr
+        #sys.stdout = saved_stdout
+        #sys.stderr = saved_stderr
 
         for name in test.fixtures:
             fixtures[name].teardown()

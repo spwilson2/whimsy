@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import string
 
 import _util
+import whimsy.terminal as termcap
 
 class InvalidResultException(Exception):
     pass
@@ -122,7 +123,7 @@ class TestSuiteResult(TestResult):
     def name(self):
         return self._name
 
-    def iterate_tests(self):
+    def iter_tests(self):
         '''
         Returns an iterable over all the TestCaseResults contained in the suite
 
@@ -173,9 +174,33 @@ class ResultFormatter(object):
         '''
 
 class ConsoleFormatter(ResultFormatter):
+    '''
+    Formats results for a console.
+    '''
+    color = termcap.get_termcap()
+    reset = color.Normal
+    result_colormap = {
+        Result.FAIL: color.Red,
+        Result.ERROR: color.Red,
+        Result.PASS: color.Green,
+        Result.XFAIL: color.Cyan,
+        Result.SKIP: color.Cyan,
+    }
 
-    def __init__(self, result):
-        pass
+    def __init__(self, result, only_testcases=True):
+        super(ConsoleFormatter, self).__init__(result)
+        self.only_testcases = only_testcases
+
+    def format_test(self, test):
+        return self.result_colormap[test.result] + str(test) + self.reset
+
+    def __str__(self):
+        string = ''
+        # If we only care about printing test cases logic looks simpler.
+        if self.only_testcases:
+            for testcase in self.result.iter_tests():
+                string += self.format_test(testcase) + '\n'
+        return string
 
 
 class JUnitFormatter(ResultFormatter):
@@ -355,4 +380,6 @@ if __name__ == '__main__':
         suiteresult.results.append(testcase)
 
     formatter = JUnitFormatter(parentsuiteresult, flatten=True)
+    print(formatter)
+    formatter = ConsoleFormatter(parentsuiteresult)
     print(formatter)

@@ -22,12 +22,23 @@ class InvalidEnumException(Exception):
     pass
 
 class Enum(object):
+    '''
+    Generator for Enum objects.
+    '''
     def __init__(self, enums, namespace=''):
+        def __name__(self):
+            return self.variant
+
         if namespace is not '':
             namespace = namespace + '.'
         for i, variant in enumerate(enums):
-            new_enum = type(namespace+variant, (Enum,), {})
-            setattr(self, variant, new_enum)
+            dct = {'__str__': __name__, 'variant': variant}
+
+            new_enum = type('Enum.' + namespace + variant,
+                            (object,),
+                            dct)
+            setattr(self, variant, new_enum())
+
 
 class Timer(object):
     def __init__(self, start=False):
