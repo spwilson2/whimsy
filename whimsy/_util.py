@@ -26,6 +26,7 @@ class Enum(object):
     Generator for Enum objects.
     '''
     def __init__(self, enums, namespace=''):
+        self.enums = []
         def __name__(self):
             return self.variant
 
@@ -37,7 +38,9 @@ class Enum(object):
             new_enum = type('Enum.' + namespace + variant,
                             (object,),
                             dct)
-            setattr(self, variant, new_enum())
+            new_enum = new_enum()
+            setattr(self, variant, new_enum)
+            self.enums.append(new_enum)
 
 
 class Timer(object):

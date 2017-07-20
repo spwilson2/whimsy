@@ -1,6 +1,7 @@
 print('in test2')
 import os
 import subprocess
+#import sys
 
 import whimsy.test as test
 import whimsy.fixture as fixture
@@ -65,6 +66,7 @@ def simple_test(test, fixtures):
     assert True
 
 def simple_fail_test(test, fixtures):
+    #import pdb; pdb.set_trace()
     assert False
     pass
 

@@ -27,6 +27,9 @@
 # Author: Steve Reinhardt
 
 import sys
+import fcntl
+import termios
+import struct
 
 # Intended usage example:
 #
@@ -113,6 +116,12 @@ def test_termcap(obj):
             print attr_str + c_str + attr_name + " " + c_name + obj.Normal
         print obj.Bold + obj.Underline + \
               c_name + "Bold Underline " + c_str + obj.Normal
+
+def terminal_size():
+    h, w, hp, wp = struct.unpack('HHHH',
+        fcntl.ioctl(0, termios.TIOCGWINSZ,
+        struct.pack('HHHH', 0, 0, 0, 0)))
+    return w, h
 
 if __name__ == '__main__':
     print "=== termcap enabled ==="

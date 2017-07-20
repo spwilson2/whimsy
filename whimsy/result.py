@@ -192,15 +192,50 @@ class ConsoleFormatter(ResultFormatter):
         self.only_testcases = only_testcases
 
     def format_test(self, test):
-        return self.result_colormap[test.result] + str(test) + self.reset
+        string = self.result_colormap[test.result]
+        string += str(test.result)
+        string += ': '
+        string += test.name
+        string += self.reset
+        string += '\n'
+        return string
+
+    def format_summary(self, summary):
+        string = 'Summary of Testing Results'
+        string += '\n'
+        for key in summary:
+            string += str(key) + ': %d' % len(summary[key])
+            string += '\n'
+        return string
+
+    def summarize_results(self):
+        # If only_testcases don't summarize information about suites.
+        summary = dict.fromkeys(Result.enums, [])
+        print(Result.enums)
+        print(summary)
+        if self.only_testcases:
+            for test in self.result.iter_tests():
+                summary[test.result].append(test)
+
+        return summary
+
 
     def __str__(self):
         string = ''
         # If we only care about printing test cases logic looks simpler.
         if self.only_testcases:
             for testcase in self.result.iter_tests():
-                string += self.format_test(testcase) + '\n'
-        return string
+                string += '{separator}'
+                string += self.format_test(testcase)
+            string += '{separator}'
+
+        string += self.format_summary(self.summarize_results())
+        string += '{separator}'
+
+        # Just before we return the string fill in information about the
+        # separator size.
+        (termw, termh) = termcap.terminal_size()
+        return string.format(separator='='*termw)
 
 
 class JUnitFormatter(ResultFormatter):
