@@ -23,7 +23,7 @@ class Runner(object):
         3. Handle teardown for all fixtures in the test_suite.
         '''
         if results is None:
-            results = whimsy.result.TestSuiteResult()
+            results = whimsy.result.TestSuiteResult(test_suite)
 
         for name, fixture in test_suite.fixtures.items():
             fixture.setup()
@@ -33,7 +33,7 @@ class Runner(object):
         fixtures = fixtures.copy()
         fixtures.update(test_suite.fixtures)
 
-        for item in test_suite:
+        for (idx, item) in enumerate(test_suite):
 
             if isinstance(item, suite.TestSuite):
                 result = self.run_suite(item, fixtures=fixtures)
@@ -43,7 +43,7 @@ class Runner(object):
                 assert(False)
 
             # Add the result of the test or suite to our test_suite results.
-            results.add_result(result)
+            results.results[idx] = result
 
             if test_suite.failfast \
                     and result.result in whimsy.result.Result.failfast:
@@ -66,7 +66,7 @@ class Runner(object):
            test?
         '''
         if result is None:
-            result = whimsy.result.TestCaseResult()
+            result = whimsy.result.TestCaseResult(test)
 
         for name, fixture in test.fixtures.items():
             fixture.setup()

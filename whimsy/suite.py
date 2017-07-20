@@ -65,5 +65,8 @@ class TestSuite(object):
             return False
         return recursive_check(self)
 
+    def __len__(self):
+        return len(self.items)
+
     def __iter__(self):
         return iter(self.items)
