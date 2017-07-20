@@ -57,10 +57,10 @@ class TestCaseResult(TestResult):
     '''
     Holds information corresponding to a single test case result.
     '''
-    def __init__(self, testcase, result=None, *args, **kwargs):
+    def __init__(self, name, result=None, *args, **kwargs):
         super(TestCaseResult, self).__init__(*args, **kwargs)
-        self.testcase = testcase
         self._result = result
+        self._name = name
 
     @property
     def result(self):
@@ -72,27 +72,17 @@ class TestCaseResult(TestResult):
 
     @property
     def name(self):
-        return self.testcase.name
+        return self._name
 
 
 class TestSuiteResult(TestResult):
     '''
     Holds information containing one or more test cases or suites.
     '''
-    def __init__(self, testsuite, results=None, *args, **kwargs):
+    def __init__(self, name, *args, **kwargs):
         super(TestSuiteResult, self).__init__(*args, **kwargs)
-
-
-        self.testsuite = testsuite
-        if results is None:
-            results = [None] * len(testsuite)
-
-        # Assert that if given results that they have the correct number
-        # for the given test suite.
-        # TODO: Change from assert to an exception.
-        assert(len(testsuite) == len(results))
-
-        self.results = results
+        self._name = name
+        self.results = []
 
     @property
     def result(self):
@@ -130,7 +120,7 @@ class TestSuiteResult(TestResult):
 
     @property
     def name(self):
-        return self.testsuite.name
+        return self._name
 
     def iterate_tests(self):
         '''
@@ -139,23 +129,32 @@ class TestSuiteResult(TestResult):
         (Pretends that this is the only suite and that it contains all tests
         directly.)
         '''
-        for result in self:
+        for result in self.iter_inorder():
             if isinstance(result, TestCaseResult):
                 yield result
 
-    def __iter__(self):
+    def iter_inorder(self):
         '''
         Iterate over all the results contained in this collection of results.
         Traverses the tree in in-order fashion.
         '''
         for result in self.results:
-            if isinstance(result, collections.Iterable):
-                # Check other iterable collections for their results.
+            if isinstance(result, TestSuiteResult):
+                # yield the testsuite first
+                yield result
+
+                # Then yield that testsuite's results.
                 for result in result:
                     yield result
             else:
                 # Otherwise just yield the test case result
                 yield result
+
+    def __iter__(self):
+        '''
+        Return an iterator over the test suites and cases just in this suite.
+        '''
+        return iter(self.results)
 
 
 class ResultFormatter(object):
@@ -173,6 +172,11 @@ class ResultFormatter(object):
         formatter.
         '''
 
+class ConsoleFormatter(ResultFormatter):
+
+    def __init__(self, result):
+        pass
+
 
 class JUnitFormatter(ResultFormatter):
     '''
@@ -183,8 +187,17 @@ class JUnitFormatter(ResultFormatter):
     # that aren't traditionally reported under JUnit.
     passing_results = {Result.PASS, Result.XFAIL}
 
-    def __init__(self, result, translate_names=True):
+    def __init__(self,
+                 result,
+                 translate_names=True,
+                 flatten=True):
+        '''
+        :param flatten: Flatten out heirarchical tests in order to fit the
+        basic JUnit format (test suites traditionally cannot hold other test
+        suites).
+        '''
         super(JUnitFormatter, self).__init__(result)
+        self.flatten = flatten
 
         if translate_names:
             self.name_table = string.maketrans("/.", ".-",)
@@ -193,8 +206,63 @@ class JUnitFormatter(ResultFormatter):
 
     def __str__(self):
         self.root = ET.Element("testsuites")
-        et = ET.ElementTree(self.convert_testsuite(self.root, self.result))
+
+        results = self.result
+        if self.flatten:
+            results = JUnitFormatter.flatten_suites(results)
+
+        ET.ElementTree(self.convert_testsuite(self.root,
+                                              results,
+                                              self.flatten))
         return ET.tostring(self.root)
+
+    @staticmethod
+    def flatten_suites(toplevel_suite):
+        '''
+        JUnit doesn't officially have a concept of heirarchecal test suites as
+        far as I can tell, so to fix this we group tests at their finest
+        granularity. That is, test cases are grouped in the test suite that
+        directly contains them, not a suite of a suite.
+
+        :returns: A new toplevel_suite which contains flattened suites.
+        '''
+
+        def metadata_copy_suiteresult(suite):
+            copy = TestSuiteResult(suite.name)
+            copy.timer = suite.timer
+            return copy
+
+        def recurse_flatten(suite):
+            # Iterate over items in the suite, if they are other suites, we need
+            # to recurse and do the same.
+            # If they are tests then pull them out and save them. We'll attach
+            # them to us.
+            flattened_suite = metadata_copy_suiteresult(suite)
+            our_testcases = []
+            flat_suites = []
+
+            for result in suite:
+                if isinstance(result, TestCaseResult):
+                    our_testcases.append(result)
+                else:
+                    flat_suites.extend(recurse_flatten(result))
+
+            if our_testcases:
+                # If there were test cases held in this test suite, we should
+                # reattach them to our new copy and place us in the top level
+                # collection
+                flattened_suite.results.extend(our_testcases)
+                flat_suites.append(flattened_suite)
+
+            return flat_suites
+
+        # Just copy the name since we're going to update all the results.
+        new_toplevel_suite = metadata_copy_suiteresult(toplevel_suite)
+        flatted_results = recurse_flatten(toplevel_suite)
+        if flatted_results:
+            new_toplevel_suite.results.extend(flatted_results)
+
+        return new_toplevel_suite
 
     def convert_testcase(self, xtree, testcase):
         xtest = ET.SubElement(xtree, "testcase",
@@ -215,27 +283,40 @@ class JUnitFormatter(ResultFormatter):
         if xstate is not Result.PASS:
             #TODO: Add extra output to the text?
             #xstate.text = "\n".join(msg)
+            # TODO: Use these subelements for text.
+            #<system-out>
+            #    I am stdout!
+            #</system-out>
+            #<system-err>
+            #    I am stderr!
+            #</system-err>
             pass
 
-        return xtest
 
-
-    def convert_testsuite(self, xtree, suite):
-        xsuite = ET.SubElement(xtree, "testsuite",
-                                name=suite.name.translate(self.name_table),
-                                time="%f" % suite.runtime)
+    def convert_testsuite(self, xtree, suite, _flatten=False):
+        '''
+        '''
         errors = 0
         failures = 0
         skipped = 0
+
+        # Remove the topmost suite that is containing other suites.
+        if _flatten:
+            xsuite = xtree
+            _flatten = False
+        else:
+            xsuite = ET.SubElement(xtree, "testsuite",
+                                    name=suite.name.translate(self.name_table),
+                                    time="%f" % suite.runtime)
 
         # Iterate over the tests and suites held in the test suite.
         for result in suite:
             # If the element is a test case attach it as such
             if isinstance(result, TestCaseResult):
-                self.convert_testcase(xtree, result)
+                self.convert_testcase(xsuite, result)
             else:
                 # Otherwise recurse
-                self.convert_testsuite(xtree, result)
+                self.convert_testsuite(xsuite, result, _flatten)
 
             # Check the return value to fill in metadata for our xsuite
             if result.result not in self.passing_results:
@@ -248,31 +329,30 @@ class JUnitFormatter(ResultFormatter):
                 else:
                     assert False, "Unknown test state"
 
-        xsuite.set("errors", str(errors))
-        xsuite.set("failures", str(failures))
-        xsuite.set("skipped", str(skipped))
-        xsuite.set("tests", str(len(suite.results)))
-
-        return xsuite
+        if not _flatten:
+            xsuite.set("errors", str(errors))
+            xsuite.set("failures", str(failures))
+            xsuite.set("skipped", str(skipped))
+            xsuite.set("tests", str(len(suite.results)))
 
 
 if __name__ == '__main__':
     import whimsy.suite as suite
-    named_object = lambda : None
-    named_object.name = 'testcase'
-    testsuite = suite.TestSuite('testsuite', items=[None]*2)
-    suiteresult = TestSuiteResult(testsuite)
+    suiteresult = TestSuiteResult('Test Suite')
+    parentsuiteresult = TestSuiteResult('Parent Test Suite')
+    parentsuiteresult.results.append(suiteresult)
 
+    parentsuiteresult.timer.start()
+    parentsuiteresult.timer.stop()
     suiteresult.timer.start()
     suiteresult.timer.stop()
 
-    suiteresult.results[0] = TestCaseResult(named_object, result=Result.PASS)
-    suiteresult.results[0].timer.start()
-    suiteresult.results[0].timer.stop()
 
-    suiteresult.results[1] = TestCaseResult(named_object, result=Result.PASS)
-    suiteresult.results[1].timer.start()
-    suiteresult.results[1].timer.stop()
+    for _ in range(2):
+        testcase = TestCaseResult('testcase', result=Result.PASS)
+        testcase.timer.start()
+        testcase.timer.stop()
+        suiteresult.results.append(testcase)
 
-    formatter = JUnitFormatter(suiteresult)
+    formatter = JUnitFormatter(parentsuiteresult, flatten=True)
     print(formatter)

@@ -18,16 +18,27 @@ class TestCase(object):
     def test(self, result, fixtures):
         pass
 
+    @abc.abstractproperty
+    def name(self):
+        pass
+
 class TestFunction(TestCase):
     '''
     Class which wraps functions to use as a test case.
     '''
-    def __init__(self, test, *args, **kwargs):
+    def __init__(self, test, name=None, *args, **kwargs):
         super(TestFunction, self).__init__(*args, **kwargs)
         self._test_function = test
+        if name is None:
+            name = str(test)
+        self._name = name
 
     def test(self, result, fixtures):
         self._test_function(self, fixtures)
+
+    @property
+    def name(self):
+        return self._name
 
 #TestFunction('')
 

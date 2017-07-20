@@ -27,6 +27,7 @@ class TestSuite(object):
         self.fixtures = {}
         self.items = []
         self.failfast = failfast
+        self.parallelizable = parallelizable
 
         if items is not None:
             self.add_items(*items)
@@ -70,3 +71,15 @@ class TestSuite(object):
 
     def __iter__(self):
         return iter(self.items)
+
+    def copy(self):
+        '''
+        We don't create deep copies of tests, we just create copies of the
+        containers of references.
+        '''
+        newcopy = TestSuite(self.name,
+                            self.items[:],
+                            self.failfast,
+                            self.parallelizable)
+        newcopy.fixtures = self.fixtures.copy()
+        return newcopy
