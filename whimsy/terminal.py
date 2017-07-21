@@ -133,8 +133,8 @@ def insert_separator(inside, char=default_separator, min_barrier=3):
     Place the given string inside of the separator. If it does not fit inside,
     expand the separator to fit it with at least min_barrier.
     '''
-    # Use a list so it's easy to manipulate
-    string = list(separator(char))
+    # Use a bytearray so it's efficient to manipulate
+    string = bytearray(separator(char))
 
     # Check if we can fit inside with at least min_barrier.
     gap = (len(string) - len(inside)) - min_barrier * 2
@@ -145,7 +145,7 @@ def insert_separator(inside, char=default_separator, min_barrier=3):
     middle = ((len(string)-1)/2)
     start_idx = middle - len(inside)/2
     string[start_idx:len(inside)+start_idx] = inside
-    return ''.join(string)
+    return str(string)
 
 
 if __name__ == '__main__':

@@ -213,13 +213,43 @@ class ConsoleFormatter(ResultFormatter):
         return string
 
     def format_summary(self, summary):
-        string = 'Summary of Testing Results'
-        string += '\n'
+        result_heading = 'Result'
+        count_heading = 'Count'
+        h_sep = ' | '
+        v_sep = '-'
+
+        summary = {name:len(results) for name, results in summary.items() }
+
+        # First get the alignment to start/stop numbers at.
+        namestrings = map(str, Result.enums)
+        namestrings.append(result_heading)
+        maxname = max(map(len, namestrings))
+
+        result_strings = map(str, summary.values())
+        result_strings.append(count_heading)
+        maxresult = max(map(len, result_strings))
+
+        divider = '{:-%d}' % (maxname + maxresult + len(h_sep))
+        summarystring = '{result: <{maxname}}{h_sep}{count: >{maxresult}}\n'.format(
+                h_sep=h_sep,
+                maxname=maxname,
+                maxresult=maxresult,
+                result=result_heading,
+                count=count_heading)
+        formatstring = '{name: <{maxname}}{h_sep}{count: >{maxresult}}\n'
+
+        # Actually start building our string now.
+        string = bytearray(summarystring)
+        string += len(summarystring) * '-' + '\n'
         # Iterate through the results in the specified order by the enum type.
         for key in Result.enums:
-            string += str(key) + ': %d' % len(summary[key])
-            string += '\n'
-        return string
+            string += formatstring.format(
+                    h_sep=h_sep,
+                    name=key,
+                    count=summary[key],
+                    maxname=maxname,
+                    maxresult=maxresult)
+        return str(string)
 
     def summarize_results(self):
         # If only_testcases don't summarize information about suites.

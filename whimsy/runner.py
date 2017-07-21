@@ -113,4 +113,5 @@ class Runner(object):
                 result.result = Result.SKIP
             else:
                 assert(False)
+            logger.log.info('Skipping: %s' % item.name)
             results.results.append(result)
