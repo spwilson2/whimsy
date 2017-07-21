@@ -6,6 +6,7 @@ import whimsy.logger as logger
 import whimsy.test as test
 import whimsy.suite as suite
 import whimsy.result
+from whimsy.result import Result
 import whimsy.terminal as terminal
 
 class Runner(object):
@@ -34,7 +35,9 @@ class Runner(object):
         fixtures = fixtures.copy()
         fixtures.update(test_suite.fixtures)
 
-        for (idx, item) in enumerate(test_suite):
+        suite_iterator = enumerate(test_suite)
+
+        for (idx, item) in suite_iterator:
             logger.log.info(terminal.separator())
 
             if isinstance(item, suite.TestSuite):
@@ -48,8 +51,10 @@ class Runner(object):
             results.results.append(result)
 
             if test_suite.failfast \
-                    and result.result in whimsy.result.Result.failfast:
-                # TODO: Mark the rest of the items as skipped.
+                    and result.result in Result.failfast:
+                logger.log.inform('Previous test failed in a failfast suite,'
+                                  ' skipping remaining tests.')
+                self._generate_skips(results, suite_iterator)
                 break
 
         for fixture in test_suite.fixtures.values():
@@ -94,3 +99,18 @@ class Runner(object):
             fixtures[name].teardown()
 
         return result
+
+    def _generate_skips(self, results, remaining_iterator):
+        '''
+        Generate SKIP for all remaining tests (for use with the failfast
+        suite option)
+        '''
+        for (idx, item) in remaining_iterator:
+            if isinstance(item, suite.TestSuite):
+                result = whimsy.result.TestSuiteResult(item.name)
+            elif isinstance(item, test.TestCase):
+                result = whimsy.result.TestCaseResult(item.name)
+                result.result = Result.SKIP
+            else:
+                assert(False)
+            results.results.append(result)

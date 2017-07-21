@@ -22,7 +22,9 @@ class TestLoader(object):
     def __init__(self, top_level_suite=None, filepath_filter=default_filepath_filter):
 
         if top_level_suite is None:
-            top_level_suite = suite.TestSuite('Default Suite Collection')
+            top_level_suite = suite.TestSuite('Default Suite Collection',
+                                              #failfast=False
+                                              )
         self.top_level_suite = top_level_suite
 
         self.filepath_filter = filepath_filter
@@ -54,4 +56,5 @@ class TestLoader(object):
         execfile(path, newdict, newdict)
 
         new_tests = newdict['TESTS']
+        import pdb; pdb.set_trace()
         self.top_level_suite.add_items(*new_tests)

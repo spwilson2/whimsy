@@ -43,11 +43,6 @@ class TestSuite(object):
         '''
         pass
 
-    @classmethod
-    def list_all(cls):
-        '''Return all instances of this class.'''
-        return cls.__instances
-
     def _detect_cycle(self):
         '''
         Traverse the DAG looking for cycles.

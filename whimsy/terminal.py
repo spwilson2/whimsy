@@ -42,7 +42,7 @@ import struct
 # print termcap.Blue + "This could be blue!" + termcap.Normal
 
 # ANSI color names in index order
-color_names = "Black Red Green Yellow Blue Magenta Cyan".split()
+color_names = "Black Red Green Yellow Blue Magenta Cyan White".split()
 default_separator = '='
 
 # Character attribute capabilities.  Note that not all terminals

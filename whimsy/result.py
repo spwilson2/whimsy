@@ -11,13 +11,13 @@ class InvalidResultException(Exception):
     pass
 
 Result = _util.Enum(
-    {
+    [
     'PASS',   # The test passed successfully.
     'XFAIL',  # The test ran and failed as expected.
     'SKIP',   # The test was skipped.
-    'FAIL',   # The test failed to pass.
     'ERROR',  # There was an error during the setup of the test.
-    },
+    'FAIL',   # The test failed to pass.
+    ],
     namespace='Result'
 )
 
@@ -215,7 +215,8 @@ class ConsoleFormatter(ResultFormatter):
     def format_summary(self, summary):
         string = 'Summary of Testing Results'
         string += '\n'
-        for key in summary:
+        # Iterate through the results in the specified order by the enum type.
+        for key in Result.enums:
             string += str(key) + ': %d' % len(summary[key])
             string += '\n'
         return string

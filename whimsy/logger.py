@@ -3,6 +3,15 @@ import sys
 
 import whimsy.terminal as termcap
 
+# Logging level to be used to always display information to the user
+INFORM = 1000
+logging.addLevelName(INFORM, "INFORM")
+def inform(self, message, *args, **kwargs):
+    # For now we can just use print to do this.
+    self._log(INFORM, message, args, **kwargs)
+logging.Logger.inform = inform
+logging.INFORM = INFORM
+
 # https://www.electricmonk.nl/log/2011/08/14/redirect-stdout-and-stderr-to-a-logger-in-python/
 class StreamToLogger(object):
     '''
@@ -31,6 +40,7 @@ class ConsoleLogFormatter(object):
     color = termcap.get_termcap()
     reset = color.Normal
     level_colormap = {
+        logging.INFORM: color.White + color.Bold,
         logging.FATAL: color.Red,
         logging.WARN: color.Yellow,
         logging.INFO: color.Normal,
@@ -41,26 +51,25 @@ class ConsoleLogFormatter(object):
         pass
 
     def format(self, record):
+        #import pdb; pdb.set_trace()
         color_str = self.level_colormap[record.levelno]
         return color_str + record.msg + self.reset
 
 def set_logging_verbosity(verbosity):
     log.setLevel(max(logging.CRITICAL - verbosity * 10, logging.DEBUG))
 
+
 # The root logger for whimsy
 log = logging.getLogger('Whimsy Console Logger')
 
-# Redirect log back to stdout so when we redirect it to the log we
+# Redirect log back to stdout so if we redirect the log we
 # still see it in the console.
-saved_stdout = sys.stdout
 saved_stderr = sys.stderr
-stdout_logger = logging.StreamHandler(saved_stdout)
+stdout_logger = logging.StreamHandler(sys.stdout)
 
 # NOTE: This won't capture subprocesses output, the process of doing so would
 # invlove using os.dup2 and would mean that we would likely want to run
 # imported tests with a modified namespace (for pdb).
 stdout_logger.formatter = ConsoleLogFormatter()
 log.addHandler(stdout_logger)
-
-# Make python stderr log at the warning level.
-sys.stderr = StreamToLogger(log, logging.WARN)
+sys.stderr = StreamToLogger(log, logging.FATAL)
