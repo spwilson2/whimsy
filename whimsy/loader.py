@@ -50,7 +50,8 @@ class TestLoader(object):
         # variable to keep track of instances of tests with __init__ if they
         # were to import a place were tests were defined. So instead we
         # require users to create a variable 'TESTS' in each test file.
-        module = imp.load_source('test_file', path)
+        newdict = {'__builtins__':__builtins__}
+        execfile(path, newdict, newdict)
 
-        new_tests = module.TESTS
+        new_tests = newdict['TESTS']
         self.top_level_suite.add_items(*new_tests)
