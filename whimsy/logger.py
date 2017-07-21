@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import whimsy.terminal as termcap
 
@@ -32,8 +33,8 @@ class ConsoleLogFormatter(object):
     level_colormap = {
         logging.FATAL: color.Red,
         logging.WARN: color.Yellow,
-        logging.INFO: color.Cyan,
-        logging.DEBUG: color.Normal,
+        logging.INFO: color.Normal,
+        logging.DEBUG: color.Cyan,
     }
 
     def __init__(self):
@@ -42,3 +43,24 @@ class ConsoleLogFormatter(object):
     def format(self, record):
         color_str = self.level_colormap[record.levelno]
         return color_str + record.msg + self.reset
+
+def set_logging_verbosity(verbosity):
+    log.setLevel(max(logging.CRITICAL - verbosity * 10, logging.DEBUG))
+
+# The root logger for whimsy
+log = logging.getLogger('Whimsy Console Logger')
+
+# Redirect log back to stdout so when we redirect it to the log we
+# still see it in the console.
+saved_stdout = sys.stdout
+saved_stderr = sys.stderr
+stdout_logger = logging.StreamHandler(saved_stdout)
+
+# NOTE: This won't capture subprocesses output, the process of doing so would
+# invlove using os.dup2 and would mean that we would likely want to run
+# imported tests with a modified namespace (for pdb).
+stdout_logger.formatter = ConsoleLogFormatter()
+log.addHandler(stdout_logger)
+
+# Make python stderr log at the warning level.
+sys.stderr = StreamToLogger(log, logging.WARN)

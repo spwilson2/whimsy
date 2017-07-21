@@ -1,4 +1,3 @@
-print('in test2')
 import os
 import subprocess
 #import sys
@@ -7,6 +6,7 @@ import whimsy.test as test
 import whimsy.fixture as fixture
 import whimsy.runner as runner
 import whimsy.loader as loader
+import whimsy.logger as logger
 
 class MakeFixture(fixture.Fixture):
     '''
@@ -24,8 +24,7 @@ class MakeFixture(fixture.Fixture):
         targets = set(self.required_by)
         command = ['make']
         command.extend([target.target for target in targets])
-        print('Executing command:')
-        print(command)
+        logger.log.debug('Executing command: %s' % command)
         subprocess.check_call(command)
 
     def teardown(self):

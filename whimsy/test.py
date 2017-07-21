@@ -30,7 +30,7 @@ class TestFunction(TestCase):
         super(TestFunction, self).__init__(*args, **kwargs)
         self._test_function = test
         if name is None:
-            name = str(test)
+            name = test.__name__
         self._name = name
 
     def test(self, result, fixtures):

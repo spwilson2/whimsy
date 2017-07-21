@@ -186,10 +186,13 @@ class ConsoleFormatter(ResultFormatter):
         Result.XFAIL: color.Cyan,
         Result.SKIP: color.Cyan,
     }
+    sep_fmtkey = 'separator'
+    sep_fmtstr = '{%s}' % sep_fmtkey
 
-    def __init__(self, result, only_testcases=True):
+    def __init__(self, result, verbosity=0, only_testcases=True):
         super(ConsoleFormatter, self).__init__(result)
         self.only_testcases = only_testcases
+        self.verbosity = verbosity
 
     def format_test(self, test):
         string = self.result_colormap[test.result]
@@ -198,6 +201,15 @@ class ConsoleFormatter(ResultFormatter):
         string += test.name
         string += self.reset
         string += '\n'
+        return string
+
+    def format_tests(self, suite):
+        string = ''
+        for testcase in suite:
+            string += self.sep_fmtstr
+            string += self.format_test(testcase)
+        string += self.sep_fmtstr
+
         return string
 
     def format_summary(self, summary):
@@ -210,32 +222,27 @@ class ConsoleFormatter(ResultFormatter):
 
     def summarize_results(self):
         # If only_testcases don't summarize information about suites.
-        summary = dict.fromkeys(Result.enums, [])
-        print(Result.enums)
-        print(summary)
+        summary = {enum:[] for enum in Result.enums}
         if self.only_testcases:
             for test in self.result.iter_tests():
                 summary[test.result].append(test)
-
         return summary
 
+    def format_separators(self, string):
+        (termw, termh) = termcap.terminal_size()
+        format_separators = {self.sep_fmtkey: '='*termw}
+        return string.format(**format_separators)
 
     def __str__(self):
         string = ''
         # If we only care about printing test cases logic looks simpler.
         if self.only_testcases:
-            for testcase in self.result.iter_tests():
-                string += '{separator}'
-                string += self.format_test(testcase)
-            string += '{separator}'
+            string = self.format_tests(self.result.iter_tests())
 
         string += self.format_summary(self.summarize_results())
-        string += '{separator}'
+        string += self.sep_fmtstr
 
-        # Just before we return the string fill in information about the
-        # separator size.
-        (termw, termh) = termcap.terminal_size()
-        return string.format(separator='='*termw)
+        return self.format_separators(string)
 
 
 class JUnitFormatter(ResultFormatter):
@@ -414,7 +421,7 @@ if __name__ == '__main__':
         testcase.timer.stop()
         suiteresult.results.append(testcase)
 
-    formatter = JUnitFormatter(parentsuiteresult, flatten=True)
-    print(formatter)
+    #formatter = JUnitFormatter(parentsuiteresult, flatten=True)
+    #print(formatter)
     formatter = ConsoleFormatter(parentsuiteresult)
     print(formatter)

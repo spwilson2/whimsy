@@ -6,6 +6,7 @@ import whimsy.logger as logger
 import whimsy.test as test
 import whimsy.suite as suite
 import whimsy.result
+import whimsy.terminal as terminal
 
 class Runner(object):
     '''
@@ -34,6 +35,7 @@ class Runner(object):
         fixtures.update(test_suite.fixtures)
 
         for (idx, item) in enumerate(test_suite):
+            logger.log.info(terminal.separator())
 
             if isinstance(item, suite.TestSuite):
                 result = self.run_suite(item, fixtures=fixtures)
@@ -76,22 +78,7 @@ class Runner(object):
         fixtures = fixtures.copy()
         fixtures.update(test.fixtures)
 
-        #saved_stdout = sys.stdout
-        #saved_stderr = sys.stderr
-        ## Create a log to store the test output in.
-        ## TODO: Change default logging level
-        #log = logging.getLogger(__name__)
-        #log.setLevel(logging.DEBUG)
-
-        ## Redirect log back to stdout so when we redirect it to the log we
-        ## still see it in the console.
-        #log.addHandler(logging.StreamHandler(saved_stdout))
-
-        ## Redirect stdout and stderr to logger for the test.
-        #sys.stdout = logger.StreamToLogger(log, logging.INFO)
-        #sys.stderr = logger.StreamToLogger(log, logging.WARN)
-
-
+        logger.log.info('Starting TestCase: %s' % test.name)
         result.timer.start()
         try:
             test.test(result=result, fixtures=fixtures)
@@ -101,10 +88,7 @@ class Runner(object):
 
         if result.result is None:
             result.result = whimsy.result.Result.PASS
-
-        # Restore stdout and stderr
-        #sys.stdout = saved_stdout
-        #sys.stderr = saved_stderr
+        logger.log.info(terminal.insert_separator(' %s '%result.result))
 
         for name in test.fixtures:
             fixtures[name].teardown()

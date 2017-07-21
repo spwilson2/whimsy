@@ -12,6 +12,7 @@ import sys
 import whimsy.loader as loader
 import whimsy.logger as logger
 import whimsy.runner as runner
+import whimsy.result as result
 
 parser = argparse.ArgumentParser()
 parser.add_argument('directory',
@@ -21,25 +22,7 @@ parser.add_argument('--verbose', '-v',
                     default=0,
                     help='Increase verbosity')
 args = parser.parse_args()
-
-def logging_verbosity(verbosity):
-    return max(logging.CRITICAL - verbosity * 10, logging.DEBUG)
-
-log = logging.getLogger(__name__)
-log.setLevel(logging_verbosity(args.verbose))
-
-saved_stdout = sys.stdout
-saved_stderr = sys.stderr
-# Redirect log back to stdout so when we redirect it to the log we
-# still see it in the console.
-stdout_logger = logging.StreamHandler(saved_stdout)
-stdout_logger.formatter = logger.ConsoleLogFormatter()
-log.addHandler(stdout_logger)
-log.warn('Hello')
-
-# Redirect stdout and stderr to logger for the test.
-sys.stdout = logger.StreamToLogger(log, logging.INFO)
-sys.stderr = logger.StreamToLogger(log, logging.WARN)
+logger.set_logging_verbosity(args.verbose)
 
 testloader = loader.TestLoader()
 files = testloader.discover_files(args.directory)
@@ -48,9 +31,6 @@ for f in files:
 
 testrunner = runner.Runner()
 results = testrunner.run_suite(testloader.top_level_suite)
-for result in results:
-    print(result.result)
 
-# Restore stdout and stderr
-sys.stdout = saved_stdout
-sys.stderr = saved_stderr
+formatter = result.ConsoleFormatter(results)
+print(formatter)

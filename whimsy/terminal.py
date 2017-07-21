@@ -43,6 +43,7 @@ import struct
 
 # ANSI color names in index order
 color_names = "Black Red Green Yellow Blue Magenta Cyan".split()
+default_separator = '='
 
 # Character attribute capabilities.  Note that not all terminals
 # support all of these capabilities, or support them
@@ -122,6 +123,30 @@ def terminal_size():
         fcntl.ioctl(0, termios.TIOCGWINSZ,
         struct.pack('HHHH', 0, 0, 0, 0)))
     return w, h
+
+def separator(char=default_separator):
+    (w, h) = terminal_size()
+    return char*w
+
+def insert_separator(inside, char=default_separator, min_barrier=3):
+    '''
+    Place the given string inside of the separator. If it does not fit inside,
+    expand the separator to fit it with at least min_barrier.
+    '''
+    # Use a list so it's easy to manipulate
+    string = list(separator(char))
+
+    # Check if we can fit inside with at least min_barrier.
+    gap = (len(string) - len(inside)) - min_barrier * 2
+    if gap > 0:
+        # We'll need to expand the string to fit us.
+        string.extend([ char for _ in range(-gap)])
+    # Emplace inside
+    middle = ((len(string)-1)/2)
+    start_idx = middle - len(inside)/2
+    string[start_idx:len(inside)+start_idx] = inside
+    return ''.join(string)
+
 
 if __name__ == '__main__':
     print "=== termcap enabled ==="
