@@ -56,5 +56,4 @@ class TestLoader(object):
         execfile(path, newdict, newdict)
 
         new_tests = newdict['TESTS']
-        import pdb; pdb.set_trace()
         self.top_level_suite.add_items(*new_tests)

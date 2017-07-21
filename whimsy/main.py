@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 '''
 The main source for whimsy. Ties together the default test runners and
 loaders.
@@ -5,7 +6,6 @@ loaders.
 Discovers and runs all tests from a given root directory.
 '''
 
-import argparse
 import logging
 import sys
 
@@ -13,24 +13,23 @@ import whimsy.loader as loader
 import whimsy.logger as logger
 import whimsy.runner as runner
 import whimsy.result as result
+import whimsy.args as args
 
-parser = argparse.ArgumentParser()
-parser.add_argument('directory',
-                    help='Directory to start searching for tests in')
-parser.add_argument('--verbose', '-v',
-                    action='count',
-                    default=0,
-                    help='Increase verbosity')
-args = parser.parse_args()
-logger.set_logging_verbosity(args.verbose)
 
-testloader = loader.TestLoader()
-files = testloader.discover_files(args.directory)
-for f in files:
-    testloader.load_file(f)
+if __name__ == '__main__':
 
-testrunner = runner.Runner()
-results = testrunner.run_suite(testloader.top_level_suite)
+    # Start logging verbosity at its minimum
+    logger.set_logging_verbosity(0)
+    args = args.parse_args()
+    logger.set_logging_verbosity(args.verbose)
 
-formatter = result.ConsoleFormatter(results)
-print(formatter)
+    testloader = loader.TestLoader()
+    files = testloader.discover_files(args.directory)
+    for f in files:
+        testloader.load_file(f)
+
+    testrunner = runner.Runner()
+    results = testrunner.run_suite(testloader.top_level_suite)
+
+    formatter = result.ConsoleFormatter(results)
+    print(formatter)
