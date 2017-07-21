@@ -4,15 +4,18 @@ import numbers
 
 class ArgParser(object):
     __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
     def __init__(self, parser):
         self.parser = parser
         self.add_argument = self.parser.add_argument
 
     @abc.abstractmethod
-    def setup(self):
-        pass
-    @abc.abstractmethod
     def parse(self):
+        '''
+        Function called once the top level parse has been called. We can now
+        check our own args.
+        '''
         pass
 
 class RunParser(ArgParser):
@@ -21,9 +24,9 @@ class RunParser(ArgParser):
             'run',
             help=''''''
         )
+
         super(RunParser, self).__init__(parser)
 
-    def setup(self):
         self.add_argument('directory',
                           help='Directory to start'
                           ' searching for tests in')
@@ -39,9 +42,6 @@ class ListParser(ArgParser):
         )
         super(ListParser, self).__init__(parser)
 
-    def setup(self):
-        pass
-
     def parse(self):
         pass
 
@@ -51,6 +51,11 @@ class Argument:
         self.kwargs = kwargs
     def add_to_parser(self, parser):
         parser.add_argument(*self.args, **self.kwargs)
+
+
+# Setup parser and subcommands
+baseparser = argparse.ArgumentParser()
+subparser = baseparser.add_subparsers()
 
 class _SickyInt:
     '''
@@ -64,24 +69,15 @@ class _SickyInt:
     def __add__(self, other):
         self.val += other
         return self
+verbose_arg = Argument('--verbose', '-v',
+                       action='count',
+                       default=_SickyInt(),
+                       help='Increase verbosity')
 
-def parse_args():
-    # Setup parser and subcommands
-    baseparser = argparse.ArgumentParser()
-    subparser = baseparser.add_subparsers()
-    parsers = [RunParser(subparser), ListParser(subparser)]
+parsers = [RunParser(subparser), ListParser(subparser), baseparser]
 
-    verbosity = 0
-    verbose_arg = Argument('--verbose', '-v',
-                           action='count',
-                           default=_SickyInt(),
-                           help='Increase verbosity')
+for parser in parsers:
+    verbose_arg.add_to_parser(parser)
 
-    for parser in parsers:
-        parser.setup()
-        verbose_arg.add_to_parser(parser)
-    verbose_arg.add_to_parser(baseparser)
-
-    args = baseparser.parse_args()
-    args.verbose = args.verbose.val
-    return args
+args = baseparser.parse_args()
+args.verbose = args.verbose.val

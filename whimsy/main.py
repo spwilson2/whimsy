@@ -5,22 +5,17 @@ loaders.
 
 Discovers and runs all tests from a given root directory.
 '''
-
-import logging
-import sys
-
-import whimsy.loader as loader
 import whimsy.logger as logger
+import whimsy.loader as loader
 import whimsy.runner as runner
 import whimsy.result as result
-import whimsy.args as args
 
 
 if __name__ == '__main__':
-
     # Start logging verbosity at its minimum
     logger.set_logging_verbosity(0)
-    args = args.parse_args()
+    from whimsy.args import args
+
     logger.set_logging_verbosity(args.verbose)
 
     testloader = loader.TestLoader()

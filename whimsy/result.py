@@ -195,22 +195,22 @@ class ConsoleFormatter(ResultFormatter):
         self.verbosity = verbosity
 
     def format_test(self, test):
-        string = self.result_colormap[test.result]
+        string = bytearray(self.result_colormap[test.result])
         string += str(test.result)
         string += ': '
         string += test.name
         string += self.reset
         string += '\n'
-        return string
+        return str(string)
 
     def format_tests(self, suite):
-        string = ''
+        string = bytearray('')
         for testcase in suite:
             string += self.sep_fmtstr
             string += self.format_test(testcase)
         string += self.sep_fmtstr
 
-        return string
+        return str(string)
 
     def format_summary(self, summary):
         result_heading = 'Result'
