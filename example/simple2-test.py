@@ -59,13 +59,12 @@ second_fixture = {
 }
 
 
-def simple_test(test, fixtures):
+def simple_test(result, fixtures):
     # TODO: Check that our fixtures were created.
     print 'Simple Test!!'
     assert True
 
-def simple_fail_test(test, fixtures):
-    #import pdb; pdb.set_trace()
+def simple_fail_test(result, fixtures):
     assert False
     pass
 

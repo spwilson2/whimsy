@@ -29,6 +29,9 @@ class Enum(object):
         self.enums = []
         def __name__(self):
             return self.variant
+        def __cmp__(self, other):
+            return self.enums.index(self) > self.enums.index(other)
+
 
         if namespace is not '':
             namespace = namespace + '.'

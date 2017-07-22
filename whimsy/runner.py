@@ -1,6 +1,7 @@
 import tempfile
 import sys
 import logging
+import traceback
 
 import whimsy.logger as logger
 import whimsy.test as test
@@ -54,7 +55,7 @@ class Runner(object):
                     and result.result in Result.failfast:
                 logger.log.inform('Previous test failed in a failfast suite,'
                                   ' skipping remaining tests.')
-                self._generate_skips(results, suite_iterator)
+                self._generate_skips(result.name, results, suite_iterator)
                 break
 
         for fixture in test_suite.fixtures.values():
@@ -87,12 +88,20 @@ class Runner(object):
         result.timer.start()
         try:
             test.test(result=result, fixtures=fixtures)
-        except:
+        except AssertionError as e:
+            result.reason = e.message
+            if not result.reason:
+                result.reason = traceback.format_exc()
             result.result = whimsy.result.Result.FAIL
+        except Exception as e:
+            result.reason = traceback.format_exc()
+            result.result = whimsy.result.Result.FAIL
+        else:
+            result.result = whimsy.result.Result.PASS
         result.timer.stop()
 
-        if result.result is None:
-            result.result = whimsy.result.Result.PASS
+        if result.reason:
+            logger.log.debug('%s'%result.reason)
         logger.log.info(terminal.insert_separator(' %s '%result.result))
 
         for name in test.fixtures:
@@ -100,7 +109,7 @@ class Runner(object):
 
         return result
 
-    def _generate_skips(self, results, remaining_iterator):
+    def _generate_skips(self, failed_test, results, remaining_iterator):
         '''
         Generate SKIP for all remaining tests (for use with the failfast
         suite option)
@@ -108,6 +117,8 @@ class Runner(object):
         for (idx, item) in remaining_iterator:
             if isinstance(item, suite.TestSuite):
                 result = whimsy.result.TestSuiteResult(item.name)
+                result.reason = ("Previous test '%s' failed in a failfast"
+                        " TestSuite." % failed_test)
             elif isinstance(item, test.TestCase):
                 result = whimsy.result.TestCaseResult(item.name)
                 result.result = Result.SKIP

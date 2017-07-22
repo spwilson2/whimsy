@@ -58,10 +58,11 @@ class TestCaseResult(TestResult):
     '''
     Holds information corresponding to a single test case result.
     '''
-    def __init__(self, name, result=None, *args, **kwargs):
+    def __init__(self, name, result=None, reason=None, *args, **kwargs):
         super(TestCaseResult, self).__init__(*args, **kwargs)
         self._result = result
         self._name = name
+        self.reason = reason
 
     @property
     def result(self):
@@ -188,20 +189,27 @@ class ConsoleFormatter(ResultFormatter):
     }
     sep_fmtkey = 'separator'
     sep_fmtstr = '{%s}' % sep_fmtkey
+    verbosity_levels = _util.Enum([
+            'FATAL',
+            'INFO',
+            'DEBUG',])
 
-    def __init__(self, result, verbosity=0, only_testcases=True):
+    def __init__(self, result, verbosity=verbosity_levels.INFO, only_testcases=True):
         super(ConsoleFormatter, self).__init__(result)
         self.only_testcases = only_testcases
         self.verbosity = verbosity
 
     def format_test(self, test):
-        string = bytearray(self.result_colormap[test.result])
-        string += str(test.result)
-        string += ': '
-        string += test.name
-        string += self.reset
-        string += '\n'
-        return str(string)
+        string = '{color}{result}: {name}{reset}\n'.format(
+                color=self.result_colormap[test.result],
+                result=test.result,
+                name=test.name,
+                reset=self.reset)
+        if self.verbosity > self.verbosity_levels.DEBUG:
+            if test.reason:
+                string += '\nFailure Reason:\n\n'
+                string += '%s\n' % test.reason
+        return string
 
     def format_tests(self, suite):
         string = bytearray('')

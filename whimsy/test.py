@@ -34,7 +34,7 @@ class TestFunction(TestCase):
         self._name = name
 
     def test(self, result, fixtures):
-        self._test_function(self, fixtures)
+        self._test_function(result, fixtures)
 
     @property
     def name(self):
