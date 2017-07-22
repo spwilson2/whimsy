@@ -19,7 +19,7 @@ class MakeFixture(fixture.Fixture):
         super(MakeFixture, self).__init__(*args, **kwargs)
         self.targets = []
 
-    @fixture.cacheresult
+    @helper.cacheresult
     def setup(self):
         super(MakeFixture, self).setup()
         targets = set(self.required_by)

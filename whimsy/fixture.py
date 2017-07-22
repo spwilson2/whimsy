@@ -32,27 +32,6 @@ class CacheLevel:
     Suite = _inc.next()
     Case = _inc.next()
 
-
-class CachedResult(object):
-    def __init__(self, *args, **kwargs):
-        self.result = None
-        self.args = args
-        self.kwargs = kwargs
-    def __eq__(self, other):
-        return self.args == other.args \
-                and self.kwargs == other.kwargs
-
-def cacheresult(function):
-    # We use a list since it's impossible to hash the kwargs
-    results = []
-    def cacheresultwrapper(*args, **kwargs):
-        result = CachedResult(*args,**kwargs)
-        if result not in results:
-            result.result = function(*args, **kwargs)
-        results.append(result)
-        return result.result
-    return cacheresultwrapper
-
 class Fixture(object):
     '''Base Class for a test Fixture'''
     def __init__(self, teardown=None, setup=None, cached=None, lazy_init=True):
