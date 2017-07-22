@@ -1,6 +1,13 @@
+'''
+Note: This module is atypical. It replaces its own namespace with
+a ConfigModule object in order to export the config in a user friendly way.
+'''
+
 import abc
 import argparse
 import numbers
+import sys
+import types
 
 import helper
 import _util
@@ -88,10 +95,6 @@ verbose_arg = Argument('--verbose', '-v',
 
 parsers = [RunParser(subparser), ListParser(subparser), baseparser]
 
-
-def config():
-    return parse_args()
-
 @helper.cacheresult
 def parse_args():
     for parser in parsers:
@@ -100,3 +103,26 @@ def parse_args():
     args = baseparser.parse_args()
     args.verbose = args.verbose.val
     return args
+
+
+class ConfigModule(types.ModuleType):
+    '''
+    This class is used to wrap a module object and attach its own properties to
+    the module.
+
+    We create this as a module so we can attach the config() property. (This
+    way it actually calls the parse_args automatically when the config as
+    accessed.)
+    '''
+    def __init__(self, module):
+        assert 'config' not in dir(module), ("'config' should not be in the"
+                " namespace of the module, it will be replaced.")
+        for item in dir(module):
+            setattr(sys.modules[__name__], item, getattr(module, item))
+
+    @property
+    def config(self):
+        return parse_args()
+
+# Replace the module with just a config.
+sys.modules[__name__] = ConfigModule(sys.modules[__name__])

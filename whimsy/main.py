@@ -17,10 +17,10 @@ def main():
     logger.set_logging_verbosity(0)
     from whimsy.config import config
 
-    logger.set_logging_verbosity(config().verbose)
+    logger.set_logging_verbosity(config.verbose)
 
     testloader = loader.TestLoader()
-    files = testloader.discover_files(config().directory)
+    files = testloader.discover_files(config.directory)
 
     logger.log.info(terminal.separator())
     logger.log.info('Loading Tests')
