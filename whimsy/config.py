@@ -2,21 +2,39 @@ import abc
 import argparse
 import numbers
 
+import whimsy.helper as helper
+import _util
+
+class Flag(_util.Enum):
+    def __init__(self, option):
+        self.flag = flag
+    def asflag(self):
+        return '--' + str(self)
+    def __str__(self):
+        return self.flag
+    def __get__(self, instance, _):
+        return instance.flag
+
+flags = [
+        'directory',
+        ]
+for flag in flags:
+    setattr(Flag, flag, Flag(flag))
+
+
 class ArgParser(object):
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
     def __init__(self, parser):
         self.parser = parser
         self.add_argument = self.parser.add_argument
 
-    @abc.abstractmethod
     def parse(self):
         '''
         Function called once the top level parse has been called. We can now
         check our own args.
         '''
-        pass
+        return self.parser.parse_args()
 
 class RunParser(ArgParser):
     def __init__(self, subparser):
@@ -31,9 +49,6 @@ class RunParser(ArgParser):
                           help='Directory to start'
                           ' searching for tests in')
 
-    def parse(self):
-        pass
-
 class ListParser(ArgParser):
     def __init__(self, subparser):
         parser = subparser.add_parser(
@@ -41,9 +56,6 @@ class ListParser(ArgParser):
             help=''''''
         )
         super(ListParser, self).__init__(parser)
-
-    def parse(self):
-        pass
 
 class Argument:
     def __init__(self, *args, **kwargs):
@@ -76,8 +88,15 @@ verbose_arg = Argument('--verbose', '-v',
 
 parsers = [RunParser(subparser), ListParser(subparser), baseparser]
 
-for parser in parsers:
-    verbose_arg.add_to_parser(parser)
 
-args = baseparser.parse_args()
-args.verbose = args.verbose.val
+def config():
+    return parse_args()
+
+@helper.cacheresult
+def parse_args():
+    for parser in parsers:
+        verbose_arg.add_to_parser(parser)
+
+    args = baseparser.parse_args()
+    args.verbose = args.verbose.val
+    return args

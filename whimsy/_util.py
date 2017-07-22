@@ -63,3 +63,11 @@ class Timer(object):
 
     def reset(self):
         self._start = self._finish = None
+
+def singleton(cls):
+    instances = {}
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls()
+        return instances[cls]
+    return getinstance
