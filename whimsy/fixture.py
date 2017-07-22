@@ -24,6 +24,8 @@
 # How do we access the fixtures from test cases which require them?
 # - Import them into the test class.
 #
+import helper
+
 class CacheLevel:
     # Should this just be moved into implicitly how fixtures are used? I.e.
     # attached to either suites or standalone?
@@ -34,7 +36,7 @@ class CacheLevel:
 
 class Fixture(object):
     '''Base Class for a test Fixture'''
-    def __init__(self, teardown=None, setup=None, cached=None, lazy_init=True):
+    def __init__(self, teardown=None, setup=None, cached=False, lazy_init=True):
         '''
         :param lazy_init: If True, wait until test cases that use this fixture
         are ran to setup this fixture. Otherwise init the fixture before the
@@ -50,6 +52,8 @@ class Fixture(object):
             self.teardown = teardown
         if setup is not None:
             self.setup = setup
+        if cached:
+            self.setup = helper.cacheresult(self.setup)
 
     def require(self, other_fixture):
         self.requires.append(other_fixture)

@@ -89,12 +89,16 @@ def log_call(*popenargs, **kwargs):
     return p.returncode
 
 
-# cacheresult stuff, (From python 3.2+)
+# lru_cache stuff (Introduced in python 3.2+)
+# Renamed and modified to cacheresult
 class _HashedSeq(list):
-    """ This class guarantees that hash() will be called no more than once
-        per element.  This is important because the lru_cache() will hash
-        the key multiple times on a cache miss.
-    """
+    '''
+    This class guarantees that hash() will be called no more than once per
+    element. This is important because the cacheresult() will hash the key
+    multiple times on a cache miss.
+
+    From cpython 3.7
+    '''
 
     __slots__ = 'hashvalue'
 
@@ -109,13 +113,16 @@ def _make_key(args, kwds, typed,
              kwd_mark = (object(),),
              fasttypes = {int, str, frozenset, type(None)},
              tuple=tuple, type=type, len=len):
-    """Make a cache key from optionally typed positional and keyword arguments
-    The key is constructed in a way that is flat as possible rather than
-    as a nested structure that would take more memory.
-    If there is only a single argument and its data type is known to cache
-    its hash value, then that argument is returned without a wrapper.  This
-    saves space and improves lookup speed.
-    """
+    '''
+    Make a cache key from optionally typed positional and keyword arguments.
+    The key is constructed in a way that is flat as possible rather than as
+    a nested structure that would take more memory.  If there is only a single
+    argument and its data type is known to cache its hash value, then that
+    argument is returned without a wrapper. This saves space and improves
+    lookup speed.
+
+    From cpython 3.7
+    '''
     key = args
     if kwds:
         key += kwd_mark
@@ -132,9 +139,11 @@ def _make_key(args, kwds, typed,
 
 def cacheresult(function, typed=False):
     '''
-    If *typed* is True, arguments of different types will be cached separately.
-    For example, f(3.0) and f(3) will be treated as distinct calls with
-    distinct results.
+    :param typed: If typed is True, arguments of different types will be cached
+    separately. I.e. f(3.0) and f(3) will be treated as distinct calls
+    with distinct results.
+
+    From cpython 3.7
     '''
     sentinel = object()          # unique object used to signal cache misses
     make_key = _make_key         # build a key from the function arguments

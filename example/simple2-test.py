@@ -16,10 +16,10 @@ class MakeFixture(fixture.Fixture):
     targets.
     '''
     def __init__(self, *args, **kwargs):
-        super(MakeFixture, self).__init__(*args, **kwargs)
+        super(MakeFixture, self).__init__(cached=True, lazy_init=False,
+                                          *args, **kwargs)
         self.targets = []
 
-    @helper.cacheresult
     def setup(self):
         super(MakeFixture, self).setup()
         targets = set(self.required_by)
@@ -28,14 +28,10 @@ class MakeFixture(fixture.Fixture):
         logger.log.debug('Executing command: %s' % command)
         helper.log_call(command)
 
-    def teardown(self):
-        pass
-
-
-# The singleton make fixture we'll use for all targets.
-make_fixture = MakeFixture(lazy_init=False)
 
 class MakeTarget(fixture.Fixture):
+    # The singleton make fixture we'll use for all targets.
+    make_fixture = MakeFixture()
 
     def __init__(self, target, *args, **kwargs):
         super(MakeTarget, self).__init__(*args, **kwargs)
@@ -43,11 +39,11 @@ class MakeTarget(fixture.Fixture):
 
         # Add our self to the required targets of the main MakeFixture
         #make_fixture.add_target(self)
-        self.require(make_fixture)
+        self.require(self.make_fixture)
 
     def setup(self):
         fixture.Fixture.setup(self)
-        make_fixture.setup()
+        self.make_fixture.setup()
         return self
 
 
