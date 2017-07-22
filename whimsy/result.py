@@ -21,7 +21,11 @@ Result = _util.Enum(
     namespace='Result'
 )
 
-Result.failfast = {Result.ERROR, Result.FAIL}
+# Add all result enums to this module's namespace.
+for result in Result.enums:
+    globals()[str(result)] = result
+
+Result.failfast = {ERROR, FAIL}
 
 class TestResult(object):
     '''
@@ -107,18 +111,18 @@ class TestSuiteResult(TestResult):
 
         for result in self.results:
             result = result.result
-            if result == Result.ERROR:
-                return Result.ERROR
-            if result != Result.SKIP:
+            if result == ERROR:
+                return ERROR
+            if result != SKIP:
                 all_skipped = False
-            if result == Result.FAIL:
+            if result == FAIL:
                 failed = True
 
         if failed:
-            return Result.FAIL
+            return FAIL
         if all_skipped:
-            return Result.SKIP
-        return Result.PASS
+            return SKIP
+        return PASS
 
     @property
     def name(self):
@@ -181,11 +185,11 @@ class ConsoleFormatter(ResultFormatter):
     color = termcap.get_termcap()
     reset = color.Normal
     result_colormap = {
-        Result.FAIL: color.Red,
-        Result.ERROR: color.Red,
-        Result.PASS: color.Green,
-        Result.XFAIL: color.Cyan,
-        Result.SKIP: color.Cyan,
+        FAIL: color.Red,
+        ERROR: color.Red,
+        PASS: color.Green,
+        XFAIL: color.Cyan,
+        SKIP: color.Cyan,
     }
     sep_fmtkey = 'separator'
     sep_fmtstr = '{%s}' % sep_fmtkey
@@ -291,7 +295,7 @@ class JUnitFormatter(ResultFormatter):
 
     # Results considered passing under JUnit, we have a couple extra states
     # that aren't traditionally reported under JUnit.
-    passing_results = {Result.PASS, Result.XFAIL}
+    passing_results = {PASS, XFAIL}
 
     def __init__(self,
                  result,
@@ -376,17 +380,17 @@ class JUnitFormatter(ResultFormatter):
                                time="%f" % testcase.runtime)
 
         if testcase.result in self.passing_results:
-            xstate = Result.PASS
-        elif testcase.result == Result.SKIP:
+            xstate = PASS
+        elif testcase.result == SKIP:
             xstate = ET.SubElement(x_test, "skipped")
-        elif testcase.result == Result.FAIL:
+        elif testcase.result == FAIL:
             xstate = ET.SubElement(x_test, "failure")
-        elif testcase.result == Result.ERROR:
+        elif testcase.result == ERROR:
             xstate = ET.SubElement(x_test, "error")
         else:
             assert False, "Unknown test state"
 
-        if xstate is not Result.PASS:
+        if xstate is not PASS:
             #TODO: Add extra output to the text?
             #xstate.text = "\n".join(msg)
             # TODO: Use these subelements for text.
@@ -426,11 +430,11 @@ class JUnitFormatter(ResultFormatter):
 
             # Check the return value to fill in metadata for our xsuite
             if result.result not in self.passing_results:
-                if test.state == Result.SKIP:
+                if test.state == SKIP:
                     skipped += 1
-                elif test.state == Result.ERROR:
+                elif test.state == ERROR:
                     errors += 1
-                elif test.state == Result.FAIL:
+                elif test.state == FAIL:
                     failures += 1
                 else:
                     assert False, "Unknown test state"
@@ -455,7 +459,7 @@ if __name__ == '__main__':
 
 
     for _ in range(2):
-        testcase = TestCaseResult('testcase', result=Result.PASS)
+        testcase = TestCaseResult('testcase', result=PASS)
         testcase.timer.start()
         testcase.timer.stop()
         suiteresult.results.append(testcase)
