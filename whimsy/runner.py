@@ -9,6 +9,9 @@ import suite as suite
 from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
 import terminal as terminal
 
+_unexpected_item_msg = \
+        'Only TestSuites and TestCases should be contained in a TestSuite'
+
 class Runner(object):
     '''
     The default runner class used for running test suites and cases.
@@ -45,8 +48,7 @@ class Runner(object):
             elif isinstance(item, test.TestCase):
                 result = self.run_test(item, fixtures=fixtures)
             else:
-                # TODO: Change assert to exception
-                assert(False)
+                assert False, _unexpected_item_msg
 
             # Add the result of the test or suite to our test_suite results.
             results.results.append(result)
@@ -129,7 +131,6 @@ class Runner(object):
                         " TestSuite." % failed_test)
                 result.result = Result.SKIP
             else:
-                # TODO: Change assert to exception
-                assert(False)
+                assert False, _unexpected_item_msg
             logger.log.info('Skipping: %s' % item.name)
             results.results.append(result)

@@ -1,4 +1,22 @@
 import abc
+from unittest import FunctionTestCase as _Ftc
+from functools import partial
+
+def steal_unittest_assertions(module):
+    '''
+    Attach all the unittest.TestCase assertion helpers to the given modules
+    namespace.
+    '''
+    # Since unittest assertion helpers all need an instance to work, we
+    # need to do some partial application with a wrapper function.
+    fake_testcase = _Ftc(None)
+    for item in dir(_Ftc):
+        if item.startswith('assert'):
+            module[item] = partial(getattr(_Ftc, item), fake_testcase)
+
+# Export the unittest assertion helpers from this module.
+steal_unittest_assertions(globals())
+
 
 class TestCase(object):
     '''

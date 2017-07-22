@@ -59,11 +59,9 @@ second_fixture = {
 def simple_test(result, fixtures):
     # TODO: Check that our fixtures were created.
     print 'Simple Test!!'
-    assert True
 
 def simple_fail_test(result, fixtures):
-    assert False
-    pass
+    test.assertTrue(False)
 
 print('running code in simple2-test.py')
 TESTS = [
