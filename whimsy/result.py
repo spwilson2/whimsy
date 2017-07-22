@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import string
 
 import _util
-import whimsy.terminal as termcap
+import terminal as termcap
 
 class InvalidResultException(Exception):
     pass
@@ -443,7 +443,7 @@ class JUnitFormatter(ResultFormatter):
 
 
 if __name__ == '__main__':
-    import whimsy.suite as suite
+    import suite
     suiteresult = TestSuiteResult('Test Suite')
     parentsuiteresult = TestSuiteResult('Parent Test Suite')
     parentsuiteresult.results.append(suiteresult)

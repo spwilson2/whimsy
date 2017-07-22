@@ -1,7 +1,7 @@
 import logging
 import sys
 
-import whimsy.terminal as termcap
+import terminal as termcap
 
 # Logging level to be used to always display information to the user
 INFORM = 1000

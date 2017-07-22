@@ -2,7 +2,7 @@
 # Suites should provide fixtures for their contained test cases..
 # How?
 
-import whimsy._util as util
+import _util as util
 
 class TestSuite(object):
     '''An object containing a collection of tests or other test suites.'''

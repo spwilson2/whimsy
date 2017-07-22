@@ -2,7 +2,7 @@ import abc
 import argparse
 import numbers
 
-import whimsy.helper as helper
+import helper
 import _util
 
 class Flag(_util.Enum):

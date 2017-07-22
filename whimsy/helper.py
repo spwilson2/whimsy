@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 import threading
 
-import whimsy.logger as logger
+import logger
 
 class Popen(subprocess.Popen):
     '''

@@ -3,12 +3,11 @@ import sys
 import logging
 import traceback
 
-import whimsy.logger as logger
-import whimsy.test as test
-import whimsy.suite as suite
-import whimsy.result
-from whimsy.result import Result, ConsoleFormatter
-import whimsy.terminal as terminal
+import logger as logger
+import test as test
+import suite as suite
+from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
+import terminal as terminal
 
 class Runner(object):
     '''
@@ -26,7 +25,7 @@ class Runner(object):
         3. Handle teardown for all fixtures in the test_suite.
         '''
         if results is None:
-            results = whimsy.result.TestSuiteResult(test_suite.name)
+            results = TestSuiteResult(test_suite.name)
 
         for name, fixture in test_suite.fixtures.items():
             fixture.setup()
@@ -46,6 +45,7 @@ class Runner(object):
             elif isinstance(item, test.TestCase):
                 result = self.run_test(item, fixtures=fixtures)
             else:
+                # TODO: Change assert to exception
                 assert(False)
 
             # Add the result of the test or suite to our test_suite results.
@@ -74,7 +74,7 @@ class Runner(object):
            test?
         '''
         if result is None:
-            result = whimsy.result.TestCaseResult(test.name)
+            result = TestCaseResult(test.name)
 
         for name, fixture in test.fixtures.items():
             fixture.setup()
@@ -92,12 +92,12 @@ class Runner(object):
             result.reason = e.message
             if not result.reason:
                 result.reason = traceback.format_exc()
-            result.result = whimsy.result.Result.FAIL
+            result.result = Result.FAIL
         except Exception as e:
             result.reason = traceback.format_exc()
-            result.result = whimsy.result.Result.FAIL
+            result.result = Result.FAIL
         else:
-            result.result = whimsy.result.Result.PASS
+            result.result = Result.PASS
         result.timer.stop()
 
         if result.reason:
@@ -122,13 +122,14 @@ class Runner(object):
         '''
         for (idx, item) in remaining_iterator:
             if isinstance(item, suite.TestSuite):
-                result = whimsy.result.TestSuiteResult(item.name)
+                result = TestSuiteResult(item.name)
             elif isinstance(item, test.TestCase):
-                result = whimsy.result.TestCaseResult(item.name)
+                result = TestCaseResult(item.name)
                 result.reason = ("Previous test '%s' failed in a failfast"
                         " TestSuite." % failed_test)
                 result.result = Result.SKIP
             else:
+                # TODO: Change assert to exception
                 assert(False)
             logger.log.info('Skipping: %s' % item.name)
             results.results.append(result)

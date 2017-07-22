@@ -4,9 +4,9 @@ import re
 import traceback
 import warnings
 
-import whimsy.test as test
-import whimsy.suite as suite
-import whimsy.logger as logger
+import test
+import suite
+import logger
 
 default_filepath_regex = re.compile(r'((.+[-_]test)|(test[-_].+))\.py$')
 
