@@ -11,7 +11,7 @@ import whimsy.runner as runner
 import whimsy.result as result
 
 
-if __name__ == '__main__':
+def main():
     # Start logging verbosity at its minimum
     logger.set_logging_verbosity(0)
     from whimsy.args import args
