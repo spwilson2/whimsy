@@ -9,6 +9,7 @@ import whimsy.logger as logger
 import whimsy.loader as loader
 import whimsy.runner as runner
 import whimsy.result as result
+import whimsy.terminal as terminal
 
 
 def main():
@@ -20,11 +21,18 @@ def main():
 
     testloader = loader.TestLoader()
     files = testloader.discover_files(args.directory)
+
+    logger.log.info(terminal.separator())
+    logger.log.info('Loading Tests')
     for f in files:
         testloader.load_file(f)
+    logger.log.info(terminal.separator())
 
+    logger.log.info(terminal.separator())
+    logger.log.info('Running Tests')
     testrunner = runner.Runner()
     results = testrunner.run_suite(testloader.top_level_suite)
+    logger.log.info(terminal.separator())
 
     formatter = result.ConsoleFormatter(results)
     print(formatter)

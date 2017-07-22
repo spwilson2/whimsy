@@ -1,17 +1,21 @@
 import imp
 import os
 import re
+import traceback
 import warnings
 
 import whimsy.test as test
 import whimsy.suite as suite
+import whimsy.logger as logger
 
-default_filepath_regex = re.compile(r'.*[-_]test.py$')
+default_filepath_regex = re.compile(r'((.+[-_]test)|(test[-_].+))\.py$')
 
 def default_filepath_filter(filepath):
+    filepath = os.path.basename(filepath)
     return True if default_filepath_regex.match(filepath) else False
 
 
+teststring = 'TESTS'
 class TestLoader(object):
     '''
     Base class for discovering tests.
@@ -19,6 +23,7 @@ class TestLoader(object):
     If tests are not tagged, automatically places them into their own test
     suite.
     '''
+    teststring = teststring
     def __init__(self, top_level_suite=None, filepath_filter=default_filepath_filter):
 
         if top_level_suite is None:
@@ -50,10 +55,19 @@ class TestLoader(object):
         #
         # The implication for this is that we can't use a simple class
         # variable to keep track of instances of tests with __init__ if they
-        # were to import a place were tests were defined. So instead we
+        # were to import a place where tests were defined. So instead we
         # require users to create a variable 'TESTS' in each test file.
         newdict = {'__builtins__':__builtins__}
-        execfile(path, newdict, newdict)
+        try:
+            execfile(path, newdict, newdict)
+        except Exception as e:
+            logger.log.warn('Tried to load tests from %s but failed with an'
+                    ' exception.' % path)
+            logger.log.debug(traceback.format_exc())
 
-        new_tests = newdict['TESTS']
-        self.top_level_suite.add_items(*new_tests)
+        new_tests = newdict.get(self.teststring, None)
+        if new_tests is not None:
+            logger.log.debug('Discovered %d tests in %s' % (len(new_tests), path))
+            self.top_level_suite.add_items(*new_tests)
+        else:
+            logger.log.warn('No tests discovered in %s' % path)

@@ -124,17 +124,20 @@ def terminal_size():
         struct.pack('HHHH', 0, 0, 0, 0)))
     return w, h
 
-def separator(char=default_separator):
+def separator(char=default_separator, color=None):
     (w, h) = terminal_size()
-    return char*w
+    if color:
+        return color + char*w + termcap.Normal
+    else:
+        return char*w
 
-def insert_separator(inside, char=default_separator, min_barrier=3):
+def insert_separator(inside, char=default_separator, min_barrier=3, color=None):
     '''
     Place the given string inside of the separator. If it does not fit inside,
     expand the separator to fit it with at least min_barrier.
     '''
     # Use a bytearray so it's efficient to manipulate
-    string = bytearray(separator(char))
+    string = bytearray(separator(char, color=color))
 
     # Check if we can fit inside with at least min_barrier.
     gap = (len(string) - len(inside)) - min_barrier * 2

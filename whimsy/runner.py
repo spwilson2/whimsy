@@ -7,7 +7,7 @@ import whimsy.logger as logger
 import whimsy.test as test
 import whimsy.suite as suite
 import whimsy.result
-from whimsy.result import Result
+from whimsy.result import Result, ConsoleFormatter
 import whimsy.terminal as terminal
 
 class Runner(object):
@@ -84,7 +84,7 @@ class Runner(object):
         fixtures = fixtures.copy()
         fixtures.update(test.fixtures)
 
-        logger.log.info('Starting TestCase: %s' % test.name)
+        logger.log.info('TestCase: %s' % test.name)
         result.timer.start()
         try:
             test.test(result=result, fixtures=fixtures)
@@ -102,7 +102,13 @@ class Runner(object):
 
         if result.reason:
             logger.log.debug('%s'%result.reason)
-        logger.log.info(terminal.insert_separator(' %s '%result.result))
+        logger.log.inform('{color}{name} - {result}{reset}'.format(
+                name=result.name,
+                result=result.result,
+                color=ConsoleFormatter.result_colormap[result.result],
+                reset=terminal.termcap.Normal))
+        logger.log.info(terminal.insert_separator(' %s '%result.result,
+                color=ConsoleFormatter.result_colormap[result.result]))
 
         for name in test.fixtures:
             fixtures[name].teardown()
@@ -117,10 +123,10 @@ class Runner(object):
         for (idx, item) in remaining_iterator:
             if isinstance(item, suite.TestSuite):
                 result = whimsy.result.TestSuiteResult(item.name)
-                result.reason = ("Previous test '%s' failed in a failfast"
-                        " TestSuite." % failed_test)
             elif isinstance(item, test.TestCase):
                 result = whimsy.result.TestCaseResult(item.name)
+                result.reason = ("Previous test '%s' failed in a failfast"
+                        " TestSuite." % failed_test)
                 result.result = Result.SKIP
             else:
                 assert(False)

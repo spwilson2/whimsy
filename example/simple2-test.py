@@ -7,6 +7,7 @@ import whimsy.fixture as fixture
 import whimsy.runner as runner
 import whimsy.loader as loader
 import whimsy.logger as logger
+import whimsy.helper as helper
 
 class MakeFixture(fixture.Fixture):
     '''
@@ -25,7 +26,7 @@ class MakeFixture(fixture.Fixture):
         command = ['make']
         command.extend([target.target for target in targets])
         logger.log.debug('Executing command: %s' % command)
-        subprocess.check_call(command)
+        helper.log_call(command)
 
     def teardown(self):
         pass
