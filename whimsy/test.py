@@ -2,6 +2,8 @@ import abc
 from unittest import FunctionTestCase as _Ftc
 from functools import partial
 
+import helper
+
 def steal_unittest_assertions(module):
     '''
     Attach all the unittest.TestCase assertion helpers to the given modules
@@ -26,7 +28,7 @@ class TestCase(object):
     enumerated by the test system.
     '''
     __metaclass__ = abc.ABCMeta
-    __instances = set()
+    __instances = helper.OrderedSet()
 
     def __init__(self, fixtures=None):
         '''

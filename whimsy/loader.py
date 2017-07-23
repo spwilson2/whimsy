@@ -4,9 +4,10 @@ import re
 import traceback
 import warnings
 
-import test
+from test import TestCase
 import suite as suite_mod
 import logger
+import helper
 
 # Ignores filenames that begin with '.'
 # Will match filenames that either begin or end with 'test' or tests and use
@@ -62,7 +63,7 @@ class TestLoader(object):
             # actually tried to load a file into our suite.
             self._loaded_a_file = False
 
-        self.discovered_tests = set()
+        self.discovered_tests = helper.OrderedSet()
 
     @property
     def suite(self):
@@ -131,7 +132,7 @@ class TestLoader(object):
                     ' exception.' % path)
             logger.log.debug(traceback.format_exc())
 
-        new_tests = test.TestCase.instances() - self.discovered_tests
+        new_tests = TestCase.instances() - self.discovered_tests
         self.discovered_tests.update(new_tests)
         if new_tests is not None:
             logger.log.debug('Discovered %d tests in %s' % (len(new_tests), path))
