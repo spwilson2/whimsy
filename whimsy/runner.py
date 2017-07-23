@@ -100,7 +100,7 @@ class Runner(object):
                 result.reason = traceback.format_exc()
             result.outcome = Result.FAIL
         except Exception as e:
-            result.outcome = traceback.format_exc()
+            result.reason = traceback.format_exc()
             result.outcome = Result.FAIL
         else:
             if result.outcome is None:
