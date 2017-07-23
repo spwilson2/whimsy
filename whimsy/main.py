@@ -20,12 +20,9 @@ def main():
     logger.set_logging_verbosity(config.verbose)
 
     testloader = loader.TestLoader()
-    files = testloader.discover_files(config.directory)
-
     logger.log.info(terminal.separator())
     logger.log.info('Loading Tests')
-    for f in files:
-        testloader.load_file(f)
+    testloader.load_root(config.directory)
     logger.log.info(terminal.separator())
 
     logger.log.info(terminal.separator())
