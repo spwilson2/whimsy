@@ -8,6 +8,7 @@ import test as test
 import suite as suite
 from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
 import terminal as terminal
+from config import Flag
 
 _unexpected_item_msg = \
         'Only TestSuites and TestCases should be contained in a TestSuite'
@@ -70,12 +71,18 @@ class Runner(object):
             # Add the result of the test or suite to our test_suite results.
             results.results.append(result)
 
-            if test_suite.failfast \
-                    and result.outcome in Result.failfast:
-                logger.log.inform('Previous test failed in a failfast suite,'
-                                  ' skipping remaining tests.')
-                self._generate_skips(result.name, results, suite_iterator)
-                break
+            if result.outcome in Result.failfast:
+                if test_suite.failfast:
+                    logger.log.inform('Test failed in a failfast suite,'
+                                      ' skipping remaining tests.')
+                    self._generate_skips(result.name, results, suite_iterator)
+                elif Flag.failfast.set:
+                    logger.log.inform(
+                            'Test failed with the %s '
+                            ' flag provided.')
+                    logger.log.inform('Skipping remaining tests.')
+                    self._generate_skips(result.name, results, suite_iterator)
+
 
         for fixture in test_suite.fixtures.values():
             fixture.teardown()

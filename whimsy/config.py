@@ -13,22 +13,40 @@ import types
 import helper
 import _util
 
+class _Config(object):
+    '''
+    Config object that automatically parses args when one attempts to get
+    a config attr.
+    '''
+    def __getattr__(self, attr):
+        # Since parse_args is cached, we don't need to cache it's call here.
+        return getattr(parse_args(), attr)
+
+config = _Config()
+
 class Flag(_util.Enum):
-    def __init__(self, option):
+    def __init__(self, flag):
         self.flag = flag
     def asflag(self):
         return '--' + str(self)
+    def asarg(self):
+        return str(self)
     def __str__(self):
         return self.flag
-    def __get__(self, instance, _):
-        return instance.flag
+    @property
+    def set(self):
+        '''Checks if the given flag was set in the config.'''
+        return getattr(config, str(self))
 
 flags = [
         'directory',
+        'failfast'
         ]
+
 for flag in flags:
     setattr(Flag, flag, Flag(flag))
 
+print(dir(Flag))
 
 class ArgParser(object):
     __metaclass__ = abc.ABCMeta
@@ -53,9 +71,13 @@ class RunParser(ArgParser):
 
         super(RunParser, self).__init__(parser)
 
-        self.add_argument('directory',
-                          help='Directory to start'
-                          ' searching for tests in')
+        self.add_argument(
+                Flag.directory.asarg(),
+                help='Directory to start searching for tests in')
+        self.add_argument(
+                Flag.failfast.asflag(),
+                action='store_true',
+                help='Stop running on the first instance of failure')
 
 class ListParser(ArgParser):
     def __init__(self, subparser):
@@ -104,14 +126,3 @@ def parse_args():
     args = baseparser.parse_args()
     args.verbose = args.verbose.val
     return args
-
-class _Config(object):
-    '''
-    Config object that automatically parses args when one attempts to get
-    a config attr.
-    '''
-    def __getattr__(self, attr):
-        # Since parse_args is cached, we don't need to cache it's call here.
-        return getattr(parse_args(), attr)
-
-config = _Config()
