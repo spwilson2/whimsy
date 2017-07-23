@@ -43,6 +43,8 @@ class Fixture(object):
         self.requires = []
         self.required_by = []
         self.name = name
+        self.built = False
+        self.lazy_init = lazy_init
 
         if cached:
             self.setup = helper.cacheresult(self.setup)
@@ -53,6 +55,7 @@ class Fixture(object):
 
     def setup(self):
         '''Call setup of fixtures we require.'''
+        self.built = True
         for fixture in self.requires:
             fixture.setup()
 

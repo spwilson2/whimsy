@@ -83,3 +83,16 @@ class TestSuite(object):
                             self.parallelizable)
         newcopy.fixtures = self.fixtures.copy()
         return newcopy
+
+    def enumerate_fixtures(self):
+        '''
+        Traverse all our subsuites and testcases and return a list of all
+        their fixtures.
+        '''
+        fixtures = []
+        for item in self.items:
+            if isinstance(item, TestSuite):
+                fixtures.extend(item.enumerate_fixtures())
+            else:
+                fixtures.extend(item.fixtures.values())
+        return fixtures

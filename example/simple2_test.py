@@ -67,6 +67,10 @@ def fixture_test1(result, fixtures):
     assert 'first-target' in fixtures\
             or 'second-target' in fixtures
 
+@test.testfunction(fixtures={0:fixture.Fixture('testfixture')})
+def nonlazy_fixture_test(result, fixtures):
+    assert fixtures[0].built
+
 shared_obj = None
 @test.testfunction
 def simple_multitest_start1(result, fixtures):

@@ -25,10 +25,11 @@ def main():
     testloader.load_root(config.directory)
     logger.log.info(terminal.separator())
 
+    testrunner = runner.Runner(testloader.suite)
+
     logger.log.info(terminal.separator())
     logger.log.info('Running Tests')
-    testrunner = runner.Runner()
-    results = testrunner.run_suite(testloader.suite)
+    results = testrunner.run()
     logger.log.info(terminal.separator())
 
     formatter = result.ConsoleFormatter(results)

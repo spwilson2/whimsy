@@ -12,12 +12,30 @@ import terminal as terminal
 _unexpected_item_msg = \
         'Only TestSuites and TestCases should be contained in a TestSuite'
 
+def setup_unbuilt(fixtures, setup_lazy_init=False):
+    for fixture in fixtures:
+        if not fixture.built:
+            if fixture.lazy_init == setup_lazy_init:
+                fixture.setup()
+
 class Runner(object):
     '''
     The default runner class used for running test suites and cases.
     '''
+    def __init__(self, test_suite, fixtures=None):
+        if fixtures is None:
+            fixtures = {}
+        self.fixtures = fixtures
+        self.test_suite = test_suite
 
-    def run_suite(self, test_suite, results=None, fixtures={}):
+    def run(self):
+        # Build all the non lazy_init fixtures.
+        setup_unbuilt(self.test_suite.enumerate_fixtures(),
+                      setup_lazy_init=False)
+
+        return self.run_suite(self.test_suite)
+
+    def run_suite(self, test_suite, results=None, fixtures=None):
         '''
         Run all tests/suites. From the given test_suite.
 
@@ -29,9 +47,8 @@ class Runner(object):
         '''
         if results is None:
             results = TestSuiteResult(test_suite.name)
-
-        for name, fixture in test_suite.fixtures.items():
-            fixture.setup()
+        if fixtures is None:
+            fixtures = {}
 
         # We'll use a local shallow copy of fixtures to make it easier to
         # cleanup and override local fixtures.
@@ -65,7 +82,7 @@ class Runner(object):
 
         return results
 
-    def run_test(self, test, fixtures={}, result=None):
+    def run_test(self, test, fixtures=None, result=None):
         '''
         Run the given test.
 
@@ -75,6 +92,8 @@ class Runner(object):
         3. Teardown the fixtures for the test which are tied locally to the
            test?
         '''
+        if fixtures is None:
+            fixtures = {}
         if result is None:
             result = TestCaseResult(test.name)
         else:
@@ -82,13 +101,13 @@ class Runner(object):
             # testing.
             result.outcome = None
 
-        for name, fixture in test.fixtures.items():
-            fixture.setup()
-
         # We'll use a local shallow copy of fixtures to make it easier to
-        # cleanup and override local fixtures.
+        # cleanup and override suite level fixtures with testcase level ones.
         fixtures = fixtures.copy()
         fixtures.update(test.fixtures)
+
+        # Build any fixtures that haven't been built yet.
+        setup_unbuilt(fixtures.values(), setup_lazy_init=True)
 
         logger.log.info('TestCase: %s' % test.name)
         result.timer.start()
