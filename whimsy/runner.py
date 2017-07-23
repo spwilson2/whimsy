@@ -77,6 +77,10 @@ class Runner(object):
         '''
         if result is None:
             result = TestCaseResult(test.name)
+        else:
+            # If we are given a result. We'll be updating its outcome by
+            # testing.
+            result.outcome = None
 
         for name, fixture in test.fixtures.items():
             fixture.setup()
@@ -99,7 +103,8 @@ class Runner(object):
             result.outcome = traceback.format_exc()
             result.outcome = Result.FAIL
         else:
-            result.outcome = Result.PASS
+            if result.outcome is None:
+                result.outcome = Result.PASS
         result.timer.stop()
 
         if result.reason:
