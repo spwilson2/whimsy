@@ -59,12 +59,17 @@ second_fixture = [
 def simple_test(result, fixtures):
     print 'Simple Test!!'
 
+def fixture_test(result, fixtures):
+    assert 'first-target' in fixtures\
+            or 'second-target' in fixtures
+
+
 def simple_fail_test(result, fixtures):
     test.assertTrue(False, 'This test was bound to fail')
 
 print('running code in simple2-test.py')
 TESTS = [
-    test.TestFunction(simple_test, fixtures=second_fixture),
-    test.TestFunction(simple_test, fixtures=first_fixture),
+    test.TestFunction(fixture_test, fixtures=first_fixture),
+    test.TestFunction(fixture_test, fixtures=second_fixture),
     test.TestFunction(simple_fail_test),
 ]
