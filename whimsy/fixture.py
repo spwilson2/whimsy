@@ -26,14 +26,6 @@
 #
 import helper
 
-class CacheLevel:
-    # Should this just be moved into implicitly how fixtures are used? I.e.
-    # attached to either suites or standalone?
-    _inc = iter(int, 1)
-    Global = _inc.next()
-    Suite = _inc.next()
-    Case = _inc.next()
-
 class Fixture(object):
     '''Base Class for a test Fixture'''
     def __init__(self, name, cached=False, lazy_init=True):
