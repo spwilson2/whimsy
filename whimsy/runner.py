@@ -54,7 +54,7 @@ class Runner(object):
             results.results.append(result)
 
             if test_suite.failfast \
-                    and result.result in Result.failfast:
+                    and result.outcome in Result.failfast:
                 logger.log.inform('Previous test failed in a failfast suite,'
                                   ' skipping remaining tests.')
                 self._generate_skips(result.name, results, suite_iterator)
@@ -94,23 +94,23 @@ class Runner(object):
             result.reason = e.message
             if not result.reason:
                 result.reason = traceback.format_exc()
-            result.result = Result.FAIL
+            result.outcome = Result.FAIL
         except Exception as e:
-            result.reason = traceback.format_exc()
-            result.result = Result.FAIL
+            result.outcome = traceback.format_exc()
+            result.outcome = Result.FAIL
         else:
-            result.result = Result.PASS
+            result.outcome = Result.PASS
         result.timer.stop()
 
         if result.reason:
             logger.log.debug('%s'%result.reason)
         logger.log.inform('{color}{name} - {result}{reset}'.format(
                 name=result.name,
-                result=result.result,
-                color=ConsoleFormatter.result_colormap[result.result],
+                result=result.outcome,
+                color=ConsoleFormatter.result_colormap[result.outcome],
                 reset=terminal.termcap.Normal))
-        logger.log.info(terminal.insert_separator(' %s '%result.result,
-                color=ConsoleFormatter.result_colormap[result.result]))
+        logger.log.info(terminal.insert_separator(' %s '%result.outcome,
+                color=ConsoleFormatter.result_colormap[result.outcome]))
 
         for name in test.fixtures:
             fixtures[name].teardown()
@@ -129,7 +129,7 @@ class Runner(object):
                 result = TestCaseResult(item.name)
                 result.reason = ("Previous test '%s' failed in a failfast"
                         " TestSuite." % failed_test)
-                result.result = Result.SKIP
+                result.outcome = Result.SKIP
             else:
                 assert False, _unexpected_item_msg
             logger.log.info('Skipping: %s' % item.name)

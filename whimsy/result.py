@@ -50,7 +50,7 @@ class TestResult(object):
         return self.timer.runtime()
 
     @abc.abstractproperty
-    def result():
+    def outcome():
         '''Should return the result of the TestResult.'''
         pass
 
@@ -62,19 +62,19 @@ class TestCaseResult(TestResult):
     '''
     Holds information corresponding to a single test case result.
     '''
-    def __init__(self, name, result=None, reason=None, *args, **kwargs):
+    def __init__(self, name, outcome=None, reason=None, *args, **kwargs):
         super(TestCaseResult, self).__init__(*args, **kwargs)
-        self._result = result
+        self._outcome = outcome
         self._name = name
         self.reason = reason
 
     @property
-    def result(self):
-        return self._result
+    def outcome(self):
+        return self._outcome
 
-    @result.setter
-    def result(self, val):
-        self._result = val
+    @outcome.setter
+    def outcome(self, val):
+        self._outcome = val
 
     @property
     def name(self):
@@ -91,7 +91,7 @@ class TestSuiteResult(TestResult):
         self.results = []
 
     @property
-    def result(self):
+    def outcome(self):
         '''
         A test suite can have the following results, they occur with the
         following priority/ordering.
@@ -110,12 +110,11 @@ class TestSuiteResult(TestResult):
         all_skipped = True
 
         for result in self.results:
-            result = result.result
-            if result == ERROR:
+            if result.outcome == ERROR:
                 return ERROR
-            if result != SKIP:
+            if result.outcome  != SKIP:
                 all_skipped = False
-            if result == FAIL:
+            if result.outcome  == FAIL:
                 failed = True
 
         if failed:
@@ -205,8 +204,8 @@ class ConsoleFormatter(ResultFormatter):
 
     def format_test(self, test):
         string = '{color}{result}: {name}{reset}\n'.format(
-                color=self.result_colormap[test.result],
-                result=test.result,
+                color=self.result_colormap[test.outcome],
+                result=test.outcome,
                 name=test.name,
                 reset=self.reset)
         if self.verbosity > self.verbosity_levels.DEBUG:
@@ -268,7 +267,7 @@ class ConsoleFormatter(ResultFormatter):
         summary = {enum:[] for enum in Result.enums}
         if self.only_testcases:
             for test in self.result.iter_tests():
-                summary[test.result].append(test)
+                summary[test.outcome].append(test)
         return summary
 
     def format_separators(self, string):
@@ -429,12 +428,12 @@ class JUnitFormatter(ResultFormatter):
                 self.convert_testsuite(xsuite, result, _flatten)
 
             # Check the return value to fill in metadata for our xsuite
-            if result.result not in self.passing_results:
-                if test.state == SKIP:
+            if result.outcome not in self.passing_results:
+                if result.outcome == SKIP:
                     skipped += 1
-                elif test.state == ERROR:
+                elif result.outcome == ERROR:
                     errors += 1
-                elif test.state == FAIL:
+                elif result.outcome == FAIL:
                     failures += 1
                 else:
                     assert False, "Unknown test state"

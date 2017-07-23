@@ -60,7 +60,7 @@ def simple_test(result, fixtures):
     print 'Simple Test!!'
 
 def simple_fail_test(result, fixtures):
-    test.assertTrue(False)
+    test.assertTrue(False, 'This test was bound to fail')
 
 print('running code in simple2-test.py')
 TESTS = [
