@@ -6,7 +6,7 @@ import _util as util
 
 class TestSuite(object):
     '''An object containing a collection of tests or other test suites.'''
-    def __init__(self, name, items=None, failfast=True, parallelizable=False):
+    def __init__(self, name, items=None, fixtures=None, failfast=True, parallelizable=False):
         '''
         All test suites are implicitly added into the top_level TestSuite.
         This forms a DAG so test runners can traverse this running test suite
@@ -24,10 +24,15 @@ class TestSuite(object):
         '''
 
         self.name = name
-        self.fixtures = {}
         self.items = []
         self.failfast = failfast
         self.parallelizable = parallelizable
+
+        if isinstance(fixtures, list):
+            fixtures = {fixture.name: fixture for fixture in fixtures}
+        elif fixtures is None:
+            fixtures = {}
+        self.fixtures = fixtures
 
         if items is not None:
             self.add_items(*items)

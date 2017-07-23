@@ -31,11 +31,11 @@ class MakeFixture(fixture.Fixture):
 
 class MakeTarget(fixture.Fixture):
     # The singleton make fixture we'll use for all targets.
-    make_fixture = MakeFixture()
+    make_fixture = MakeFixture('Global Make Fixture')
 
     def __init__(self, target, *args, **kwargs):
-        super(MakeTarget, self).__init__(*args, **kwargs)
-        self.target = target
+        super(MakeTarget, self).__init__(name=target, *args, **kwargs)
+        self.target = self.name
 
         # Add our self to the required targets of the main MakeFixture
         #make_fixture.add_target(self)
@@ -47,17 +47,16 @@ class MakeTarget(fixture.Fixture):
         return self
 
 
-first_fixture = {
-    'first-target': MakeTarget('first-target'),
-}
+first_fixture = [
+    MakeTarget('first-target'),
+]
 
-second_fixture = {
-    'second-target': MakeTarget('second-target'),
-}
+second_fixture = [
+    MakeTarget('second-target'),
+]
 
 
 def simple_test(result, fixtures):
-    # TODO: Check that our fixtures were created.
     print 'Simple Test!!'
 
 def simple_fail_test(result, fixtures):

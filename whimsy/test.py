@@ -27,9 +27,13 @@ class TestCase(object):
     '''
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, fixtures={}):
+    def __init__(self, fixtures=None):
         '''
         '''
+        if isinstance(fixtures, list):
+            fixtures = {fixture.name: fixture for fixture in fixtures}
+        elif fixtures is None:
+            fixtures = {}
         self.fixtures = fixtures
 
     @abc.abstractmethod

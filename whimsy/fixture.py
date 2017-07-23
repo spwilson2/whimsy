@@ -36,22 +36,22 @@ class CacheLevel:
 
 class Fixture(object):
     '''Base Class for a test Fixture'''
-    def __init__(self, teardown=None, setup=None, cached=False, lazy_init=True):
+    def __init__(self, name, cached=False, lazy_init=True):
         '''
         :param lazy_init: If True, wait until test cases that use this fixture
         are ran to setup this fixture. Otherwise init the fixture before the
         first test case is ran.
+
+        :param cached: Cached means that the setup for this fixture will be
+        cached. That is, multiple calls to setup will return a cachedresult.
 
         :var requires: List of fixtures which require this Fixture.
         :var required_by: List of fixtures this Fixture requires.
         '''
         self.requires = []
         self.required_by = []
+        self.name = name
 
-        if teardown is not None:
-            self.teardown = teardown
-        if setup is not None:
-            self.setup = setup
         if cached:
             self.setup = helper.cacheresult(self.setup)
 
@@ -60,14 +60,9 @@ class Fixture(object):
         other_fixture.required_by.append(self)
 
     def setup(self):
-        '''
-        Automatically call setup of fixtures we require and return their
-        results.
-        '''
-        setup_fixtures = []
+        '''Call setup of fixtures we require.'''
         for fixture in self.requires:
-            setup_fixtures.append(fixture.setup())
-        return setup_fixtures
+            fixture.setup()
 
     def teardown(self):
         '''Empty method, meant to be overriden if fixture requires teardown.'''

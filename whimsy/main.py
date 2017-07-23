@@ -31,7 +31,7 @@ def main():
     logger.log.info(terminal.separator())
     logger.log.info('Running Tests')
     testrunner = runner.Runner()
-    results = testrunner.run_suite(testloader.top_level_suite)
+    results = testrunner.run_suite(testloader.suite)
     logger.log.info(terminal.separator())
 
     formatter = result.ConsoleFormatter(results)
