@@ -63,6 +63,13 @@ def fixture_test(result, fixtures):
     assert 'first-target' in fixtures\
             or 'second-target' in fixtures
 
+shared_obj = None
+def simple_multitest_start(result, fixtures):
+    global shared_obj
+    shared_obj = True
+
+def simple_multitest_complete(result, fixtures):
+    test.assertTrue(shared_obj)
 
 def simple_fail_test(result, fixtures):
     test.assertTrue(False, 'This test was bound to fail')
@@ -72,4 +79,6 @@ TESTS = [
     test.TestFunction(fixture_test, fixtures=first_fixture),
     test.TestFunction(fixture_test, fixtures=second_fixture),
     test.TestFunction(simple_fail_test),
+    test.TestFunction(simple_multitest_start),
+    test.TestFunction(simple_multitest_complete),
 ]
