@@ -1,6 +1,7 @@
 '''
 Note: This module is atypical. It replaces its own namespace with
-a ConfigModule object in order to export the config in a user friendly way.
+a ConfigModule object in order to export the config in a user friendly way (as
+a property).
 '''
 
 import abc
@@ -104,25 +105,13 @@ def parse_args():
     args.verbose = args.verbose.val
     return args
 
-
-class ConfigModule(types.ModuleType):
+class _Config(object):
     '''
-    This class is used to wrap a module object and attach its own properties to
-    the module.
-
-    We create this as a module so we can attach the config() property. (This
-    way it actually calls the parse_args automatically when the config as
-    accessed.)
+    Config object that automatically parses args when one attempts to get
+    a config attr.
     '''
-    def __init__(self, module):
-        assert 'config' not in dir(module), ("'config' should not be in the"
-                " namespace of the module, it will be replaced.")
-        for item in dir(module):
-            setattr(sys.modules[__name__], item, getattr(module, item))
+    def __getattr__(self, attr):
+        # Since parse_args is cached, we don't need to cache it's call here.
+        return getattr(parse_args(), attr)
 
-    @property
-    def config(self):
-        return parse_args()
-
-# Replace the module with just a config.
-sys.modules[__name__] = ConfigModule(sys.modules[__name__])
+config = _Config()
