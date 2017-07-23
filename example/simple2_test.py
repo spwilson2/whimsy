@@ -56,29 +56,33 @@ second_fixture = [
 ]
 
 
-def simple_test(result, fixtures):
+@test.testfunction
+def simple_test1(result, fixtures):
     print 'Simple Test!!'
 
-def fixture_test(result, fixtures):
+@test.testfunction(fixtures=first_fixture)
+@test.testfunction(fixtures=second_fixture)
+def fixture_test1(result, fixtures):
+    print('recieved %s' % fixtures)
     assert 'first-target' in fixtures\
             or 'second-target' in fixtures
 
 shared_obj = None
-def simple_multitest_start(result, fixtures):
+@test.testfunction
+def simple_multitest_start1(result, fixtures):
     global shared_obj
     shared_obj = True
 
-def simple_multitest_complete(result, fixtures):
+@test.testfunction
+def simple_multitest_complete1(result, fixtures):
     test.assertTrue(shared_obj)
 
-def simple_fail_test(result, fixtures):
+@test.testfunction
+def simple_fail_test1(result, fixtures):
     test.assertTrue(False, 'This test was bound to fail')
 
-print('running code in simple2-test.py')
-TESTS = [
-    test.TestFunction(fixture_test, fixtures=first_fixture),
-    test.TestFunction(fixture_test, fixtures=second_fixture),
-    test.TestFunction(simple_fail_test),
-    test.TestFunction(simple_multitest_start),
-    test.TestFunction(simple_multitest_complete),
-]
+@test.testfunction
+def simple_testfunction1(resut, fixtures):
+    pass
+
+print('running code in %s' % __name__)

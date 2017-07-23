@@ -14,6 +14,8 @@ def default_filepath_filter(filepath):
     filepath = os.path.basename(filepath)
     return True if default_filepath_regex.match(filepath) else False
 
+def path_as_module(filepath):
+    return os.path.splitext(os.path.basename(filepath))[0]
 
 teststring = 'TESTS'
 class TestLoader(object):
@@ -37,6 +39,8 @@ class TestLoader(object):
             # actually tried to load a file into our suite.
             self._loaded_a_file = False
 
+        self.discovered_tests = set()
+
     @property
     def suite(self):
         assert self._loaded_a_file
@@ -44,6 +48,10 @@ class TestLoader(object):
 
     def enumerate_fixtures(self):
         pass
+
+    def load_root(self, root):
+        for f in self.discover_files(root):
+            self.load_file(f)
 
     def discover_files(self, root):
         files = []
@@ -64,17 +72,15 @@ class TestLoader(object):
         '''
         # NOTE: There isn't a way to prevent reloading of test modules that are
         # imported by other test modules. It's up to users to never import
-        # a test module.
-        #
-        # The implication for this is that we can't use a simple class variable
-        # to keep track of instances of tests with __init__. If they were to
-        # import a place where tests were defined then we would accidentally
-        # enumerate those tests. So instead we require users to create
-        # a variable 'TESTS' in each test file.
+        # a test module from a test module, otherwise those tests will be
+        # enumerated twice.
         if __debug__:
             self._loaded_a_file = True
 
-        newdict = {'__builtins__':__builtins__}
+        newdict = {
+                '__builtins__':__builtins__,
+                '__name__':path_as_module(path),
+        }
         try:
             execfile(path, newdict, newdict)
         except Exception as e:
@@ -82,7 +88,8 @@ class TestLoader(object):
                     ' exception.' % path)
             logger.log.debug(traceback.format_exc())
 
-        new_tests = newdict.get(self.teststring, None)
+        new_tests = test.TestCase.instances() - self.discovered_tests
+        self.discovered_tests.update(new_tests)
         if new_tests is not None:
             logger.log.debug('Discovered %d tests in %s' % (len(new_tests), path))
             self._suite.add_items(*new_tests)

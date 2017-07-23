@@ -26,6 +26,7 @@ class TestCase(object):
     enumerated by the test system.
     '''
     __metaclass__ = abc.ABCMeta
+    __instances = set()
 
     def __init__(self, fixtures=None):
         '''
@@ -35,6 +36,7 @@ class TestCase(object):
         elif fixtures is None:
             fixtures = {}
         self.fixtures = fixtures
+        self.__instances.add(self)
 
     @abc.abstractmethod
     def test(self, result, fixtures):
@@ -43,6 +45,10 @@ class TestCase(object):
     @abc.abstractproperty
     def name(self):
         pass
+
+    @classmethod
+    def instances(cls):
+        return cls.__instances
 
 class TestFunction(TestCase):
     '''
@@ -62,13 +68,15 @@ class TestFunction(TestCase):
     def name(self):
         return self._name
 
-#TestFunction('')
-
-def testfunction():
-    '''Decorator used to mark a function as a test case.'''
-    #TODO
-    pass
-
+def testfunction(function=None, name=None, fixtures=None):
+    def testfunctiondecorator(function):
+        '''Decorator used to mark a function as a test case.'''
+        TestFunction(function, name=name, fixtures=fixtures)
+        return function
+    if function is not None:
+        return testfunctiondecorator(function)
+    else:
+        return testfunctiondecorator
 
 def tag():
     '''Decorator to add a tag to a test case.'''
