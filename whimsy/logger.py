@@ -1,16 +1,46 @@
 import logging
 import sys
+import functools
 
 import terminal as termcap
 
 # Logging level to be used to always display information to the user
-INFORM = 1000
-logging.addLevelName(INFORM, "INFORM")
-def inform(self, message, *args, **kwargs):
-    # For now we can just use print to do this.
-    self._log(INFORM, message, args, **kwargs)
-logging.Logger.inform = inform
-logging.INFORM = INFORM
+def add_logging_level(name, val):
+    name = name.lower()
+    logging.addLevelName(val, name.upper())
+
+    def log_at_level(self, message, *args, **kwargs):
+        if self.isEnabledFor(val):
+            self._log(val, message, args, **kwargs)
+    # Add the logging helper function as lowercase
+    setattr(
+        logging.Logger,
+        name.lower(),
+        log_at_level
+    )
+
+    # Add the value to the naming module as CAPITALIZED
+    setattr(logging, name.upper(), val)
+
+# The minimum level which will always be displayed no matter verbosity.
+always_display_level = logging.WARN
+
+# Logging level used to display bold information for users.
+add_logging_level('bold', 1000)
+# Logging level to always output (Use for UI stuff.)
+add_logging_level('display', 999)
+# Logging level used to log captured print statements
+# (any output to sys.stdout)
+add_logging_level('print', 998)
+
+assert logging.DISPLAY > always_display_level
+assert logging.BOLD > always_display_level
+
+# Logging level will be incredibly verbose, used to trace through testing.
+add_logging_level('trace', 0)
+
+def set_logging_verbosity(verbosity):
+    log.setLevel(max(always_display_level - verbosity * 10, logging.DEBUG))
 
 # https://www.electricmonk.nl/log/2011/08/14/redirect-stdout-and-stderr-to-a-logger-in-python/
 class StreamToLogger(object):
@@ -40,24 +70,17 @@ class ConsoleLogFormatter(object):
     color = termcap.get_termcap()
     reset = color.Normal
     level_colormap = {
-        logging.INFORM: color.White + color.Bold,
+        logging.BOLD: color.White + color.Bold,
         logging.FATAL: color.Red,
-        logging.WARN: color.Yellow,
-        logging.INFO: color.Normal,
-        logging.DEBUG: color.Cyan,
+        logging.WARN: color.Yellow
     }
 
     def __init__(self):
         pass
 
     def format(self, record):
-        #import pdb; pdb.set_trace()
-        color_str = self.level_colormap[record.levelno]
+        color_str = self.level_colormap.get(record.levelno, self.color.Normal)
         return color_str + record.msg + self.reset
-
-def set_logging_verbosity(verbosity):
-    log.setLevel(max(logging.CRITICAL - verbosity * 10, logging.DEBUG))
-
 
 # The root logger for whimsy
 log = logging.getLogger('Whimsy Console Logger')
@@ -65,11 +88,14 @@ log = logging.getLogger('Whimsy Console Logger')
 # Redirect log back to stdout so if we redirect the log we
 # still see it in the console.
 saved_stderr = sys.stderr
-stdout_logger = logging.StreamHandler(sys.stdout)
+saved_stdout = sys.stdout
+
+stdout_logger = logging.StreamHandler(saved_stdout)
+stdout_logger.formatter = ConsoleLogFormatter()
+log.addHandler(stdout_logger)
 
 # NOTE: This won't capture subprocesses output, the process of doing so would
 # invlove using os.dup2 and would mean that we would likely want to run
 # imported tests with a modified namespace (for pdb).
-stdout_logger.formatter = ConsoleLogFormatter()
-log.addHandler(stdout_logger)
 sys.stderr = StreamToLogger(log, logging.FATAL)
+sys.stdout = StreamToLogger(log, logging.PRINT)

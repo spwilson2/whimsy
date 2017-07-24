@@ -46,8 +46,6 @@ flags = [
 for flag in flags:
     setattr(Flag, flag, Flag(flag))
 
-print(dir(Flag))
-
 class ArgParser(object):
     __metaclass__ = abc.ABCMeta
 

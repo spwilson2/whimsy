@@ -25,11 +25,9 @@ class Popen(subprocess.Popen):
         if stdout is None:
             self.stdout_f = tempfile.TemporaryFile()
             stdout = self.stdout_f
-            print('Here')
         if stderr is None:
             self.stderr_f = tempfile.TemporaryFile()
             stderr = self.stderr_f
-            print('Here')
 
         super(Popen, self).__init__(args, bufsize=bufsize,
                                     executable=executable, stdin=stdin,

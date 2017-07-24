@@ -93,7 +93,6 @@ class TestLoader(object):
         will be contained in the same TestSuite.
         '''
         for directory in self.discover_files(root):
-            print(directory)
             if directory:
 
                 if __debug__:

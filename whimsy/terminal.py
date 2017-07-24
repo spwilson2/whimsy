@@ -106,18 +106,6 @@ def get_termcap(use_colors = None):
     else:
         return no_termcap
 
-def test_termcap(obj):
-    for c_name in color_names:
-        c_str = getattr(obj, c_name)
-        print c_str + c_name + obj.Normal
-        for attr_name in capability_names:
-            if attr_name == 'Normal':
-                continue
-            attr_str = getattr(obj, attr_name)
-            print attr_str + c_str + attr_name + " " + c_name + obj.Normal
-        print obj.Bold + obj.Underline + \
-              c_name + "Bold Underline " + c_str + obj.Normal
-
 def terminal_size():
     h, w, hp, wp = struct.unpack('HHHH',
         fcntl.ioctl(0, termios.TIOCGWINSZ,
@@ -152,6 +140,18 @@ def insert_separator(inside, char=default_separator, min_barrier=3, color=None):
 
 
 if __name__ == '__main__':
+    def test_termcap(obj):
+        for c_name in color_names:
+            c_str = getattr(obj, c_name)
+            print c_str + c_name + obj.Normal
+            for attr_name in capability_names:
+                if attr_name == 'Normal':
+                    continue
+                attr_str = getattr(obj, attr_name)
+                print attr_str + c_str + attr_name + " " + c_name + obj.Normal
+            print obj.Bold + obj.Underline + \
+                  c_name + "Bold Underline " + c_str + obj.Normal
+
     print "=== termcap enabled ==="
     test_termcap(termcap)
     print termcap.Normal

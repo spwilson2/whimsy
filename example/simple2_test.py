@@ -58,12 +58,12 @@ second_fixture = [
 
 @test.testfunction
 def simple_test1(result, fixtures):
-    print 'Simple Test!!'
+    logger.log.display('simple-test running!')
 
 @test.testfunction(fixtures=first_fixture)
 @test.testfunction(fixtures=second_fixture)
 def fixture_test1(result, fixtures):
-    print('recieved %s' % fixtures)
+    logger.log.trace('fixture_test1 recieved %s' % fixtures)
     assert 'first-target' in fixtures\
             or 'second-target' in fixtures
 

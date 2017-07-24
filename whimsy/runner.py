@@ -73,14 +73,14 @@ class Runner(object):
 
             if result.outcome in Result.failfast:
                 if test_suite.failfast:
-                    logger.log.inform('Test failed in a failfast suite,'
+                    logger.log.bold('Test failed in a failfast suite,'
                                       ' skipping remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
                 elif Flag.failfast.set:
-                    logger.log.inform(
+                    logger.log.bold(
                             'Test failed with the %s '
                             ' flag provided.')
-                    logger.log.inform('Skipping remaining tests.')
+                    logger.log.bold('Skipping remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
 
 
@@ -135,7 +135,7 @@ class Runner(object):
 
         if result.reason:
             logger.log.debug('%s'%result.reason)
-        logger.log.inform('{color}{name} - {result}{reset}'.format(
+        logger.log.bold('{color}{name} - {result}{reset}'.format(
                 name=result.name,
                 result=result.outcome,
                 color=ConsoleFormatter.result_colormap[result.outcome],
