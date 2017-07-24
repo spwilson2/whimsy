@@ -3,6 +3,7 @@ import collections
 import time
 import xml.etree.ElementTree as ET
 import string
+import functools
 
 import _util
 import terminal as termcap
@@ -89,6 +90,13 @@ class TestSuiteResult(TestResult):
         super(TestSuiteResult, self).__init__(*args, **kwargs)
         self._name = name
         self.results = []
+
+    iter_inorder = lambda self : _util.iter_recursively(self, inoder=True)
+    iter_inorder.__doc__ = \
+        '''
+        Iterate over all the testsuite results and testcase results contained
+        in this collection of results. Traverses the tree in in-order fashion.
+        '''
 
     @property
     def outcome(self):
@@ -217,9 +225,7 @@ class ConsoleFormatter(ResultFormatter):
     def format_tests(self, suite):
         string = bytearray('')
         for testcase in suite:
-            string += self.sep_fmtstr
             string += self.format_test(testcase)
-        string += self.sep_fmtstr
 
         return str(string)
 
@@ -277,10 +283,12 @@ class ConsoleFormatter(ResultFormatter):
 
     def __str__(self):
         string = ''
+        string += self.sep_fmtstr
         # If we only care about printing test cases logic looks simpler.
         if self.only_testcases:
-            string = self.format_tests(self.result.iter_tests())
+            string += self.format_tests(self.result.iter_tests())
 
+        string += self.sep_fmtstr
         string += self.format_summary(self.summarize_results())
         string += self.sep_fmtstr
 

@@ -2,10 +2,11 @@ import imp
 import os
 import re
 import traceback
+import types
 import warnings
 
 from test import TestCase
-import suite as suite_mod
+from suite import TestSuite
 import logger
 import helper
 
@@ -30,9 +31,8 @@ def path_as_testsuite(filepath, *args, **kwargs):
 
     The testsuite will be named after the containing directory of the file.
     '''
-    suite_mod.TestSuite(
-            os.path.split(os.path.dirname(os.path.abspath(filepath)))[-1],
-            *args, **kwargs)
+    TestSuite(os.path.split(os.path.dirname(os.path.abspath(filepath)))[-1],
+              *args, **kwargs)
 
 def _assert_files_in_same_dir(files):
     if files:
@@ -53,8 +53,8 @@ class TestLoader(object):
     def __init__(self, suite=None, filepath_filter=default_filepath_filter):
 
         if suite is None:
-            suite = suite_mod.TestSuite('Default Suite Collection',
-                                        failfast=False)
+            suite = TestSuite('Default Suite Collection',
+                              failfast=False)
         self._suite = suite
         self.filepath_filter = filepath_filter
 
@@ -64,6 +64,8 @@ class TestLoader(object):
             self._loaded_a_file = False
 
         self.discovered_tests = helper.OrderedSet()
+        self._wrapped_classes = {}
+        self._wrapped_instances = helper.OrderedSet()
 
     @property
     def suite(self):
@@ -124,6 +126,9 @@ class TestLoader(object):
                 '__name__': path_as_modulename(path),
         }
 
+        self._wrap_init(TestSuite)
+        self._wrap_init(TestCase)
+
         try:
             execfile(path, newdict, newdict)
         except Exception as e:
@@ -131,10 +136,74 @@ class TestLoader(object):
                     ' exception.' % path)
             logger.log.debug(traceback.format_exc())
 
-        new_tests = TestCase.instances() - self.discovered_tests
-        self.discovered_tests.update(new_tests)
-        if new_tests is not None:
-            logger.log.debug('Discovered %d tests in %s' % (len(new_tests), path))
-            testsuite.add_items(*new_tests)
+        self._unwrap_init(TestSuite)
+
+        # Separate the instances so we can manipulate them more easily.
+        # We also keep them together so we know ordering.
+        test_items = self._wrapped_instances
+        testcases = []
+        testsuites = []
+        for item in test_items:
+            if isinstance(item, TestCase):
+                testcases.append(item)
+            elif isinstance(item, TestSuite):
+                testsuites.append(item)
+
+        if testcases:
+            logger.log.debug('Discovered %d tests and %d testsuites in %s'
+                             '' % (len(testcases), len(testsuites), path))
+            if testsuites:
+                # Remove all tests contained in testsuites from being attached
+                # directly to this module's test suite.
+                testcases = helper.OrderedSet(testcases)
+                for testsuite in testsuites:
+                    test_items -= helper.OrderedSet(testsuite.iter_leaves())
+            self._suite.add_items(*testcases)
+        elif testsuites:
+            logger.log.warn('No tests discovered in %s, but found %d '
+                            ' TestSuites' % (path, len(testsuites)))
         else:
             logger.log.warn('No tests discovered in %s' % path)
+
+    def _wrap_init(self, cls):
+        '''
+        Wrap the given cls' __init__ method with a wrapper that will keep an
+        OrderedSet of the instances.
+
+        Note: If any other class monkey patches the __init__ method as well,
+        this will lead to issues. Keep __debug__ mode enabled to ensure this
+        never happens.
+        '''
+        assert cls not in self._wrapped_classes
+        instances = self._wrapped_instances
+        old_init = cls.__init__
+
+        def instance_collect_wrapper(self, *args, **kwargs):
+            instances.add(self)
+            old_init(self, *args, **kwargs)
+
+        our_wrapper = types.MethodType(instance_collect_wrapper, None, cls)
+        if __debug__:
+            self._wrapped_classes[cls] = (old_init, our_wrapper)
+        else:
+            self._wrapped_classes[cls] = old_init
+
+        cls.__init__ = our_wrapper
+
+    def _unwrap_init(self, cls):
+        '''
+        Unwrap the given cls' __init__ method.
+
+        Note: If any other class monkey patches the __init__ method as well,
+        this will lead to issues. Keep __debug__ mode enabled to ensure this
+        never happens.
+        '''
+        if __debug__:
+            (old_init, our_init) = self._wrapped_classes[cls]
+            assert cls.__init__ == our_init, \
+                    "%s's __init__ has changed, we can not restore it." % cls
+        else:
+            old_init = self._wrapped_classes[cls]
+
+        cls.__init__ = old_init
+        del self._wrapped_classes[cls]

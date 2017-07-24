@@ -9,6 +9,7 @@ import suite as suite
 from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
 import terminal as terminal
 from config import Flag
+import helper
 
 _unexpected_item_msg = \
         'Only TestSuites and TestCases should be contained in a TestSuite'
@@ -114,6 +115,7 @@ class Runner(object):
         fixtures.update(test.fixtures)
 
         # Build any fixtures that haven't been built yet.
+        logger.log.debug('Building fixtures for TestCase: %s' % test.name)
         setup_unbuilt(fixtures.values(), setup_lazy_init=True)
 
         logger.log.info('TestCase: %s' % test.name)

@@ -28,17 +28,17 @@ class TestCase(object):
     enumerated by the test system.
     '''
     __metaclass__ = abc.ABCMeta
-    __instances = helper.OrderedSet()
 
     def __init__(self, fixtures=None):
         '''
+        All subclasses must call this __init__ method for them to be
+        enumerated by the test loader.
         '''
         if isinstance(fixtures, list):
             fixtures = {fixture.name: fixture for fixture in fixtures}
         elif fixtures is None:
             fixtures = {}
         self.fixtures = fixtures
-        self.__instances.add(self)
 
     @abc.abstractmethod
     def test(self, result, fixtures):
@@ -47,10 +47,6 @@ class TestCase(object):
     @abc.abstractproperty
     def name(self):
         pass
-
-    @classmethod
-    def instances(cls):
-        return cls.__instances
 
 class TestFunction(TestCase):
     '''

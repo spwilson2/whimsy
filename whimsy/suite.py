@@ -2,7 +2,7 @@
 # Suites should provide fixtures for their contained test cases..
 # How?
 
-import _util as util
+import _util
 
 class TestSuite(object):
     '''An object containing a collection of tests or other test suites.'''
@@ -72,17 +72,18 @@ class TestSuite(object):
     def __iter__(self):
         return iter(self.items)
 
-    def copy(self):
-        '''
-        We don't create deep copies of tests, we just create copies of the
-        containers of references.
-        '''
-        newcopy = TestSuite(self.name,
-                            self.items[:],
-                            self.failfast,
-                            self.parallelizable)
-        newcopy.fixtures = self.fixtures.copy()
-        return newcopy
+    iter_inorder = lambda self: _util.iter_recursively(self, inorder=True)
+    iter_inorder.__doc__ = \
+            '''
+            Iterate over all the testsuites and testcases contained in this
+            testsuite. Traverses the tree in in-order fashion.
+            '''
+    iter_leaves = lambda self: _util.iter_recursively(self, inorder=False)
+    iter_leaves.__doc__ = \
+            '''
+            Recursively iterate over all the testcases contained in this
+            testsuite and testsuites we contain.
+            '''
 
     def enumerate_fixtures(self):
         '''

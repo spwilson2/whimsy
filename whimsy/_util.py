@@ -1,3 +1,4 @@
+import collections
 import time
 
 def kwonlyargs(given_kwargs, **available_kwargs):
@@ -71,3 +72,23 @@ def singleton(cls):
             instances[cls] = cls()
         return instances[cls]
     return getinstance
+
+def iter_recursively(self, inorder=True):
+    '''
+    Recursively iterate over all items contained in this collection.
+
+    :param inorder: Traverses the tree in in-order fashion, returning nodes as
+    well as leaves.
+    '''
+    for item in self:
+        if isinstance(item , collections.Iterable):
+            if inorder:
+                # yield the node first
+                yield item
+
+            # Then yield that node's leaves.
+            for item in item:
+                yield item
+        else:
+            # Otherwise just yield the leaf
+            yield item

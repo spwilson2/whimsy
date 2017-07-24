@@ -24,6 +24,7 @@ def main():
     logger.log.info('Loading Tests')
     testloader.load_root(config.directory)
     logger.log.info(terminal.separator())
+    print(testloader.suite.items)
 
     testrunner = runner.Runner(testloader.suite)
 

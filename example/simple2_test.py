@@ -8,6 +8,7 @@ import whimsy.runner as runner
 import whimsy.loader as loader
 import whimsy.logger as logger
 import whimsy.helper as helper
+import whimsy.suite as suite
 
 class MakeFixture(fixture.Fixture):
     '''
@@ -85,8 +86,10 @@ def simple_multitest_complete1(result, fixtures):
 def simple_fail_test1(result, fixtures):
     test.assertTrue(False, 'This test was bound to fail')
 
-@test.testfunction
 def simple_testfunction1(resut, fixtures):
     pass
+
+testsuite = suite.TestSuite('Simple testsuite')
+testsuite.add_items(test.testfunction(simple_testfunction1))
 
 print('running code in %s' % __name__)
