@@ -46,7 +46,10 @@ class Flag(_util.Enum):
 flags = [
         'directory',
         'failfast',
-        'tags'
+        'tags',
+        'builddir',
+        'sourcedir',
+        'threads'
         ]
 
 for flag in flags:
@@ -79,6 +82,16 @@ class RunParser(ArgParser):
                 Flag.directory.asarg(),
                 help='Directory to start searching for tests in')
         self.add_argument(
+                Flag.builddir.asflag(),
+                action='store',
+                default='build',
+                help='Build directory for SCons')
+        self.add_argument(
+                Flag.sourcedir.asflag(),
+                action='store',
+                default=helper.absdirpath(__file__),
+                help='Directory to change to in order to exec scons.')
+        self.add_argument(
                 Flag.failfast.asflag(),
                 action='store_true',
                 help='Stop running on the first instance of failure')
@@ -87,6 +100,20 @@ class RunParser(ArgParser):
                 action='append',
                 default=[],
                 help='Only run items marked with one of the given tags.')
+        self.add_argument(
+                Flag.threads.asflag(),
+                action='store',
+                default=1,
+                help='Number of threads to run SCons with.'
+                )
+        self.add_argument(
+                '-j',
+                dest=str(Flag.threads),
+                action='store',
+                default=1,
+                help='Number of threads to run SCons with.'
+                )
+
 
 class ListParser(ArgParser):
     def __init__(self, subparser):

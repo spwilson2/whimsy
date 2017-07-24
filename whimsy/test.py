@@ -34,10 +34,10 @@ class TestCase(object):
         All subclasses must call this __init__ method for them to be
         enumerated by the test loader.
         '''
-        if isinstance(fixtures, list):
-            fixtures = {fixture.name: fixture for fixture in fixtures}
-        elif fixtures is None:
+        if fixtures is None:
             fixtures = {}
+        elif not isinstance(fixtures, dict):
+            fixtures = {fixture.name: fixture for fixture in fixtures}
         self.fixtures = fixtures
         if tags is None:
             tags = set()

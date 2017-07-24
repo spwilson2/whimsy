@@ -225,6 +225,7 @@ class TestLoader(object):
         Loads the given path for tests collecting suites and tests and placing
         them into the top_level_suite.
         '''
+        path = os.path.abspath(path)
         # NOTE: There isn't a way to prevent reloading of test modules that are
         # imported by other test modules. It's up to users to never import
         # a test module from a test module, otherwise those tests will be
@@ -241,6 +242,7 @@ class TestLoader(object):
         newdict = {
                 '__builtins__':__builtins__,
                 '__name__': path_as_modulename(path),
+                '__file__': path,
         }
 
         self._wrap_init(TestSuite, self._collected_test_items)

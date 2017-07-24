@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import threading
 import collections
+import os
 
 import logger
 
@@ -55,7 +56,7 @@ class Popen(subprocess.Popen):
         if self.stderr_f is not None:
             self.stderr_f.close()
 
-def log_call(*popenargs, **kwargs):
+def log_call(command, *popenargs, **kwargs):
     '''
     Calls the given process and automatically logs the command and output.
 
@@ -66,7 +67,7 @@ def log_call(*popenargs, **kwargs):
         if key in kwargs:
             raise ValueError('%s argument not allowed, it will be'
                              ' overridden.' % key)
-    p = Popen(stdout=subprocess.PIPE, stderr=subprocess.PIPE, *popenargs, **kwargs)
+    p = Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, *popenargs, **kwargs)
     def log_output(log_level, pipe):
         # Read iteractively, don't allow input to fill the pipe.
         for line in iter(pipe.readline, ''):
@@ -224,6 +225,12 @@ class OrderedSet(collections.MutableSet):
         if isinstance(other, OrderedSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
+
+def absdirpath(path):
+    '''
+    Return the directory component of the absolute path of the given path.
+    '''
+    return os.path.dirname(os.path.abspath(path))
 
 if __name__ == '__main__':
     p = Popen(['echo', 'hello'])
