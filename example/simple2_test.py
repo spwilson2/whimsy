@@ -82,7 +82,7 @@ def simple_multitest_start1(result, fixtures):
 def simple_multitest_complete1(result, fixtures):
     test.assertTrue(shared_obj)
 
-@test.testfunction
+@test.testfunction(tag='My Tag!')
 def simple_fail_test1(result, fixtures):
     test.assertTrue(False, 'This test was bound to fail')
 

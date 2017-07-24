@@ -7,6 +7,7 @@ import warnings
 
 from test import TestCase
 from suite import TestSuite
+from fixture import Fixture
 import logger
 import helper
 
@@ -41,7 +42,6 @@ def _assert_files_in_same_dir(files):
             assert os.path.dirname(f) == directory
 
 
-teststring = 'TESTS'
 class TestLoader(object):
     '''
     Base class for discovering tests.
@@ -49,13 +49,10 @@ class TestLoader(object):
     If tests are not tagged, automatically places them into their own test
     suite.
     '''
-    teststring = teststring
-    def __init__(self, suite=None, filepath_filter=default_filepath_filter):
+    def __init__(self, filepath_filter=default_filepath_filter):
 
-        if suite is None:
-            suite = TestSuite('Default Suite Collection',
-                              failfast=False)
-        self._suite = suite
+        self._suite = TestSuite('Default Suite Collection',
+                                failfast=False)
         self.filepath_filter = filepath_filter
 
         if __debug__:
@@ -63,9 +60,28 @@ class TestLoader(object):
             # actually tried to load a file into our suite.
             self._loaded_a_file = False
 
-        self.discovered_tests = helper.OrderedSet()
         self._wrapped_classes = {}
-        self._wrapped_instances = helper.OrderedSet()
+        self._collected_test_items = helper.OrderedSet()
+        self._collected_fixtures = helper.OrderedSet()
+
+        self._fixtures = []
+        self._suites = []
+        self._tests = []
+
+    @property
+    def suites(self):
+        assert self._loaded_a_file
+        return self._suites
+
+    @property
+    def tests(self):
+        assert self._loaded_a_file
+        return self._tests
+
+    @property
+    def fixtures(self):
+        assert self._loaded_a_file
+        return self._fixtures
 
     @property
     def suite(self):
@@ -94,6 +110,9 @@ class TestLoader(object):
         Start from the given root loading files. Files in the same directory
         will be contained in the same TestSuite.
         '''
+        if __debug__:
+            self._loaded_a_file = True
+
         for directory in self.discover_files(root):
             if directory:
 
@@ -126,8 +145,16 @@ class TestLoader(object):
                 '__name__': path_as_modulename(path),
         }
 
-        self._wrap_init(TestSuite)
-        self._wrap_init(TestCase)
+        self._wrap_init(TestSuite, self._collected_test_items)
+        self._wrap_init(TestCase, self._collected_test_items)
+        self._wrap_init(Fixture, self._collected_fixtures)
+
+        def cleanup():
+            self._unwrap_init(TestSuite)
+            self._unwrap_init(TestCase)
+            self._unwrap_init(Fixture)
+            self._collected_fixtures = helper.OrderedSet()
+            self._collected_test_items = helper.OrderedSet()
 
         try:
             execfile(path, newdict, newdict)
@@ -135,12 +162,12 @@ class TestLoader(object):
             logger.log.warn('Tried to load tests from %s but failed with an'
                     ' exception.' % path)
             logger.log.debug(traceback.format_exc())
-
-        self._unwrap_init(TestSuite)
+            cleanup()
+            return
 
         # Separate the instances so we can manipulate them more easily.
         # We also keep them together so we know ordering.
-        test_items = self._wrapped_instances
+        test_items = self._collected_test_items
         testcases = []
         testsuites = []
         for item in test_items:
@@ -148,6 +175,10 @@ class TestLoader(object):
                 testcases.append(item)
             elif isinstance(item, TestSuite):
                 testsuites.append(item)
+
+        self._suites.extend(testsuites)
+        self._tests.extend(testcases)
+        self._fixtures.extend(self._collected_fixtures)
 
         if testcases:
             logger.log.debug('Discovered %d tests and %d testsuites in %s'
@@ -165,7 +196,10 @@ class TestLoader(object):
         else:
             logger.log.warn('No tests discovered in %s' % path)
 
-    def _wrap_init(self, cls):
+        cleanup()
+
+
+    def _wrap_init(self, cls, collector):
         '''
         Wrap the given cls' __init__ method with a wrapper that will keep an
         OrderedSet of the instances.
@@ -175,11 +209,10 @@ class TestLoader(object):
         never happens.
         '''
         assert cls not in self._wrapped_classes
-        instances = self._wrapped_instances
         old_init = cls.__init__
 
         def instance_collect_wrapper(self, *args, **kwargs):
-            instances.add(self)
+            collector.add(self)
             old_init(self, *args, **kwargs)
 
         our_wrapper = types.MethodType(instance_collect_wrapper, None, cls)

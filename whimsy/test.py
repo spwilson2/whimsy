@@ -29,7 +29,7 @@ class TestCase(object):
     '''
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, fixtures=None):
+    def __init__(self, tags=None, fixtures=None):
         '''
         All subclasses must call this __init__ method for them to be
         enumerated by the test loader.
@@ -39,6 +39,9 @@ class TestCase(object):
         elif fixtures is None:
             fixtures = {}
         self.fixtures = fixtures
+        if tags is None:
+            tags = set()
+        self.tags = set(tags)
 
     @abc.abstractmethod
     def test(self, result, fixtures):
@@ -66,10 +69,17 @@ class TestFunction(TestCase):
     def name(self):
         return self._name
 
-def testfunction(function=None, name=None, fixtures=None):
+def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
+    # If tag was given, then the test will be marked with that single tag.
+    # elif tags was given, then the test will be marked with all those tags.
+    if tag is not None:
+        tags = set((tag,))
+    elif tags is not None:
+        tags = set(tags)
+
     def testfunctiondecorator(function):
         '''Decorator used to mark a function as a test case.'''
-        TestFunction(function, name=name, fixtures=fixtures)
+        TestFunction(function, name=name, tags=tags, fixtures=fixtures)
         return function
     if function is not None:
         return testfunctiondecorator(function)

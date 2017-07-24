@@ -1,9 +1,8 @@
-'''
-Note: This module is atypical. It replaces its own namespace with
-a ConfigModule object in order to export the config in a user friendly way (as
-a property).
-'''
+# TODO: Add support for using some kind of config file for testing.
 
+# TODO: Refactor this module.
+# Config should *probably* be separate from just arguments incase we add
+# support for using files to configure testing.
 import abc
 import argparse
 import numbers
@@ -18,9 +17,15 @@ class _Config(object):
     Config object that automatically parses args when one attempts to get
     a config attr.
     '''
+    _config = None
     def __getattr__(self, attr):
-        # Since parse_args is cached, we don't need to cache it's call here.
-        return getattr(parse_args(), attr)
+        if attr == '_config':
+            return _Config._config
+        else:
+            if _Config._config is None:
+                # Since parse_args is cached, we don't need to cache it's call here.
+                _Config._config = parse_args()
+            return getattr(_Config._config, attr)
 
 config = _Config()
 
@@ -40,7 +45,8 @@ class Flag(_util.Enum):
 
 flags = [
         'directory',
-        'failfast'
+        'failfast',
+        'tags'
         ]
 
 for flag in flags:
@@ -66,6 +72,7 @@ class RunParser(ArgParser):
             'run',
             help=''''''
         )
+        parser.set_defaults(run=True)
 
         super(RunParser, self).__init__(parser)
 
@@ -83,7 +90,17 @@ class ListParser(ArgParser):
             'list',
             help=''''''
         )
+        parser.set_defaults(list=True)
+
         super(ListParser, self).__init__(parser)
+
+        self.add_argument(
+                Flag.tags.asflag(),
+                action='append',
+                help='Only list items marked with one of the given tags.')
+        self.add_argument(
+                Flag.directory.asarg(),
+                help='Directory to start searching for tests in')
 
 class Argument:
     def __init__(self, *args, **kwargs):
@@ -114,6 +131,7 @@ verbose_arg = Argument('--verbose', '-v',
                        default=_SickyInt(),
                        help='Increase verbosity')
 
+baseparser.set_defaults(run=False, list=False)
 parsers = [RunParser(subparser), ListParser(subparser), baseparser]
 
 @helper.cacheresult
