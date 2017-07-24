@@ -45,6 +45,12 @@ class TestSuite(object):
         '''Add the given items (TestCases or TestSuites) to this collection'''
         self.items.extend(items)
 
+        if __debug__:
+            # Check that we have not accidentally created a cycle of
+            # testsuites. They should form a DAG in order for deepcopy and
+            # other program logic to work.
+            self._detect_cycle()
+
     def require_fixture():
         '''
         Require the given fixture to run this test suite and all its
@@ -57,7 +63,8 @@ class TestSuite(object):
         Traverse the DAG looking for cycles.
 
         Note: Since we don\'t currently allow duplicates in test suites, this
-        logic is simple and we can just check that there are no duplicates.
+        logic is simple and we can just check that there are no duplicates as
+        we recurse down the tree.
         '''
         collected_set = set()
         def recursive_check(test_suite):

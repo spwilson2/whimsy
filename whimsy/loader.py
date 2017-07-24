@@ -4,12 +4,14 @@ import re
 import traceback
 import types
 import warnings
+import copy
 
 from test import TestCase
 from suite import TestSuite
 from fixture import Fixture
 import logger
 import helper
+import _util
 
 # Ignores filenames that begin with '.'
 # Will match filenames that either begin or end with 'test' or tests and use
@@ -49,7 +51,7 @@ class TestLoader(object):
     If tests are not tagged, automatically places them into their own test
     suite.
     '''
-    def __init__(self, filepath_filter=default_filepath_filter):
+    def __init__(self, filepath_filter=default_filepath_filter, tags=None):
 
         self._suite = TestSuite('Default Suite Collection',
                                 failfast=False)
@@ -60,6 +62,13 @@ class TestLoader(object):
             # actually tried to load a file into our suite.
             self._loaded_a_file = False
 
+        if tags is None:
+            tags = set()
+        if isinstance(tags, str):
+            tags = (tags,)
+        self.tags = tags
+        print(self.tags)
+
         self._wrapped_classes = {}
         self._collected_test_items = helper.OrderedSet()
         self._collected_fixtures = helper.OrderedSet()
@@ -68,25 +77,111 @@ class TestLoader(object):
         self._suites = []
         self._tests = []
 
+        self._cached_suitecall = None
+
+    @property
+    def tags(self):
+        return tuple(self._tags)
+
+    @tags.setter
+    def tags(self, val):
+        # Remove our cached called if tags is changed.
+        self._cached_suitecall = None
+        self._tags = set(val)
+
     @property
     def suites(self):
         assert self._loaded_a_file
-        return self._suites
+        return tuple(*self._suites)
 
     @property
     def tests(self):
         assert self._loaded_a_file
-        return self._tests
+        return tuple(*self._tests)
 
     @property
     def fixtures(self):
         assert self._loaded_a_file
-        return self._fixtures
+        return tuple(*self._fixtures)
 
     @property
     def suite(self):
+        '''
+        Return a suite containing all tests/suites that are marked with all of our
+        tags.
+
+        NOTE: This is an expensive operation since we need to recurse the
+        tree of suites to build tag indexes.
+        '''
         assert self._loaded_a_file
-        return self._suite
+        if not self.tags:
+            return self._suite
+
+        if self._cached_suitecall is not None:
+            return self._cached_suitecall
+
+        newsuite = copy.deepcopy(self._suite)
+        if self._collect_with_tags(newsuite, set()):
+            self._cached_suitecall = newsuite
+        else:
+            self._cached_suitecall = \
+                TestSuite('Default Suite Collection',
+                          failfast=False)
+        return self._cached_suitecall
+
+    def _collect_with_tags(self, suite, recursive_tags):
+        '''
+        Collect testsuites and testcases which have the given tags. Leaves the
+        testsuite heirarchy intact if a parent suite does not have the given
+        tags but at some level of he heirarchy a test or suite has the given
+        tags.
+
+        :param suite: The current level suite to search for tests/suites with
+        self._tags
+
+        :param recursive_tags: A recursively expanded variable which holds the
+        tags of the current test suite plus those of all suites that hold us.
+
+        NOTE: Right now suites are set up to be collected only if the test has
+        ALL the tags in self._tags, that is if the test suite set of tags is
+        a superset of the the tags in self._tags.
+        '''
+        # TODO: Discuss if should be issuperset or subset, or more than likely
+        # should be a config option.
+        kept_items = []
+        for testitem in suite:
+            if isinstance(testitem, TestCase):
+                print('testitem is testscase')
+                print(recursive_tags or testitem.tags)
+                if (recursive_tags or testitem.tags).issuperset(self._tags):
+                    kept_items.append(testitem)
+            elif isinstance(testitem, TestSuite):
+                suitetags = testitem.tags + recursive_tags
+                if suitetags.issuperset(self._tags):
+                    kept_items.append(testitem)
+                else:
+                    if self._collect_with_tags(testitem,
+                                               testitem.tags or tags):
+                        kept_items.append(testitem)
+        if kept_items:
+            suite.items = kept_items
+        return bool(kept_items)
+
+
+    def _build_tags(self, suite, itemtags, tags):
+        '''
+        Build an dictionary index of all TestSuite and TestCases stored in the
+        given suite mapped to their tags.
+
+        NOTE: Currently unused, likely will be used by some querying tools.
+        '''
+        for testitem in suite:
+            if isinstance(testitem, TestCase):
+                itemtags[testitem] = tags + test.tags
+            elif isinstance(testitem, TestSuite):
+                self._build_tags(testitem, itemtags, testitem.tags + tags)
+            else:
+                assert False, _util.unexpected_item_msg
 
     def enumerate_fixtures(self):
         pass
@@ -136,6 +231,9 @@ class TestLoader(object):
         # enumerated twice.
         if __debug__:
             self._loaded_a_file = True
+
+        # Remove our cache of tagged test items since they may be modified.
+        self._cached_suitecall = None
 
         if testsuite is None:
             testsuite = self._suite

@@ -92,3 +92,6 @@ def iter_recursively(self, inorder=True):
         else:
             # Otherwise just yield the leaf
             yield item
+
+unexpected_item_msg = \
+        'Only TestSuites and TestCases should be contained in a TestSuite'

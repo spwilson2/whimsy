@@ -28,10 +28,7 @@ def dorun():
         loader = load_tests()
         testrunner = runner.Runner(loader.suite)
 
-        logger.log.info(terminal.separator())
-        logger.log.info('Running Tests')
         results = testrunner.run()
-        logger.log.info(terminal.separator())
 
         formatter = result.ConsoleFormatter(results)
         print(formatter)

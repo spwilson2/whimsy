@@ -83,6 +83,11 @@ class RunParser(ArgParser):
                 Flag.failfast.asflag(),
                 action='store_true',
                 help='Stop running on the first instance of failure')
+        self.add_argument(
+                Flag.tags.asflag(),
+                action='append',
+                default=[],
+                help='Only run items marked with one of the given tags.')
 
 class ListParser(ArgParser):
     def __init__(self, subparser):

@@ -58,6 +58,7 @@ second_fixture = [
 
 
 @test.testfunction
+@test.testfunction(tag='Pass')
 def simple_test1(result, fixtures):
     logger.log.display('simple-test running!')
 
@@ -82,7 +83,7 @@ def simple_multitest_start1(result, fixtures):
 def simple_multitest_complete1(result, fixtures):
     test.assertTrue(shared_obj)
 
-@test.testfunction(tag='My Tag!')
+@test.testfunction(tag='Fail')
 def simple_fail_test1(result, fixtures):
     test.assertTrue(False, 'This test was bound to fail')
 

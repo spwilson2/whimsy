@@ -10,9 +10,8 @@ from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
 import terminal as terminal
 from config import Flag
 import helper
+import _util
 
-_unexpected_item_msg = \
-        'Only TestSuites and TestCases should be contained in a TestSuite'
 
 def setup_unbuilt(fixtures, setup_lazy_init=False):
     for fixture in fixtures:
@@ -31,11 +30,16 @@ class Runner(object):
         self.test_suite = test_suite
 
     def run(self):
-        # Build all the non lazy_init fixtures.
+        logger.log.info(terminal.separator())
+        logger.log.info("Building all non 'lazy_init' fixtures")
         setup_unbuilt(self.test_suite.enumerate_fixtures(),
                       setup_lazy_init=False)
 
-        return self.run_suite(self.test_suite)
+        logger.log.info('Running Tests')
+        results = self.run_suite(self.test_suite)
+        logger.log.info(terminal.separator())
+
+        return results
 
     def run_suite(self, test_suite, results=None, fixtures=None):
         '''
@@ -67,7 +71,7 @@ class Runner(object):
             elif isinstance(item, test.TestCase):
                 result = self.run_test(item, fixtures=fixtures)
             else:
-                assert False, _unexpected_item_msg
+                assert False, _util.unexpected_item_msg
 
             # Add the result of the test or suite to our test_suite results.
             results.results.append(result)
@@ -164,6 +168,6 @@ class Runner(object):
                         " TestSuite." % failed_test)
                 result.outcome = Result.SKIP
             else:
-                assert False, _unexpected_item_msg
+                assert False, _util.unexpected_item_msg
             logger.log.info('Skipping: %s' % item.name)
             results.results.append(result)
