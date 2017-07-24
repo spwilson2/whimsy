@@ -5,13 +5,13 @@ loaders.
 
 Discovers and runs all tests from a given root directory.
 '''
-import whimsy.logger as logger
-import whimsy.loader as loader
-import whimsy.runner as runner
-import whimsy.result as result
-import whimsy.terminal as terminal
-import whimsy.query as query
-from whimsy.config import config
+import logger
+import loader
+import runner
+import result
+import terminal
+import query
+from config import config
 
 def load_tests():
     '''
@@ -46,7 +46,8 @@ def main():
     # Then do parsing of the arguments to init config.
     logger.set_logging_verbosity(config.verbose)
 
-    if config.run:
-        dorun()
-    if config.list:
-        dolist()
+    # 'do' the given command.
+    globals()['do'+config.command]()
+
+if __name__ == '__main__':
+    main()

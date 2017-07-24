@@ -72,7 +72,6 @@ class RunParser(ArgParser):
             'run',
             help=''''''
         )
-        parser.set_defaults(run=True)
 
         super(RunParser, self).__init__(parser)
 
@@ -95,7 +94,6 @@ class ListParser(ArgParser):
             'list',
             help=''''''
         )
-        parser.set_defaults(list=True)
 
         super(ListParser, self).__init__(parser)
 
@@ -117,7 +115,7 @@ class Argument:
 
 # Setup parser and subcommands
 baseparser = argparse.ArgumentParser()
-subparser = baseparser.add_subparsers()
+subparser = baseparser.add_subparsers(dest='command')
 
 class _SickyInt:
     '''
@@ -136,7 +134,6 @@ verbose_arg = Argument('--verbose', '-v',
                        default=_SickyInt(),
                        help='Increase verbosity')
 
-baseparser.set_defaults(run=False, list=False)
 parsers = [RunParser(subparser), ListParser(subparser), baseparser]
 
 @helper.cacheresult
