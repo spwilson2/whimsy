@@ -97,13 +97,13 @@ unexpected_item_msg = \
         'Only TestSuites and TestCases should be contained in a TestSuite'
 
 class AttrDict(object):
-    def __init__(self, dict_=None):
-        dict_ = {} if dict_ is None else dict_
-        self._dict = dict_
+    def __init__(self, dict_={}):
+            self.__dict__.update(dict_)
     def __getattr__(self, attr):
-        dict_ = self._dict
+        dict_ = self.__dict__
         if attr in dict_:
             return dict_[attr]
-        print(dict_)
+        #print(dict_)
         raise AttributeError('Could not find %s attribute' % attr)
-
+    def __setattr__(self, attr, val):
+        self.__dict__[attr] = val
