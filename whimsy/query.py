@@ -22,3 +22,8 @@ def list_tags(loader):
     for tag in tags:
         print tag
 
+def list_tests_with_tags(loader, tags):
+    for tag in tags:
+        print 'Tests marked with %s tag' % tag
+        for test in loader.tag_index(tag):
+            print test.name

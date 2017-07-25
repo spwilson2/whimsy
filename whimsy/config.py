@@ -223,6 +223,7 @@ class RunParser(ArgParser):
         mytags = common_args.tags.copy()
         mytags.kwargs['help'] = ('Only run items marked with one of the given'
                                  ' tags.')
+        mytags.add_to(parser)
 
 
 class ListParser(ArgParser):
@@ -240,6 +241,7 @@ class ListParser(ArgParser):
         mytags = common_args.tags.copy()
         mytags.kwargs['help'] = ('Only list items marked with one of the'
                                  ' given tags.')
+        mytags.add_to(parser)
 
 
 # Setup parser and subcommands

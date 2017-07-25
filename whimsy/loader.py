@@ -67,7 +67,6 @@ class TestLoader(object):
         if isinstance(tags, str):
             tags = (tags,)
         self.tags = tags
-        print(self.tags)
 
         self._wrapped_classes = {}
         self._collected_test_items = helper.OrderedSet()
@@ -77,6 +76,7 @@ class TestLoader(object):
         self._suites = []
         self._tests = []
 
+        self._cached_tag_index = None
         self._cached_suitecall = None
 
     @property
@@ -92,17 +92,17 @@ class TestLoader(object):
     @property
     def suites(self):
         assert self._loaded_a_file
-        return tuple(*self._suites)
+        return tuple(self._suites)
 
     @property
     def tests(self):
         assert self._loaded_a_file
-        return tuple(*self._tests)
+        return tuple(self._tests)
 
     @property
     def fixtures(self):
         assert self._loaded_a_file
-        return tuple(*self._fixtures)
+        return tuple(self._fixtures)
 
     @property
     def suite(self):
@@ -151,8 +151,6 @@ class TestLoader(object):
         kept_items = []
         for testitem in suite:
             if isinstance(testitem, TestCase):
-                print('testitem is testscase')
-                print(recursive_tags or testitem.tags)
                 if (recursive_tags or testitem.tags).issuperset(self._tags):
                     kept_items.append(testitem)
             elif isinstance(testitem, TestSuite):
@@ -168,7 +166,29 @@ class TestLoader(object):
         return bool(kept_items)
 
 
-    def _build_tags(self, suite, itemtags, tags):
+    def tag_index(self, tag):
+        '''
+        Return a list of test items with the given tag.
+        '''
+        if self._cached_tag_index is None:
+            item_to_tags = {}
+            uniq_tags = set()
+            self._build_tags(self._suite,
+                             item_to_tags,
+                             self._suite.tags.copy(),
+                             uniq_tags)
+            # Build Reverse the index of single tag to list of items
+            self._cached_tag_index = {}
+            for test, testtags in item_to_tags.iteritems():
+                for _tag in uniq_tags:
+                    if _tag in testtags:
+                        testlist = self._cached_tag_index.setdefault(_tag,
+                                                                     [])
+                        testlist.append(test)
+
+        return self._cached_tag_index.get(tag, [])
+
+    def _build_tags(self, suite, itemtags, recursive_tags, uniq_tags):
         '''
         Build an dictionary index of all TestSuite and TestCases stored in the
         given suite mapped to their tags.
@@ -176,12 +196,18 @@ class TestLoader(object):
         NOTE: Currently unused, likely will be used by some querying tools.
         '''
         for testitem in suite:
+            uniq_tags.update(testitem.tags)
             if isinstance(testitem, TestCase):
-                itemtags[testitem] = tags + test.tags
+                itemtags[testitem] = recursive_tags | testitem.tags
             elif isinstance(testitem, TestSuite):
-                self._build_tags(testitem, itemtags, testitem.tags + tags)
+                self._build_tags(testitem, itemtags, testitem.tags
+                                 | recursive_tags)
             else:
                 assert False, _util.unexpected_item_msg
+
+    def drop_caches(self):
+        self._cached_suitecall = None
+        self._cached_tag_index = None
 
     def enumerate_fixtures(self):
         pass
@@ -234,7 +260,7 @@ class TestLoader(object):
             self._loaded_a_file = True
 
         # Remove our cache of tagged test items since they may be modified.
-        self._cached_suitecall = None
+        self.drop_caches()
 
         if testsuite is None:
             testsuite = self._suite

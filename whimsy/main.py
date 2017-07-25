@@ -39,6 +39,7 @@ def dolist():
     query.list_tests(loader)
     query.list_suites(loader)
     query.list_tags(loader)
+    query.list_tests_with_tags(loader, config.tags)
 
 def main():
     # Start logging verbosity at its minimum
