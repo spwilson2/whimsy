@@ -8,7 +8,7 @@ import test as test
 import suite as suite
 from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
 import terminal as terminal
-from config import Flag
+from config import config
 import helper
 import _util
 
@@ -81,7 +81,7 @@ class Runner(object):
                     logger.log.bold('Test failed in a failfast suite,'
                                       ' skipping remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
-                elif Flag.failfast.set:
+                elif config.failfast:
                     logger.log.bold(
                             'Test failed with the %s '
                             ' flag provided.')
