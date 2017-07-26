@@ -66,11 +66,13 @@ class Runner(object):
         # cleanup and override local fixtures.
         fixtures = fixtures.copy()
         fixtures.update(test_suite.fixtures)
+        log.warn('Running suite %s' % test_suite.name)
 
         suite_iterator = enumerate(test_suite)
 
         for (idx, item) in suite_iterator:
             log.info(terminal.separator())
+            log.warn('Running item %s' %item)
 
             if isinstance(item, suite.TestSuite):
                 result = self.run_suite(item, fixtures=fixtures)

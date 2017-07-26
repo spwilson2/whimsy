@@ -34,6 +34,8 @@ import tempfile
 class Fixture(object):
     '''Base Class for a test Fixture'''
     def __init__(self, name, cached=False, lazy_init=True):
+        # TODO: Should probably rename cached to buildonce or something as
+        # such.
         '''
         :param lazy_init: If True, wait until test cases that use this fixture
         are ran to setup this fixture. Otherwise init the fixture before the
@@ -69,9 +71,9 @@ class Fixture(object):
 
 class TempdirFixture(Fixture):
     default_name = 'tempdir'
-    def __init__(self, name=None):
+    def __init__(self, name=None, **kwargs):
         name = self.default_name if name is None else name
-        super(TempdirFixture, self).__init__(name)
+        super(TempdirFixture, self).__init__(name, **kwargs)
         self.path = None
 
     def setup(self):
@@ -153,4 +155,4 @@ class Gem5Fixture(SConsTarget):
         if config.skip_build:
             logger.log.debug('Skipping build of %s' % self.target)
         else:
-            super(Gem5Target, self).setup()
+            super(Gem5Fixture, self).setup()

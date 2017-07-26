@@ -307,15 +307,15 @@ class TestLoader(object):
         self._fixtures.extend(self._collected_fixtures)
 
         if testcases:
-            logger.log.debug('Discovered %d tests and %d testsuites in %s'
+            logger.log.info('Discovered %d tests and %d testsuites in %s'
                              '' % (len(testcases), len(testsuites), path))
             if testsuites:
                 # Remove all tests contained in testsuites from being attached
                 # directly to this module's test suite.
                 testcases = helper.OrderedSet(testcases)
                 for testsuite in testsuites:
-                    test_items -= helper.OrderedSet(testsuite.iter_leaves())
-            self._suite.add_items(*testcases)
+                    test_items -= helper.OrderedSet(testsuite.iter_inorder())
+            self._suite.add_items(*test_items)
         elif testsuites:
             logger.log.warn('No tests discovered in %s, but found %d '
                             ' TestSuites' % (path, len(testsuites)))

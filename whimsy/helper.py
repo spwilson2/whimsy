@@ -25,16 +25,19 @@ def log_call(command, *popenargs, **kwargs):
     :params stderr: Iterable of items to write to as we read from the
     subprocess.
     '''
-    logger.log.trace('Logging call to command %s' % command)
+    if isinstance(command, str):
+        cmdstr = command
+    else:
+        cmdstr = ' '.join(command)
+
+    logger.log.trace('Logging call to command %s' % cmdstr)
 
     stdout_redirect = kwargs.get('stdout', tuple())
     stderr_redirect = kwargs.get('stderr', tuple())
 
     if hasattr(stdout_redirect, 'write'):
-        print('hererr stdout')
         stdout_redirect = (stdout_redirect,)
     if hasattr(stderr_redirect, 'write'):
-        print('hererr stderr')
         stderr_redirect = (stderr_redirect,)
 
     kwargs['stdout'] = subprocess.PIPE
@@ -50,23 +53,23 @@ def log_call(command, *popenargs, **kwargs):
             logger.log.log(log_level, line)
 
     stdout_thread = threading.Thread(target=log_output,
-                                     args=(logging.DEBUG, p.stdout,
+                                     args=(logging.TRACE, p.stdout,
                                            stdout_redirect))
     stdout_thread.setDaemon(True)
     stdout_thread.start()
 
     stderr_thread = threading.Thread(target=log_output,
-                                     args=(logging.DEBUG, p.stderr,
+                                     args=(logging.TRACE, p.stderr,
                                            stderr_redirect))
     stderr_thread.setDaemon(True)
     stderr_thread.start()
 
+    retval = p.wait()
     stdout_thread.join()
     stderr_thread.join()
-    retval = p.poll()
     # Return the return exit code of the process.
     if retval != 0:
-        raise CalledProcessError(retval, command)
+        raise CalledProcessError(retval, cmdstr)
 
 
 # lru_cache stuff (Introduced in python 3.2+)
@@ -215,7 +218,4 @@ def absdirpath(path):
 joinpath = os.path.join
 
 if __name__ == '__main__':
-    p = Popen(['echo', 'hello'])
-    p.poll()
-    print(p.communicate())
     log_call(' '.join(['echo', 'hello', ';sleep 3', '; echo yo']), shell=True)

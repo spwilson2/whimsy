@@ -4,6 +4,9 @@
 
 import _util
 
+if __debug__:
+    import test
+
 class TestSuite(object):
     '''An object containing a collection of tests or other test suites.'''
     def __init__(self, name, items=None, tags=None, fixtures=None, failfast=True, parallelizable=False):
@@ -28,10 +31,10 @@ class TestSuite(object):
         self.failfast = failfast
         self.parallelizable = parallelizable
 
-        if isinstance(fixtures, list):
-            fixtures = {fixture.name: fixture for fixture in fixtures}
-        elif fixtures is None:
+        if fixtures is None:
             fixtures = {}
+        elif not isinstance(fixtures, dict):
+            fixtures = {fixture.name: fixture for fixture in fixtures}
         self.fixtures = fixtures
 
         if tags is None:
@@ -43,13 +46,19 @@ class TestSuite(object):
 
     def add_items(self, *items):
         '''Add the given items (TestCases or TestSuites) to this collection'''
-        self.items.extend(items)
 
         if __debug__:
+            for item in items:
+                if not (isinstance(item, TestSuite) or
+                        isinstance(item, test.TestCase)):
+                    raise AssertionError('Test Suite can only contain'
+                                         ' TestSuite or TestCase.')
+
             # Check that we have not accidentally created a cycle of
             # testsuites. They should form a DAG in order for deepcopy and
             # other program logic to work.
             self._detect_cycle()
+        self.items.extend(items)
 
     def require_fixture():
         '''
@@ -73,7 +82,7 @@ class TestSuite(object):
                     if item in collected_set:
                         return True
                     collected_set.add(item)
-                recursive_check(item)
+                    recursive_check(item)
             return False
         return recursive_check(self)
 

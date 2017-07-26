@@ -98,4 +98,5 @@ log.addHandler(stdout_logger)
 # invlove using os.dup2 and would mean that we would likely want to run
 # imported tests with a modified namespace (for pdb).
 sys.stderr = StreamToLogger(log, logging.FATAL)
-sys.stdout = StreamToLogger(log, logging.PRINT)
+# We'll skip logging stdout for now since it can mess with pdb.
+#sys.stdout = StreamToLogger(log, logging.PRINT)

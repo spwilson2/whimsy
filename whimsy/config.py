@@ -73,7 +73,6 @@ class _Config(object):
             if attr in self._config:
                 return self._config[attr]
             else:
-                print(self._config)
                 raise AttributeError('Could not find %s config value' % attr)
 
 config = _Config()

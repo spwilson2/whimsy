@@ -6,6 +6,7 @@ from functools import partial
 from config import config
 import helper
 import fixture
+import suite
 
 def steal_unittest_assertions(module):
     '''
@@ -70,6 +71,7 @@ class TestCase(object):
         pass
 
 def gem5_test(test,
+              name=None,
               tags=None,
               fixtures=None,
               valid_isas=None,
@@ -92,7 +94,7 @@ def gem5_test(test,
     each ISA.)
 
     :param valid_optimizations: If optimizations is not set assumes that the
-    test only works for 'gem5.opt' targets.
+    test only works for \'gem5.opt\' targets.
 
     :param config: Config file to use for Gem5.
     :param config_args: List of arguments to pass to the config file.
@@ -103,7 +105,8 @@ def gem5_test(test,
     the isa and optimization level which will be handed to instantiate
     a TestFunction. This allows you to modify the arguments before they are
     passed. (One such use case is to create additional fixtures based on isa.)
-    The callback should look like:
+
+    The fixup_callback function should look like:
     .. :code-block: python
         def callback(kwargs : dict, isa : str, optimization : str) -> None:
             pass
@@ -125,20 +128,96 @@ def gem5_test(test,
             fixtures.append(fixture.Gem5Fixture(isa, opt))
             if fixup_callback is not None:
                 fixup_callback(kwargs, isa, opt)
-            TestFunction(test, fixtures=fixtures)
+            TestFunction(test, name=name, fixtures=fixtures)
 
-def Gem5ProgramTest(name, program, config):
+#def Gem5ProgramTest(name, program, config):
+#    '''
+#    Runs the given program using the given config and passes if no exception
+#    was thrown.
+#
+#    Note this is not an actual testcase, it generates a test function which
+#    can be used by gem5_test.
+#
+#    :param name: Name of the test.
+#    :param config: The config to give gem5.
+#    :param program: The executable to run using the config.
+#    '''
+
+def Gem5Test(name,
+             config,
+             config_args,
+             verifiers,
+             fixtures=[],
+             valid_isas=None,
+             valid_optimizations=('opt',)):
     '''
     Runs the given program using the given config and passes if no exception
     was thrown.
 
-    Note this is not an actual testcase, it generates a test function which
+    Note this is not an actual testcase, it generates a group of tests which
     can be used by gem5_test.
 
     :param name: Name of the test.
     :param config: The config to give gem5.
     :param program: The executable to run using the config.
+    :param verifiers: An iterable with Verifier instances which will be placed
+    into a suite that will be ran after a gem5 run.
+    :param valid_isas: An interable with the isas that this test can be ran
+    for.
+    :param valid_optimizations:
     '''
+
+    tempdir = fixture.TempdirFixture(cached=True, lazy_init=True)
+    # Testsuite to hold all verifiers for gem.
+    verifier_suite = suite.TestSuite('%s gem5 verifiers' % name)
+    for verifier in verifiers:
+        verifier_suite.add_items(verifier)
+
+
+    for opt in valid_optimizations:
+        for isa in valid_isas:
+            # Create the gem5 target for the specific architecture and
+            # optimization level.
+            fixtures = copy.copy(fixtures)
+            fixtures.append(fixture.Gem5Fixture(isa, opt))
+             # Create the test function.
+            gem5_run = TestFunction(_create_test_run_gem5(config, config_args),
+                                    name=name,
+                                    fixtures=fixtures)
+
+            # Testsuite to hold our gem5 run in, we failfast because if a gem5 run
+            # fails, there's no reason to verify results.
+            suite.TestSuite(name,
+                            fixtures=(tempdir,),
+                            failfast=True,
+                            items=(gem5_run, verifier_suite))
+
+def _create_test_run_gem5(config, config_args):
+    def test_run_gem5(fixtures):
+        '''
+        Simple \'test\' which runs gem5 and saves the result into a tempdir.
+
+        NOTE: Requires fixtures: tempdir, gem5
+        '''
+        tempdir = fixtures['tempdir'].path
+        gem5 = fixtures['gem5'].path
+        command = [
+            gem5,
+            '-d',  # Set redirect dir to tempdir.
+            tempdir,
+            '-re',# TODO: Change to const. Redirect stdout and stderr
+            config
+        ]
+        # Config_args should set up the program args.
+        command.extend(config_args)
+        try:
+            helper.log_call(command)
+        except helper.CalledProcessError as e:
+            if e.returncode != 1:
+                raise e
+    return test_run_gem5
+
+
 
 class TestFunction(TestCase):
     '''
@@ -174,11 +253,6 @@ def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
         return testfunctiondecorator(function)
     else:
         return testfunctiondecorator
-
-def tag():
-    '''Decorator to add a tag to a test case.'''
-    pass
-
 
 if __name__ == '__main__':
     print('Self-test')
