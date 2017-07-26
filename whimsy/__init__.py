@@ -4,6 +4,7 @@ from suite import TestSuite
 from result import Result
 from helper import *
 from config import *
+from logger import log
 
 __all__ = [
     'fixture',
@@ -12,5 +13,7 @@ __all__ = [
     'suite',
     'helper',
     'config', # The config class, not module.
-    'constants'
+    'constants',
+    'log',
+    'Popen'
 ]

@@ -150,7 +150,8 @@ common_args = [
     Argument(
         '--base-dir',
         action='store',
-        default=os.path.join(helper.absdirpath(__file__), '..','..'),
+        default=os.path.abspath(os.path.join(helper.absdirpath(__file__),
+                                             os.pardir, os.pardir)),
         help='Directory to change to in order to exec scons.'),
     Argument(
         '-j', '--threads',
@@ -223,6 +224,7 @@ class RunParser(ArgParser):
 
         super(RunParser, self).__init__(parser)
 
+        common_args.skip_build.add_to(parser)
         common_args.directory.add_to(parser)
         common_args.build_dir.add_to(parser)
         common_args.base_dir.add_to(parser)

@@ -29,6 +29,7 @@ import os
 from config import config
 import helper
 import logger
+import tempfile
 
 class Fixture(object):
     '''Base Class for a test Fixture'''
@@ -66,6 +67,16 @@ class Fixture(object):
     def teardown(self):
         '''Empty method, meant to be overriden if fixture requires teardown.'''
 
+class TempdirFixture(Fixture):
+    default_name = 'tempdir'
+    def __init__(self, name=None):
+        name = self.default_name if name is None else name
+        super(TempdirFixture, self).__init__(name)
+        self.path = None
+
+    def setup(self):
+        self.path = tempfile.mkdtemp()
+
 
 class SConsFixture(Fixture):
     '''
@@ -86,7 +97,7 @@ class SConsFixture(Fixture):
         super(SConsFixture, self).setup()
         targets = set(self.required_by)
         command = ['scons', '-C', self.directory, '-j', str(config.threads)]
-        command.extend([target.name for target in targets])
+        command.extend([target.target for target in targets])
         logger.log.debug('Executing command: %s' % command)
         helper.log_call(command)
 
@@ -114,11 +125,11 @@ class SConsTarget(Fixture):
         if build_dir is None:
             build_dir = config.build_dir \
                     if hasattr(config, str(config.build_dir)) \
-                    else os.path.join(config.basedir, '..', 'build')
+                    else os.path.abspath(os.path.join(config.basedir,
+                                                      os.pardir, 'build'))
 
-        target = os.path.join(build_dir, target)
-
-        super(SConsTarget, self).__init__(target, *args, **kwargs)
+        self.target = os.path.join(build_dir, target)
+        super(SConsTarget, self).__init__(self.target, *args, **kwargs)
 
         # Add our self to the required targets of the SConsFixture
         self.require(invocation)
@@ -128,3 +139,18 @@ class SConsTarget(Fixture):
         super(SConsTarget, self).setup()
         self.invocation.setup()
         return self
+
+class Gem5Fixture(SConsTarget):
+    def __init__(self, isa, optimization):
+        target = helper.joinpath(isa.upper(), 'gem5.%s' % optimization)
+        super(Gem5Fixture, self).__init__(target)
+        self.name = 'gem5'
+        self.path = self.target
+        self.isa = isa
+        self.optimization = optimization
+
+    def setup(self):
+        if config.skip_build:
+            logger.log.debug('Skipping build of %s' % self.target)
+        else:
+            super(Gem5Target, self).setup()

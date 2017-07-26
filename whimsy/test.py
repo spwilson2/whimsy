@@ -69,11 +69,12 @@ class TestCase(object):
     def name(self):
         pass
 
-def gem5_test(test, tags=None,
-              fixtures=None, valid_isas=None,
+def gem5_test(test,
+              tags=None,
+              fixtures=None,
+              valid_isas=None,
               valid_optimizations=('opt',),
-              fixup_callback=None,
-              ):
+              fixup_callback=None):
     '''
     Common test generator used to perform create tests for generic Gem5
     testing.
@@ -98,7 +99,15 @@ def gem5_test(test, tags=None,
     :param gem5_args: List of arguments to pass to gem5.
 
     :param fixup_callback: A final callback to make before creating each
-    instance of a testfunction.
+    instance of a testfunction. The callback is handed the kwargs as well as
+    the isa and optimization level which will be handed to instantiate
+    a TestFunction. This allows you to modify the arguments before they are
+    passed. (One such use case is to create additional fixtures based on isa.)
+    The callback should look like:
+    .. :code-block: python
+        def callback(kwargs : dict, isa : str, optimization : str) -> None:
+            pass
+
     '''
 
     if valid_isas is None:
@@ -113,9 +122,23 @@ def gem5_test(test, tags=None,
             # Create the gem5 target for the specific architecture and
             # optimization level.
             fixtures = copy.copy(fixtures)
-            fixtures.append(fixture.SConsTarget(
-                    helper.joinpath(isa.upper(), 'gem5.%s' % opt)))
+            fixtures.append(fixture.Gem5Fixture(isa, opt))
+            if fixup_callback is not None:
+                fixup_callback(kwargs, isa, opt)
             TestFunction(test, fixtures=fixtures)
+
+def Gem5ProgramTest(name, program, config):
+    '''
+    Runs the given program using the given config and passes if no exception
+    was thrown.
+
+    Note this is not an actual testcase, it generates a test function which
+    can be used by gem5_test.
+
+    :param name: Name of the test.
+    :param config: The config to give gem5.
+    :param program: The executable to run using the config.
+    '''
 
 class TestFunction(TestCase):
     '''

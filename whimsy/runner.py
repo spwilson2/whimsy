@@ -21,7 +21,8 @@ def setup_unbuilt(fixtures, setup_lazy_init=False):
                 try:
                     fixture.setup()
                 except Exception as e:
-                    failures.append(fixture.name)
+                    failures.append((fixture.name,
+                                     traceback.format_exc()))
     return failures
 
 class Runner(object):
@@ -151,10 +152,11 @@ class Runner(object):
 
         failed_builds = setup_unbuilt(fixtures.values(), setup_lazy_init=True)
         if failed_builds:
-            result.outcome = Result.SKIP
+            result.outcome = Result.ERROR
             reason = bytes('')
-            for fixture in failed_builds:
-                reason += b'Failed to build %s' % fixture
+            for fixture, error in failed_builds:
+                reason += b'Failed to build %s\n' % fixture
+                reason += b'%s' % error
             result.reason = str(reason)
         else:
             _run_test()
