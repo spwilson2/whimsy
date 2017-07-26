@@ -218,8 +218,8 @@ class ConsoleFormatter(ResultFormatter):
                 reset=self.reset)
         if self.verbosity > self.verbosity_levels.DEBUG:
             if test.reason:
-                string += '\nFailure Reason:\n\n'
-                string += '%s\n' % test.reason
+                string += 'Reason:\n\n'
+                string += '%s\n\n' % test.reason
         return string
 
     def format_tests(self, suite):

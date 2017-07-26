@@ -22,6 +22,7 @@ class _Config(object):
     _config_file_args = _unconfigured
     _config = {}
     __shared_dict = {}
+    constants = _util.AttrDict()
 
     def __init__(self):
         self.__dict__ = self.__shared_dict
@@ -76,6 +77,7 @@ class _Config(object):
                 raise AttributeError('Could not find %s config value' % attr)
 
 config = _Config()
+constants = config.constants
 
 
 class Argument(object):
@@ -105,6 +107,7 @@ class Argument(object):
 
         if not hasattr(self, 'name'):
             self.name = flags[0].lstrip('-')
+        self.name = self.name.replace('-', '_')
 
     def add_to(self, parser):
         parser.add_argument(*self.flags, **self.kwargs)
@@ -130,7 +133,7 @@ common_args = [
         'directory',
         help='Directory to start searching for tests in'),
     Argument(
-        '--failfast',
+        '--fail-fast',
         action='store_true',
         help='Stop running on the first instance of failure'),
     Argument(
@@ -139,12 +142,12 @@ common_args = [
         default=[],
         help=None),
     Argument(
-        '--builddir',
+        '--build-dir',
         action='store',
         default='build',
         help='Build directory for SCons'),
     Argument(
-        '--basedir',
+        '--base-dir',
         action='store',
         default=helper.absdirpath(__file__),
         help='Directory to change to in order to exec scons.'),
@@ -160,11 +163,17 @@ common_args = [
         default=_StickyInt(),
         help='Increase verbosity'),
     Argument(
-        '--configpath',
+        '--config-path',
         action='store',
         default=os.getcwd(),
         help='Path to read a testing.ini config in'
-    )
+    ),
+    Argument(
+        '--skip-build',
+        action='store_true',
+        default=False,
+        help='Skip the building component of SCons targets.'
+    ),
 ]
 # NOTE: There is a limitation which arises due to this format. If you have
 # multiple arguments with the same name only the final one in the list will be
@@ -214,9 +223,9 @@ class RunParser(ArgParser):
         super(RunParser, self).__init__(parser)
 
         common_args.directory.add_to(parser)
-        common_args.builddir.add_to(parser)
-        common_args.basedir.add_to(parser)
-        common_args.failfast.add_to(parser)
+        common_args.build_dir.add_to(parser)
+        common_args.base_dir.add_to(parser)
+        common_args.fail_fast.add_to(parser)
         common_args.threads.add_to(parser)
 
         # Modify the help statement for the tags common_arg

@@ -59,35 +59,39 @@ second_fixture = [
 
 @test.testfunction
 @test.testfunction(tag='Pass')
-def simple_test1(result, fixtures):
+def simple_test1(fixtures):
     logger.log.display('simple-test running!')
 
 @test.testfunction(fixtures=first_fixture)
 @test.testfunction(fixtures=second_fixture)
-def fixture_test1(result, fixtures):
+def fixture_test1(fixtures):
     logger.log.trace('fixture_test1 recieved %s' % fixtures)
     assert 'first-target' in fixtures\
             or 'second-target' in fixtures
 
 @test.testfunction(fixtures={0:fixture.Fixture('testfixture')})
-def nonlazy_fixture_test(result, fixtures):
+def nonlazy_fixture_test(fixtures):
     assert fixtures[0].built
 
 shared_obj = None
 @test.testfunction
-def simple_multitest_start1(result, fixtures):
+def simple_multitest_start1(fixtures):
     global shared_obj
     shared_obj = True
 
 @test.testfunction
-def simple_multitest_complete1(result, fixtures):
+def simple_multitest_complete1(fixtures):
     test.assertTrue(shared_obj)
 
 @test.testfunction(tag='Fail')
-def simple_fail_test1(result, fixtures):
+def simple_fail_test1(fixtures):
     test.assertTrue(False, 'This test was bound to fail')
 
-def simple_testfunction1(resut, fixtures):
+@test.testfunction(tag='Skip')
+def simple_skip_test1(fixtures):
+    test.skip('Skip this test.')
+
+def simple_testfunction1(fixtures):
     pass
 
 testsuite = suite.TestSuite('Simple testsuite')

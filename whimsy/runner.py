@@ -81,7 +81,7 @@ class Runner(object):
                     logger.log.bold('Test failed in a failfast suite,'
                                       ' skipping remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
-                elif config.failfast:
+                elif config.fail_fast:
                     logger.log.bold(
                             'Test failed with the %s '
                             ' flag provided.')
@@ -94,7 +94,7 @@ class Runner(object):
 
         return results
 
-    def run_test(self, test, fixtures=None, result=None):
+    def run_test(self, testobj, fixtures=None, result=None):
         '''
         Run the given test.
 
@@ -107,7 +107,7 @@ class Runner(object):
         if fixtures is None:
             fixtures = {}
         if result is None:
-            result = TestCaseResult(test.name)
+            result = TestCaseResult(testobj.name)
         else:
             # If we are given a result. We'll be updating its outcome by
             # testing.
@@ -116,27 +116,32 @@ class Runner(object):
         # We'll use a local shallow copy of fixtures to make it easier to
         # cleanup and override suite level fixtures with testcase level ones.
         fixtures = fixtures.copy()
-        fixtures.update(test.fixtures)
+        fixtures.update(testobj.fixtures)
 
         # Build any fixtures that haven't been built yet.
-        logger.log.debug('Building fixtures for TestCase: %s' % test.name)
+        logger.log.debug('Building fixtures for TestCase: %s' % testobj.name)
         setup_unbuilt(fixtures.values(), setup_lazy_init=True)
 
-        logger.log.info('TestCase: %s' % test.name)
+        logger.log.info('TestCase: %s' % testobj.name)
         result.timer.start()
         try:
-            test.test(result=result, fixtures=fixtures)
+            testobj.test(fixtures=fixtures)
         except AssertionError as e:
             result.reason = e.message
             if not result.reason:
                 result.reason = traceback.format_exc()
             result.outcome = Result.FAIL
+        except test.TestSkipException as e:
+            result.reason = e.message
+            result.outcome = Result.SKIP
+        except test.TestFailException as e:
+            result.reason = e.message
+            result.outcome = Result.FAIL
         except Exception as e:
             result.reason = traceback.format_exc()
             result.outcome = Result.FAIL
         else:
-            if result.outcome is None:
-                result.outcome = Result.PASS
+            result.outcome = Result.PASS
         result.timer.stop()
 
         if result.reason:
@@ -149,8 +154,8 @@ class Runner(object):
         logger.log.info(terminal.insert_separator(' %s '%result.outcome,
                 color=ConsoleFormatter.result_colormap[result.outcome]))
 
-        for name in test.fixtures:
-            fixtures[name].teardown()
+        for fixture in testobj.fixtures.itervalues():
+            fixture.teardown()
 
         return result
 

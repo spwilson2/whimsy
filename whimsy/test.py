@@ -19,6 +19,21 @@ def steal_unittest_assertions(module):
 # Export the unittest assertion helpers from this module.
 steal_unittest_assertions(globals())
 
+class TestingException(Exception):
+    '''Common ancestor for manual Testing Exceptions.'''
+class TestFailException(TestingException):
+    '''Signals that a test has failed.'''
+class TestSkipException(TestingException):
+    '''Signals that a test has been skipped.'''
+
+def fail(message):
+    '''Cause the current test to fail with the given message.'''
+    raise TestFailException(message)
+
+def skip(message):
+    '''Cause the current test to skip with the given message.'''
+    raise TestSkipException(message)
+
 
 class TestCase(object):
     '''
@@ -44,7 +59,7 @@ class TestCase(object):
         self.tags = set(tags)
 
     @abc.abstractmethod
-    def test(self, result, fixtures):
+    def test(self, fixtures):
         pass
 
     @abc.abstractproperty
@@ -62,8 +77,8 @@ class TestFunction(TestCase):
             name = test.__name__
         self._name = name
 
-    def test(self, result, fixtures):
-        self._test_function(result, fixtures)
+    def test(self, fixtures):
+        self._test_function(fixtures)
 
     @property
     def name(self):
