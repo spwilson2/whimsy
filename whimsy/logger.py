@@ -37,10 +37,10 @@ assert logging.DISPLAY > always_display_level
 assert logging.BOLD > always_display_level
 
 # Logging level will be incredibly verbose, used to trace through testing.
-add_logging_level('trace', 0)
+add_logging_level('trace', 1)
 
 def set_logging_verbosity(verbosity):
-    log.setLevel(max(always_display_level - verbosity * 10, logging.DEBUG))
+    log.setLevel(max(always_display_level - verbosity * 10, logging.TRACE))
 
 # https://www.electricmonk.nl/log/2011/08/14/redirect-stdout-and-stderr-to-a-logger-in-python/
 class StreamToLogger(object):

@@ -8,6 +8,9 @@ import threading
 import collections
 import os
 
+# Export CalledProcessError
+from subprocess import CalledProcessError
+
 import logger
 
 class Popen(subprocess.Popen):
@@ -63,11 +66,13 @@ def log_call(command, *popenargs, **kwargs):
     This should be used for fixture setup if the output doesn't need to
     actually be checked.
     '''
+    logger.log.trace('Logging call to command %s' % command)
     for key in ['stdout', 'stderr']:
         if key in kwargs:
             raise ValueError('%s argument not allowed, it will be'
                              ' overridden.' % key)
-    p = Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, *popenargs, **kwargs)
+    p = Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+              *popenargs, **kwargs)
     def log_output(log_level, pipe):
         # Read iteractively, don't allow input to fill the pipe.
         for line in iter(pipe.readline, ''):
@@ -86,7 +91,10 @@ def log_call(command, *popenargs, **kwargs):
 
     stdout_thread.join()
     stderr_thread.join()
-    return p.returncode
+    retval = p.poll()
+    # Return the return exit code of the process.
+    if retval != 0:
+        raise CalledProcessError(retval, command[0])
 
 
 # lru_cache stuff (Introduced in python 3.2+)
@@ -231,6 +239,8 @@ def absdirpath(path):
     Return the directory component of the absolute path of the given path.
     '''
     return os.path.dirname(os.path.abspath(path))
+
+joinpath = os.path.join
 
 if __name__ == '__main__':
     p = Popen(['echo', 'hello'])

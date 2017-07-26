@@ -149,7 +149,7 @@ common_args = [
     Argument(
         '--base-dir',
         action='store',
-        default=helper.absdirpath(__file__),
+        default=os.path.join(helper.absdirpath(__file__), '..','..'),
         help='Directory to change to in order to exec scons.'),
     Argument(
         '-j', '--threads',

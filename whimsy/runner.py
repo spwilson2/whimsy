@@ -3,7 +3,7 @@ import sys
 import logging
 import traceback
 
-import logger as logger
+from logger import log
 import test as test
 import suite as suite
 from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
@@ -14,10 +14,15 @@ import _util
 
 
 def setup_unbuilt(fixtures, setup_lazy_init=False):
+    failures = []
     for fixture in fixtures:
         if not fixture.built:
             if fixture.lazy_init == setup_lazy_init:
-                fixture.setup()
+                try:
+                    fixture.setup()
+                except Exception as e:
+                    failures.append(fixture.name)
+    return failures
 
 class Runner(object):
     '''
@@ -30,14 +35,14 @@ class Runner(object):
         self.test_suite = test_suite
 
     def run(self):
-        logger.log.info(terminal.separator())
-        logger.log.info("Building all non 'lazy_init' fixtures")
+        log.info(terminal.separator())
+        log.info("Building all non 'lazy_init' fixtures")
+
         setup_unbuilt(self.test_suite.enumerate_fixtures(),
                       setup_lazy_init=False)
-
-        logger.log.info('Running Tests')
+        log.info('Running Tests')
         results = self.run_suite(self.test_suite)
-        logger.log.info(terminal.separator())
+        log.info(terminal.separator())
 
         return results
 
@@ -64,7 +69,7 @@ class Runner(object):
         suite_iterator = enumerate(test_suite)
 
         for (idx, item) in suite_iterator:
-            logger.log.info(terminal.separator())
+            log.info(terminal.separator())
 
             if isinstance(item, suite.TestSuite):
                 result = self.run_suite(item, fixtures=fixtures)
@@ -78,14 +83,14 @@ class Runner(object):
 
             if result.outcome in Result.failfast:
                 if test_suite.failfast:
-                    logger.log.bold('Test failed in a failfast suite,'
+                    log.bold('Test failed in a failfast suite,'
                                       ' skipping remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
                 elif config.fail_fast:
-                    logger.log.bold(
+                    log.bold(
                             'Test failed with the %s '
                             ' flag provided.')
-                    logger.log.bold('Skipping remaining tests.')
+                    log.bold('Skipping remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
 
 
@@ -119,39 +124,49 @@ class Runner(object):
         fixtures.update(testobj.fixtures)
 
         # Build any fixtures that haven't been built yet.
-        logger.log.debug('Building fixtures for TestCase: %s' % testobj.name)
-        setup_unbuilt(fixtures.values(), setup_lazy_init=True)
+        log.debug('Building fixtures for TestCase: %s' % testobj.name)
 
-        logger.log.info('TestCase: %s' % testobj.name)
-        result.timer.start()
-        try:
-            testobj.test(fixtures=fixtures)
-        except AssertionError as e:
-            result.reason = e.message
-            if not result.reason:
+        def _run_test():
+            log.info('TestCase: %s' % testobj.name)
+            result.timer.start()
+            try:
+                testobj.test(fixtures=fixtures)
+            except AssertionError as e:
+                result.reason = e.message
+                if not result.reason:
+                    result.reason = traceback.format_exc()
+                result.outcome = Result.FAIL
+            except test.TestSkipException as e:
+                result.reason = e.message
+                result.outcome = Result.SKIP
+            except test.TestFailException as e:
+                result.reason = e.message
+                result.outcome = Result.FAIL
+            except Exception as e:
                 result.reason = traceback.format_exc()
-            result.outcome = Result.FAIL
-        except test.TestSkipException as e:
-            result.reason = e.message
+                result.outcome = Result.FAIL
+            else:
+                result.outcome = Result.PASS
+            result.timer.stop()
+
+        failed_builds = setup_unbuilt(fixtures.values(), setup_lazy_init=True)
+        if failed_builds:
             result.outcome = Result.SKIP
-        except test.TestFailException as e:
-            result.reason = e.message
-            result.outcome = Result.FAIL
-        except Exception as e:
-            result.reason = traceback.format_exc()
-            result.outcome = Result.FAIL
+            reason = bytes('')
+            for fixture in failed_builds:
+                reason += b'Failed to build %s' % fixture
+            result.reason = str(reason)
         else:
-            result.outcome = Result.PASS
-        result.timer.stop()
+            _run_test()
 
         if result.reason:
-            logger.log.debug('%s'%result.reason)
-        logger.log.bold('{color}{name} - {result}{reset}'.format(
+            log.debug('%s'%result.reason)
+        log.bold('{color}{name} - {result}{reset}'.format(
                 name=result.name,
                 result=result.outcome,
                 color=ConsoleFormatter.result_colormap[result.outcome],
                 reset=terminal.termcap.Normal))
-        logger.log.info(terminal.insert_separator(' %s '%result.outcome,
+        log.info(terminal.insert_separator(' %s '%result.outcome,
                 color=ConsoleFormatter.result_colormap[result.outcome]))
 
         for fixture in testobj.fixtures.itervalues():
@@ -174,5 +189,5 @@ class Runner(object):
                 result.outcome = Result.SKIP
             else:
                 assert False, _util.unexpected_item_msg
-            logger.log.info('Skipping: %s' % item.name)
+            log.info('Skipping: %s' % item.name)
             results.results.append(result)
