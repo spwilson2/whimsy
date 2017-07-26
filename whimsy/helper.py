@@ -13,79 +13,51 @@ from subprocess import CalledProcessError
 
 import logger
 
-class Popen(subprocess.Popen):
-    '''
-    A modified version of Popen where output is automatically piped to
-    a tempfile if no pipe was given for the process. If output is expected to
-    be large, the user can
-    '''
-
-    def __init__(self, args, bufsize=0, executable=None,
-             stdin=None, stdout=None, stderr=None, *remainargs, **kwargs):
-
-        self.stdout_f = None
-        self.stderr_f = None
-
-        if stdout is None:
-            self.stdout_f = tempfile.TemporaryFile()
-            stdout = self.stdout_f
-        if stderr is None:
-            self.stderr_f = tempfile.TemporaryFile()
-            stderr = self.stderr_f
-
-        super(Popen, self).__init__(args, bufsize=bufsize,
-                                    executable=executable, stdin=stdin,
-                                    stdout=stdout, stderr=stderr,
-                                    *remainargs, **kwargs)
-    @staticmethod
-    def _read_file(f):
-        f.seek(0)
-        output = f.read()
-        f.truncate()
-        return output
-
-    def communicate(self, *args, **kwargs):
-        (stdout, stderr) = super(Popen, self).communicate(*args, **kwargs)
-        if self.stderr_f is not None:
-            stdout = self._read_file(self.stderr_f)
-        if self.stdout_f is not None:
-            stdout = self._read_file(self.stdout_f)
-        return (stdout, stderr)
-
-    def __del__(self):
-        '''Destructor automatically closes temporary files if we opened any.'''
-        if self.stdout_f is not None:
-            self.stdout_f.close()
-        if self.stderr_f is not None:
-            self.stderr_f.close()
-
 def log_call(command, *popenargs, **kwargs):
     '''
     Calls the given process and automatically logs the command and output.
 
-    This should be used for fixture setup if the output doesn't need to
-    actually be checked.
+    If stdout or stderr are provided output will also be piped into those
+    streams as well.
+
+    :params stdout: Iterable of items to write to as we read from the
+    subprocess.
+    :params stderr: Iterable of items to write to as we read from the
+    subprocess.
     '''
     logger.log.trace('Logging call to command %s' % command)
-    for key in ['stdout', 'stderr']:
-        if key in kwargs:
-            raise ValueError('%s argument not allowed, it will be'
-                             ' overridden.' % key)
-    p = Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-              *popenargs, **kwargs)
-    def log_output(log_level, pipe):
+
+    stdout_redirect = kwargs.get('stdout', tuple())
+    stderr_redirect = kwargs.get('stderr', tuple())
+
+    if hasattr(stdout_redirect, 'write'):
+        print('hererr stdout')
+        stdout_redirect = (stdout_redirect,)
+    if hasattr(stderr_redirect, 'write'):
+        print('hererr stderr')
+        stderr_redirect = (stderr_redirect,)
+
+    kwargs['stdout'] = subprocess.PIPE
+    kwargs['stderr'] = subprocess.PIPE
+    p = subprocess.Popen(command, *popenargs, **kwargs)
+
+    def log_output(log_level, pipe, redirects=tuple()):
         # Read iteractively, don't allow input to fill the pipe.
         for line in iter(pipe.readline, ''):
+            for r in redirects:
+                r.write(line)
             line = line.rstrip()
             logger.log.log(log_level, line)
 
     stdout_thread = threading.Thread(target=log_output,
-                                    args=(logging.DEBUG, p.stdout))
+                                     args=(logging.DEBUG, p.stdout,
+                                           stdout_redirect))
     stdout_thread.setDaemon(True)
     stdout_thread.start()
 
     stderr_thread = threading.Thread(target=log_output,
-                                    args=(logging.DEBUG, p.stderr))
+                                     args=(logging.DEBUG, p.stderr,
+                                           stderr_redirect))
     stderr_thread.setDaemon(True)
     stderr_thread.start()
 
@@ -94,7 +66,7 @@ def log_call(command, *popenargs, **kwargs):
     retval = p.poll()
     # Return the return exit code of the process.
     if retval != 0:
-        raise CalledProcessError(retval, command[0])
+        raise CalledProcessError(retval, command)
 
 
 # lru_cache stuff (Introduced in python 3.2+)
