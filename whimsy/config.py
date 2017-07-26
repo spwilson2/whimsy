@@ -78,6 +78,7 @@ class _Config(object):
 
 config = _Config()
 constants = config.constants
+constants.supported_isas = ['ARM', 'SPARC', 'X86', 'ALPHA', 'RISCV']
 
 
 class Argument(object):

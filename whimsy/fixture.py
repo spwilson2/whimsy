@@ -24,7 +24,11 @@
 # How do we access the fixtures from test cases which require them?
 # - Import them into the test class.
 #
+import os
+
+from config import config
 import helper
+import logger
 
 class Fixture(object):
     '''Base Class for a test Fixture'''
@@ -61,3 +65,66 @@ class Fixture(object):
 
     def teardown(self):
         '''Empty method, meant to be overriden if fixture requires teardown.'''
+
+
+class SConsFixture(Fixture):
+    '''
+    Fixture will wait until all SCons targets are collected and tests are
+    about to be ran, then will invocate a single instance of SCons for all
+    targets.
+
+    :param directory: The directory which scons will -C (cd) into before
+    executing. If None is provided, will choose the config base_dir.
+    '''
+    def __init__(self, name='SCons Fixture', directory=None, *args, **kwargs):
+        super(SConsFixture, self).__init__(name, *args, lazy_init=True)
+        self.directory = config.base_dir if directory is None else directory
+        self.targets = []
+
+    @helper.cacheresult
+    def setup(self):
+        super(SConsFixture, self).setup()
+        targets = set(self.required_by)
+        command = ['scons', '-C', self.directory, '-j', str(config.threads)]
+        command.extend([target.name for target in targets])
+        logger.log.debug('Executing command: %s' % command)
+        helper.log_call(command)
+
+    def teardown(self):
+        pass
+
+# The singleton scons fixture we'll use for all targets.
+scons = SConsFixture(lazy_init=False)
+
+class SConsTarget(Fixture):
+    def __init__(self, target, build_dir=None, invocation=scons, *args, **kwargs):
+        '''
+        Represents a target to be built by an 'invocation' of scons.
+
+        :param target: The target known to scons.
+
+        :param build_dir: The 'build' directory path which will be prepended
+        to the target name.
+
+        :param invocation: Represents an invocation of scons which we will
+        automatically attach this target to. If None provided, uses the main
+        'scons' invocation.
+        '''
+
+        if build_dir is None:
+            build_dir = config.build_dir \
+                    if hasattr(config, str(config.build_dir)) \
+                    else os.path.join(config.basedir, '..', 'build')
+
+        target = os.path.join(build_dir, target)
+
+        super(SConsTarget, self).__init__(target, *args, **kwargs)
+
+        # Add our self to the required targets of the SConsFixture
+        self.require(invocation)
+        self.invocation = invocation
+
+    def setup(self):
+        super(SConsTarget, self).setup()
+        self.invocation.setup()
+        return self

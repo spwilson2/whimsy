@@ -1,8 +1,11 @@
 import abc
+import copy
 from unittest import FunctionTestCase as _Ftc
 from functools import partial
 
+from config import config
 import helper
+import fixture
 
 def steal_unittest_assertions(module):
     '''
@@ -65,6 +68,54 @@ class TestCase(object):
     @abc.abstractproperty
     def name(self):
         pass
+
+def gem5_test(test, tags=None,
+              fixtures=None, valid_isas=None,
+              valid_optimizations=('opt',),
+              fixup_callback=None,
+              ):
+    '''
+    Common test generator used to perform create tests for generic Gem5
+    testing.
+
+    :param test: Function to use for testing.
+
+    :param tags: Iterable of tags which will be attached to all test cases
+    generated.
+
+    :param fixtures: In addtional to all requested fixtures, the gem5.opt
+    binary will be provided.
+
+    :param valid_isas: If arch is not set assumes that the test will be
+    available for all ISAs. (And will create individual tests for
+    each ISA.)
+
+    :param valid_optimizations: If optimizations is not set assumes that the
+    test only works for 'gem5.opt' targets.
+
+    :param config: Config file to use for Gem5.
+    :param config_args: List of arguments to pass to the config file.
+    :param gem5_args: List of arguments to pass to gem5.
+
+    :param fixup_callback: A final callback to make before creating each
+    instance of a testfunction.
+    '''
+
+    if valid_isas is None:
+        valid_isas = config.constants.supported_isas
+
+    fixtures = [] if fixtures is None else fixtures
+
+    # TODO: assert that the valid_optimizations are all valid
+
+    for opt in valid_optimizations:
+        for isa in valid_isas:
+            # Create the gem5 target for the specific architecture and
+            # optimization level.
+            fixtures = copy.copy(fixtures)
+            fixtures.append(fixture.SConsTarget(
+                    helper.joinpath(isa.upper(), 'gem5.%s' % opt)))
+            TestFunction(test, fixtures=fixtures)
 
 class TestFunction(TestCase):
     '''
