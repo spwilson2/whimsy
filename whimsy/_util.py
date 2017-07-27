@@ -2,6 +2,7 @@ import collections
 import time
 import os
 import difflib
+import re
 import tempfile
 import shutil
 import stat
@@ -120,7 +121,7 @@ def _filter_file(fname, filters):
     with open(fname, "r") as file_:
         for line in file_:
             for regex in filters:
-                if regex.match(line):
+                if re.match(regex, line):
                     break
             else:
                 yield line

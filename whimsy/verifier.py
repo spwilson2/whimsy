@@ -8,6 +8,12 @@ import os
 import re
 from config import constants
 
+def _iterable_regex(regex):
+    if isinstance(regex, _re_type) \
+            or isinstance(regex, str):
+        regex = (regex,)
+    return regex
+
 class Verifier(test.TestFunction):
     tempdir_fixture_name = constants.tempdir_fixture_name
 
@@ -29,16 +35,13 @@ class MatchGoldStandard(test.TestFunction):
         self.test_filename = test_filename
 
         # Put the regex into an iterable.
-        if isinstance(ignore_regex, _re_type) \
-                or isinstance(ignore_regex, str):
-            ignore_regex = (ignore_regex,)
-        self.ignore_regex = ignore_regex
+        self.ignore_regex = _iterable_regex(ignore_regex)
 
     def test(self, fixtures):
         # We need a tempdir fixture from our parent verifier suite.
 
         # Get the file from the tempdir of the test.
-        tempdir = fixtures['tempdir'].path # TODO: Use constant.
+        tempdir = fixtures[constants.tempdir_fixture_name].path
         self.test_filename = os.path.join(tempdir, self.test_filename)
 
         diff = _util.diff_out_file(self.standard_filename,
@@ -80,5 +83,32 @@ class MatchStats(MatchGoldStandard):
                                          test_filename=self.__file,
                                           name=MatchStats.__name__,
                                           ignore_regex=ignore_regex)
+
+class MatchRegex(test.TestFunction):
+    def __init__(self, regex, name=None, match_stderr=True, match_stdout=True):
+        super(MatchRegex, self).__init__(self.test, name=name)
+        self.regex = _iterable_regex(regex)
+        self.match_stderr = match_stderr
+        self.match_stdout = match_stdout
+
+    def test(self, fixtures):
+        # Get the file from the tempdir of the test.
+        tempdir = fixtures[constants.tempdir_fixture_name].path
+
+        def parse_file(fname):
+            with open(fname, 'r') as file_:
+                for line in file_:
+                    for regex in self.regex:
+                        if re.match(regex, line):
+                            return True
+        if self.match_stdout:
+            if parse_file(os.path.join(tempdir,
+                                       constants.gem5_simulation_stdout)):
+                return # Success
+        if self.match_stderr:
+            if parse_file(os.path.join(tempdir,
+                                       constants.gem5_simulation_stderr)):
+                return # Success
+        test.Fail('Could not match regex.')
 
 _re_type = type(re.compile(''))
