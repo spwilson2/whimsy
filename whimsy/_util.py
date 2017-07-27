@@ -87,14 +87,14 @@ def iter_recursively(self, inorder=True):
     well as leaves.
     '''
     for item in self:
-        if isinstance(item , collections.Iterable):
+        if isinstance(item, collections.Iterable):
             if inorder:
                 # yield the node first
                 yield item
 
-            # Then yield that node's leaves.
-            for item in item:
-                yield item
+            # Recurse into that node.
+            for item_of_item in iter_recursively(item, inorder):
+                yield item_of_item
         else:
             # Otherwise just yield the leaf
             yield item

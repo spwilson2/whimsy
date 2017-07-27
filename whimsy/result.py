@@ -91,12 +91,19 @@ class TestSuiteResult(TestResult):
         self._name = name
         self.results = []
 
-    iter_inorder = lambda self : _util.iter_recursively(self, inoder=True)
-    iter_inorder.__doc__ = \
+    def iter_inorder(self):
         '''
         Iterate over all the testsuite results and testcase results contained
         in this collection of results. Traverses the tree in in-order fashion.
         '''
+        return _util.iter_recursively(self, inorder=True)
+
+    def iter_leaves(self):
+        '''
+        Recursively iterate over all the TestCaseResult's contained in this
+        TestSuiteResult and TestSuiteResult's we contain.
+        '''
+        return _util.iter_recursively(self, inorder=False)
 
     @property
     def outcome(self):
@@ -134,34 +141,6 @@ class TestSuiteResult(TestResult):
     @property
     def name(self):
         return self._name
-
-    def iter_tests(self):
-        '''
-        Returns an iterable over all the TestCaseResults contained in the suite
-
-        (Pretends that this is the only suite and that it contains all tests
-        directly.)
-        '''
-        for result in self.iter_inorder():
-            if isinstance(result, TestCaseResult):
-                yield result
-
-    def iter_inorder(self):
-        '''
-        Iterate over all the results contained in this collection of results.
-        Traverses the tree in in-order fashion.
-        '''
-        for result in self.results:
-            if isinstance(result, TestSuiteResult):
-                # yield the testsuite first
-                yield result
-
-                # Then yield that testsuite's results.
-                for result in result:
-                    yield result
-            else:
-                # Otherwise just yield the test case result
-                yield result
 
     def __iter__(self):
         '''
@@ -272,7 +251,7 @@ class ConsoleFormatter(ResultFormatter):
         # If only_testcases don't summarize information about suites.
         summary = {enum:[] for enum in Result.enums}
         if self.only_testcases:
-            for test in self.result.iter_tests():
+            for test in self.result.iter_leaves():
                 summary[test.outcome].append(test)
         return summary
 
@@ -286,7 +265,7 @@ class ConsoleFormatter(ResultFormatter):
         string += self.sep_fmtstr
         # If we only care about printing test cases logic looks simpler.
         if self.only_testcases:
-            string += self.format_tests(self.result.iter_tests())
+            string += self.format_tests(self.result.iter_leaves())
 
         string += self.sep_fmtstr
         string += self.format_summary(self.summarize_results())
