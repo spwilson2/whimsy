@@ -21,6 +21,7 @@ class _Config(object):
     _cli_args = _unconfigured
     _config_file_args = _unconfigured
     _config = {}
+    _defaults = _util.AttrDict()
     __shared_dict = {}
     constants = _util.AttrDict()
 
@@ -48,15 +49,16 @@ class _Config(object):
         args = baseparser.parse_args()
         # Finish up our verbose args incrementing hack.
         args.verbose = args.verbose.val
-        if args.build_dir is None:
-            args.build_dir = os.path.join(args.base_dir, 'build')
         self._config_file_args = {}
+        self._cli_args = {}
 
         for attr in dir(args):
             # Ignore non-argument attributes.
             if not attr.startswith('_'):
                 self._config_file_args[attr] = getattr(args, attr)
         self._config.update(self._config_file_args)
+
+        self._defaults.build_dir = os.path.join(self.base_dir, 'build')
 
     def set(self, name, value):
         self._config[name] = value
@@ -74,12 +76,33 @@ class _Config(object):
                 self._parse_config_file()
             if attr in self._config:
                 return self._config[attr]
+            elif hasattr(self._defaults, attr):
+                return getattr(self._defaults, attr)
             else:
                 raise AttributeError('Could not find %s config value' % attr)
 
 config = _Config()
+# Defaults are provided by the config if the attribute is not found in the
+# config.
+_defaults = config._defaults
 constants = config.constants
-constants.supported_isas = ['ARM', 'SPARC', 'X86', 'ALPHA', 'RISCV']
+_defaults.base_dir = os.path.abspath(os.path.join(helper.absdirpath(__file__),
+                                                  os.pardir,
+                                                  os.pardir))
+
+constants.x86_tag = 'X86'
+constants.sparc_tag = 'SPARC'
+constants.alpha_tag = 'ALPHA'
+constants.riscv_tag = 'RISCV'
+constants.arm_tag = 'ARM'
+constants.supported_isas = [
+    constants.x86_tag,
+    constants.sparc_tag,
+    constants.alpha_tag,
+    constants.riscv_tag,
+    constants.arm_tag
+]
+
 constants.tempdir_fixture_name = 'tempdir'
 constants.gem5_simulation_stderr = 'simerr'
 constants.gem5_simulation_stdout = 'simout'
@@ -157,8 +180,7 @@ common_args = [
     Argument(
         '--base-dir',
         action='store',
-        default=os.path.abspath(os.path.join(helper.absdirpath(__file__),
-                                             os.pardir, os.pardir)),
+        default=_defaults.base_dir,
         help='Directory to change to in order to exec scons.'),
     Argument(
         '-j', '--threads',
@@ -256,6 +278,7 @@ class ListParser(ArgParser):
         )
 
         super(ListParser, self).__init__(parser)
+
         common_args.directory.add_to(parser)
         mytags = common_args.tags.copy()
         mytags.kwargs['help'] = ('Only list items marked with one of the'

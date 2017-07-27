@@ -202,7 +202,7 @@ class TestLoader(object):
                 itemtags[testitem] = recursive_tags | testitem.tags
             elif isinstance(testitem, TestSuite):
                 self._build_tags(testitem, itemtags, testitem.tags
-                                 | recursive_tags)
+                                 | recursive_tags, uniq_tags)
             else:
                 assert False, _util.unexpected_item_msg
 

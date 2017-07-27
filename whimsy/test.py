@@ -74,7 +74,7 @@ class TestCase(object):
 
 def gem5_test(test,
               name=None,
-              tags=None,
+              tags=[],
               fixtures=[],
               valid_isas=None,
               valid_optimizations=('opt',),
@@ -126,17 +126,22 @@ def gem5_test(test,
             # optimization level.
             fixtures = copy.copy(fixtures)
             fixtures.append(fixture.Gem5Fixture(isa, opt))
+
+            tags = copy.copy(tags)
+            tags.extend((opt, isa))
+
             if fixup_callback is not None:
                 fixup_callback(kwargs, isa, opt)
             TestFunction(test, name=name, fixtures=fixtures)
 
 def gem5_verify_config(name,
-             config,
-             config_args,
-             verifiers,
-             fixtures=[],
-             valid_isas=None,
-             valid_optimizations=('opt',)):
+                       config,
+                       config_args,
+                       verifiers,
+                       tags=[],
+                       fixtures=[],
+                       valid_isas=None,
+                       valid_optimizations=('opt',)):
     '''
     Runs the given program using the given config and passes if no exception
     was thrown.
@@ -157,6 +162,8 @@ def gem5_verify_config(name,
     :param valid_optimizations: An interable with the optimization levels that
     this test can be ran for. (E.g. opt, debug)
     '''
+    #TODO/FIXME: Use gem5_test so we don't repeat so much code.
+
     if valid_isas is None:
         valid_isas = constants.supported_isas
 
@@ -174,6 +181,10 @@ def gem5_verify_config(name,
             # optimization level.
             fixtures = copy.copy(fixtures)
             fixtures.append(fixture.Gem5Fixture(isa, opt))
+
+            tags = copy.copy(tags)
+            tags.extend((opt, isa))
+
              # Create the test function.
             gem5_run = TestFunction(_create_test_run_gem5(config, config_args),
                                     name=name,
@@ -184,6 +195,7 @@ def gem5_verify_config(name,
             suite.TestSuite(name,
                             fixtures=(tempdir,),
                             failfast=True,
+                            tags=tags,
                             items=(gem5_run, verifier_suite))
 
 def _create_test_run_gem5(config, config_args):
