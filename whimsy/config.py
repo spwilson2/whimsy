@@ -7,6 +7,7 @@ import types
 import copy
 import ConfigParser
 import os
+from pickle import HIGHEST_PROTOCOL as HIGHEST_PICKLE_PROTOCOL
 
 import helper
 import _util
@@ -107,6 +108,7 @@ constants.tempdir_fixture_name = 'tempdir'
 constants.gem5_simulation_stderr = 'simerr'
 constants.gem5_simulation_stdout = 'simout'
 constants.gem5_simulation_stats = 'stats.txt'
+constants.pickle_protocol = HIGHEST_PICKLE_PROTOCOL
 
 
 class Argument(object):

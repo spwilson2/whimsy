@@ -37,26 +37,29 @@ class Enum(object):
     '''
     Generator for Enum objects.
     '''
-    def __init__(self, enums, namespace=''):
+    def __init__(self, enums):
         self.enums = []
-        def __name__(self):
-            return self.variant
-        def __cmp__(self, other):
-            return self.enums.index(self) > self.enums.index(other)
 
-
-        if namespace is not '':
-            namespace = namespace + '.'
-        for i, variant in enumerate(enums):
-            dct = {'__str__': __name__, 'variant': variant}
-
-            new_enum = type('Enum.' + namespace + variant,
-                            (object,),
-                            dct)
-            new_enum = new_enum()
-            setattr(self, variant, new_enum)
+        for idx, enum in enumerate(enums):
+            new_enum = _EnumVal(enum, idx, self.enums)
             self.enums.append(new_enum)
+            setattr(self, enum, new_enum)
 
+class _EnumVal(object):
+    def __init__(self, name, val, enums):
+        self.val = val
+        self.name = name
+        self.enums = enums
+
+    def __str__(self):
+        return self.name
+
+    def __name__(self):
+        return self.name
+
+    def __cmp__(self, other):
+        return self.val > other.val
+        return self.enums.index(self) > self.enums.index(other)
 
 class Timer(object):
     def __init__(self, start=False):

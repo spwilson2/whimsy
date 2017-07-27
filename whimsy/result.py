@@ -4,9 +4,11 @@ import time
 import xml.etree.ElementTree as ET
 import string
 import functools
+import pickle
 
 import _util
 import terminal as termcap
+from config import constants
 
 class InvalidResultException(Exception):
     pass
@@ -19,7 +21,6 @@ Result = _util.Enum(
     'ERROR',  # There was an error during the setup of the test.
     'FAIL',   # The test failed to pass.
     ],
-    namespace='Result'
 )
 
 # Add all result enums to this module's namespace.
@@ -158,10 +159,9 @@ class ResultFormatter(object):
         self.result = result
 
     @abc.abstractmethod
-    def __str__(self):
+    def dump(self, dumpfile):
         '''
-        Returns the result formatted as a string using the implemented result
-        formatter.
+        Dumps the result to the given dumpfile
         '''
 
 class ConsoleFormatter(ResultFormatter):
@@ -273,6 +273,35 @@ class ConsoleFormatter(ResultFormatter):
 
         return self.format_separators(string)
 
+    def dump(self, dumpfile):
+        dumpfile.write(str(self))
+
+class InternalFormatter(ResultFormatter):
+    '''
+    Result formatter for internal use by this library.
+
+    This result formatter can be used to save results in order to rerun failed
+    tests.
+    '''
+    def __init__(self, arg=None, fromfile=False):
+        '''
+        :param fromfile: Indicates that the first argument is a file where
+        previous results were dumped and that we should parse results form
+        that file.
+        '''
+        super(InternalFormatter, self).__init__(arg)
+        if fromfile:
+            with open(arg, 'r') as f:
+                self.undump(f, protocol=constants.pickle_protocol)
+
+    def __str__(self):
+        return pickle.dumps(self.result, protocol=constants.pickle_protocol)
+
+    def dump(self, dumpfile):
+        pickle.dump(self.result, savefile, protocol=constants.pickle_protocol)
+
+    def undump(self, dumpfile):
+        self.result = pickle.load(dumpfile, protocol=constants.pickle_protocol)
 
 class JUnitFormatter(ResultFormatter):
     '''
@@ -430,6 +459,9 @@ class JUnitFormatter(ResultFormatter):
             xsuite.set("failures", str(failures))
             xsuite.set("skipped", str(skipped))
             xsuite.set("tests", str(len(suite.results)))
+
+    def dump(self, dumpfile):
+        dumpfile.write(str(self))
 
 
 if __name__ == '__main__':
