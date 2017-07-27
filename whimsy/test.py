@@ -48,7 +48,7 @@ class TestCase(object):
     '''
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, tags=None, fixtures=None):
+    def __init__(self, tags=None, fixtures=None, directory=None):
         '''
         All subclasses must call this __init__ method for them to be
         enumerated by the test loader.
@@ -61,6 +61,8 @@ class TestCase(object):
         if tags is None:
             tags = set()
         self.tags = set(tags)
+
+        self.directory = directory if directory else config.base_dir
 
     @abc.abstractmethod
     def test(self, fixtures):
@@ -160,7 +162,8 @@ def gem5_verify_config(name,
 
     tempdir = fixture.TempdirFixture(cached=True, lazy_init=True)
     # Testsuite to hold all verifiers for gem.
-    verifier_suite = suite.TestSuite('%s gem5 verifiers' % name)
+    verifier_suite = suite.TestSuite('%s gem5 verifiers' % name,
+                                     failfast=False)
     for verifier in verifiers:
         verifier_suite.add_items(verifier)
 

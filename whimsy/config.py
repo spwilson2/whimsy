@@ -48,6 +48,8 @@ class _Config(object):
         args = baseparser.parse_args()
         # Finish up our verbose args incrementing hack.
         args.verbose = args.verbose.val
+        if args.build_dir is None:
+            args.build_dir = os.path.join(args.base_dir, 'build')
         self._config_file_args = {}
 
         for attr in dir(args):
@@ -148,7 +150,9 @@ common_args = [
     Argument(
         '--build-dir',
         action='store',
-        default='build',
+        default=None,
+        # We need to manually set this default to config's
+        # --base-dir/build
         help='Build directory for SCons'),
     Argument(
         '--base-dir',

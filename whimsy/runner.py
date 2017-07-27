@@ -84,18 +84,18 @@ class Runner(object):
             # Add the result of the test or suite to our test_suite results.
             results.results.append(result)
 
-            if result.outcome in Result.failfast:
+            # If there was a chance we might need to skip the remaining
+            # tests...
+            if result.outcome in Result.failfast \
+                    and idx < len(test_suite) - 1:
                 if test_suite.failfast:
                     log.bold('Test failed in a failfast suite,'
-                                      ' skipping remaining tests.')
+                             ' skipping remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
                 elif config.fail_fast:
-                    log.bold(
-                            'Test failed with the %s '
-                            ' flag provided.')
-                    log.bold('Skipping remaining tests.')
+                    log.bold('Test failed with the --fail-fast flag provided.')
+                    log.bold('Ignoring remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
-
 
         for fixture in test_suite.fixtures.values():
             fixture.teardown()
