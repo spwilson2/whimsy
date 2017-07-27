@@ -284,6 +284,12 @@ class ListParser(ArgParser):
         )
 
         super(ListParser, self).__init__(parser)
+        Argument(
+            '--suites',
+            action='store_true',
+            default=False,
+            help='List all test suites.'
+        ).add_to(parser)
 
         common_args.directory.add_to(parser)
         mytags = common_args.tags.copy()

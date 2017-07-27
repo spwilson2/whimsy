@@ -6,18 +6,21 @@ from terminal import separator
 
 def list_fixtures(loader):
     for fixture in loader.fixtures:
-        print fixture.name
+        log.display(fixture.name)
 
 def list_tests(loader):
     log.display(separator())
-    log.display('Listing all Tests.')
+    log.display('Listing all TestCases.')
     log.display(separator())
     for test in loader.tests:
-        print test
+        log.display(test)
 
 def list_suites(loader):
+    log.display(separator())
+    log.display('Listing all TestSuites.')
+    log.display(separator())
     for suite in loader.suites:
-        print suite.uid
+        log.display(suite)
 
 def list_tags(loader):
     tags = set()
@@ -25,7 +28,7 @@ def list_tags(loader):
     for item in loader.suite.iter_inorder():
         tags.update(item.tags)
     for tag in tags:
-        print tag
+        log.display(tag)
 
 def list_tests_with_tags(loader, tags):
     log.display('Listing tests based on tags.')
