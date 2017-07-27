@@ -1,6 +1,7 @@
 import imp
 import os
 import re
+import sys
 import traceback
 import types
 import warnings
@@ -266,14 +267,18 @@ class TestLoader(object):
             testsuite = self._suite
 
         newdict = {
-                '__builtins__':__builtins__,
-                '__name__': path_as_modulename(path),
-                '__file__': path,
+            '__builtins__':__builtins__,
+            '__name__': path_as_modulename(path),
+            '__file__': path,
+            '__directory__': os.path.dirname(path),
         }
 
         self._wrap_init(TestSuite, self._collected_test_items)
         self._wrap_init(TestCase, self._collected_test_items)
         self._wrap_init(Fixture, self._collected_fixtures)
+
+        # Add the file's containing directory to the system path.
+        sys.path.insert(0, os.path.dirname(path))
 
         def cleanup():
             self._unwrap_init(TestSuite)
@@ -281,6 +286,7 @@ class TestLoader(object):
             self._unwrap_init(Fixture)
             self._collected_fixtures = helper.OrderedSet()
             self._collected_test_items = helper.OrderedSet()
+            del sys.path[0]
 
         try:
             execfile(path, newdict, newdict)
