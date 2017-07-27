@@ -28,18 +28,20 @@ def dorun():
         loader = load_tests()
         testrunner = runner.Runner(loader.suite)
 
-        results = testrunner.run()
+        if config.uid:
+            results = testrunner.run_uid(config.uid)
+        else:
+            results = testrunner.run()
 
-        formatter = result.ConsoleFormatter(results)
-        print(formatter)
+        if results is not None:
+            formatter = result.ConsoleFormatter(results)
+            logger.log.display(str(formatter))
 
 def dolist():
     loader = load_tests()
-    query.list_fixtures(loader)
+    if config.tags:
+        query.list_tests_with_tags(loader, config.tags)
     query.list_tests(loader)
-    query.list_suites(loader)
-    query.list_tags(loader)
-    query.list_tests_with_tags(loader, config.tags)
 
 def main():
     # Start logging verbosity at its minimum

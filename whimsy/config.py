@@ -171,6 +171,11 @@ common_args = [
         default=[],
         help=None),
     Argument(
+        '--uid',
+        action='store',
+        default=None,
+        help='UID of a specific test item to run.'),
+    Argument(
         '--build-dir',
         action='store',
         default=None,
@@ -253,6 +258,7 @@ class RunParser(ArgParser):
 
         super(RunParser, self).__init__(parser)
 
+        common_args.uid.add_to(parser)
         common_args.skip_build.add_to(parser)
         common_args.directory.add_to(parser)
         common_args.build_dir.add_to(parser)

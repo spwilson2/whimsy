@@ -7,6 +7,11 @@ from config import config, constants
 import helper
 import fixture
 import suite
+import os
+import _util
+
+def _as_kwargs(**kwargs):
+    return kwargs
 
 def steal_unittest_assertions(module):
     '''
@@ -47,6 +52,7 @@ class TestCase(object):
     enumerated by the test system.
     '''
     __metaclass__ = abc.ABCMeta
+    clsname = 'Testcase'
 
     def __init__(self, tags=None, fixtures=None, directory=None):
         '''
@@ -63,6 +69,7 @@ class TestCase(object):
         self.tags = set(tags)
 
         self.directory = directory if directory else config.base_dir
+        self.path = os.getcwd()
 
     @abc.abstractmethod
     def test(self, fixtures):
@@ -72,8 +79,20 @@ class TestCase(object):
     def name(self):
         pass
 
+    @property
+    def uid(self):
+        return _util.uid(self)
+
+    @abc.abstractmethod
+    def __copy__(self):
+        # When we copy we should create a completely new instance so it can be
+        # enumerated.
+        return TestCase(tags=self.tags.copy(),
+                        fixtures=self.fixtures.copy(),
+                        directory=self.directory)
+
 def gem5_test(test,
-              name=None,
+              name,
               tags=[],
               fixtures=[],
               valid_isas=None,
@@ -130,9 +149,11 @@ def gem5_test(test,
             tags = copy.copy(tags)
             tags.extend((opt, isa))
 
+            kwargs = _as_kwargs(name=name, fixtures=fixtures)
             if fixup_callback is not None:
                 fixup_callback(kwargs, isa, opt)
-            TestFunction(test, name=name, fixtures=fixtures)
+
+            TestFunction(test, **kwargs)
 
 def gem5_verify_config(name,
                        config,
@@ -167,16 +188,23 @@ def gem5_verify_config(name,
     if valid_isas is None:
         valid_isas = constants.supported_isas
 
-    tempdir = fixture.TempdirFixture(cached=True, lazy_init=True)
-    # Testsuite to hold all verifiers for gem.
-    verifier_suite = suite.TestSuite('%s gem5 verifiers' % name,
-                                     failfast=False)
-    for verifier in verifiers:
-        verifier_suite.add_items(verifier)
-
 
     for opt in valid_optimizations:
         for isa in valid_isas:
+
+            tempdir = fixture.TempdirFixture(cached=True, lazy_init=True)
+
+            # Common name of this generated testsuite.
+            _name = name + ' [{isa} - {opt}]'.format(isa=isa, opt=opt)
+
+            # Testsuite to hold all verifiers for gem.
+            verifier_suite = suite.TestSuite('%s gem5 verifiers' % _name,
+                                             failfast=False)
+            for verifier in verifiers:
+                verifier = copy.copy(verifier)
+                verifier._name = '{name} ({vname} verifier)'.format(name=_name,
+                                                          vname=verifier.name)
+                verifier_suite.add_items(verifier)
             # Create the gem5 target for the specific architecture and
             # optimization level.
             fixtures = copy.copy(fixtures)
@@ -185,14 +213,15 @@ def gem5_verify_config(name,
             tags = copy.copy(tags)
             tags.extend((opt, isa))
 
+
              # Create the test function.
             gem5_run = TestFunction(_create_test_run_gem5(config, config_args),
-                                    name=name,
+                                    name=_name,
                                     fixtures=fixtures)
 
             # Testsuite to hold our gem5 run in, we failfast because if a gem5 run
             # fails, there's no reason to verify results.
-            suite.TestSuite(name,
+            suite.TestSuite(_name,
                             fixtures=(tempdir,),
                             failfast=True,
                             tags=tags,
@@ -242,6 +271,14 @@ class TestFunction(TestCase):
     @property
     def name(self):
         return self._name
+
+    def __copy__(self):
+        # When we copy we should create a completely new instance so it can be
+        # enumerated.
+        return TestFunction(self.test, name=self.name,
+                            tags=self.tags.copy(),
+                            fixtures=self.fixtures.copy(),
+                            directory=self.directory)
 
 def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
     # If tag was given, then the test will be marked with that single tag.

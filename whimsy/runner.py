@@ -6,6 +6,7 @@ import traceback
 from logger import log
 import test as test
 import suite as suite
+from suite import TestSuite
 from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
 import terminal as terminal
 from config import config
@@ -47,6 +48,44 @@ class Runner(object):
 
         return results
 
+    def _find_uid(self, uid, suite, fixtures):
+        # Update the fixtures for test items contained at this level.
+        fixtures = fixtures.copy()
+        fixtures.update(suite.fixtures)
+
+        for testitem in suite:
+            if testitem.uid == uid:
+                return (testitem, fixtures)
+            if isinstance(testitem, TestSuite):
+                result = self._find_uid(uid, testitem, fixtures=fixtures)
+                if result is not None:
+                    return (result[0], result[1])
+            elif __debug__ and not isinstance(testitem, test.TestCase):
+                raise AssertionError(_util.unexpected_item_msg)
+
+    def run_uid(self, uid):
+
+        # Traverse our tree looking for the uid, if we can find it, we also
+        # want to enumerate the fixtures that that testcase will have.
+        result = self._find_uid(uid, self.test_suite, {})
+        if result is not None:
+            (testitem, fixtures) = result
+            if isinstance(testitem, suite.TestSuite):
+                return self.run_suite(testitem, fixtures=fixtures)
+            elif isinstance(testitem, test.TestCase):
+                # We need to create a parent suite result to attach this
+                # to.
+                test_container = TestSuiteResult(testitem.name)
+                test_container.results.append(
+                        self.run_test(testitem, fixtures=fixtures))
+
+                return test_container
+
+            elif __debug__:
+                raise AssertionError(_util.unexpected_item_msg)
+
+        # Create a new runner object with the suite we've found/created.
+
     def run_suite(self, test_suite, results=None, fixtures=None):
         '''
         Run all tests/suites. From the given test_suite.
@@ -78,8 +117,8 @@ class Runner(object):
                 result = self.run_suite(item, fixtures=fixtures)
             elif isinstance(item, test.TestCase):
                 result = self.run_test(item, fixtures=fixtures)
-            else:
-                assert False, _util.unexpected_item_msg
+            elif __debug__:
+                raise AssertionError(_util.unexpected_item_msg)
 
             # Add the result of the test or suite to our test_suite results.
             results.results.append(result)
@@ -191,7 +230,7 @@ class Runner(object):
                 result.reason = ("Previous test '%s' failed in a failfast"
                         " TestSuite." % failed_test)
                 result.outcome = Result.SKIP
-            else:
-                assert False, _util.unexpected_item_msg
+            elif __debug__:
+                raise AssertionError(_util.unexpected_item_msg)
             log.info('Skipping: %s' % item.name)
             results.results.append(result)

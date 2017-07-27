@@ -44,7 +44,6 @@ def _assert_files_in_same_dir(files):
         for f in files:
             assert os.path.dirname(f) == directory
 
-
 class TestLoader(object):
     '''
     Base class for discovering tests.
@@ -74,8 +73,16 @@ class TestLoader(object):
         self._collected_fixtures = helper.OrderedSet()
 
         self._fixtures = []
-        self._suites = []
-        self._tests = []
+
+        # Tests and suites are identified by the test loader in a format that
+        # enforces uniqueness - both so users and the test system can identify
+        # unique tests.
+        # Reverse index: item->uid
+        self._test_index  = {}
+        self._suite_index = {}
+        # Reverse index: uid->item
+        self._test_rindex = {}
+        self._suite_rindex = {}
 
         self._cached_tag_index = None
         self._cached_suitecall = None
@@ -93,12 +100,12 @@ class TestLoader(object):
     @property
     def suites(self):
         assert self._loaded_a_file
-        return tuple(self._suites)
+        return tuple(self._suite_index)
 
     @property
     def tests(self):
         assert self._loaded_a_file
-        return tuple(self._tests)
+        return tuple(self._test_index)
 
     @property
     def fixtures(self):
@@ -279,6 +286,8 @@ class TestLoader(object):
 
         # Add the file's containing directory to the system path.
         sys.path.insert(0, os.path.dirname(path))
+        cwd = os.getcwd()
+        os.chdir(os.path.dirname(path))
 
         def cleanup():
             self._unwrap_init(TestSuite)
@@ -287,6 +296,7 @@ class TestLoader(object):
             self._collected_fixtures = helper.OrderedSet()
             self._collected_test_items = helper.OrderedSet()
             del sys.path[0]
+            os.chdir(cwd)
 
         try:
             execfile(path, newdict, newdict)
@@ -308,8 +318,7 @@ class TestLoader(object):
             elif isinstance(item, TestSuite):
                 testsuites.append(item)
 
-        self._suites.extend(testsuites)
-        self._tests.extend(testcases)
+        self._index(*(testsuites + testcases))
         self._fixtures.extend(self._collected_fixtures)
 
         if testcases:
@@ -372,3 +381,22 @@ class TestLoader(object):
 
         cls.__init__ = old_init
         del self._wrapped_classes[cls]
+
+    def _index(self, *testitems):
+        def add_to_index(item, index, rindex):
+            if item in rindex:
+                raise DuplicateTestItemError()
+            rindex[item] = item.uid
+            index[item.uid] = item
+
+        for item in testitems:
+            if isinstance(item, TestCase):
+                add_to_index(item, self._test_index, self._test_rindex)
+            elif isinstance(item, TestSuite):
+                add_to_index(item, self._suite_index, self._suite_rindex)
+            elif __debug__:
+                raise AssertionError('Only can enumerate TestCase and'
+                                     ' TestSuite objects')
+
+class DuplicateTestItemError(Exception):
+    pass

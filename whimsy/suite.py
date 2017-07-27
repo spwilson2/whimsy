@@ -3,11 +3,14 @@
 # How?
 
 import _util
+import os
 
 if __debug__:
     import test
 
 class TestSuite(object):
+    clsname = 'Testsuite'
+
     '''An object containing a collection of tests or other test suites.'''
     def __init__(self, name, items=None, tags=None, fixtures=None, failfast=True, parallelizable=False):
         '''
@@ -30,6 +33,7 @@ class TestSuite(object):
         self.items = []
         self.failfast = failfast
         self.parallelizable = parallelizable
+        self.path = os.getcwd()
 
         if fixtures is None:
             fixtures = {}
@@ -43,6 +47,10 @@ class TestSuite(object):
 
         if items is not None:
             self.add_items(*items)
+
+    @property
+    def uid(self):
+        return _util.uid(self)
 
     def add_items(self, *items):
         '''Add the given items (TestCases or TestSuites) to this collection'''

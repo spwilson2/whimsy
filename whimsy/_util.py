@@ -176,3 +176,8 @@ def diff_out_file(ref_file, out_file, ignore_regexes=tuple()):
             return ''.join(tempfile_.readlines())
         else:
             return None
+
+def uid(testitem):
+    fmt = '{file}:{class_}:{name}'
+    return fmt.format(file=testitem.path, name=testitem.name,
+                      class_=testitem.clsname)
