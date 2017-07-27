@@ -78,6 +78,10 @@ class _Config(object):
 config = _Config()
 constants = config.constants
 constants.supported_isas = ['ARM', 'SPARC', 'X86', 'ALPHA', 'RISCV']
+constants.tempdir_fixture_name = 'tempdir'
+constants.gem5_simulation_stderr = 'simerr'
+constants.gem5_simulation_stdout = 'simout'
+constants.gem5_simulation_stats = 'stats.txt'
 
 
 class Argument(object):

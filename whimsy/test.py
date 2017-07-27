@@ -3,7 +3,7 @@ import copy
 from unittest import FunctionTestCase as _Ftc
 from functools import partial
 
-from config import config
+from config import config, constants
 import helper
 import fixture
 import suite
@@ -73,7 +73,7 @@ class TestCase(object):
 def gem5_test(test,
               name=None,
               tags=None,
-              fixtures=None,
+              fixtures=[],
               valid_isas=None,
               valid_optimizations=('opt',),
               fixup_callback=None):
@@ -114,9 +114,7 @@ def gem5_test(test,
     '''
 
     if valid_isas is None:
-        valid_isas = config.constants.supported_isas
-
-    fixtures = [] if fixtures is None else fixtures
+        valid_isas = constants.supported_isas
 
     # TODO: assert that the valid_optimizations are all valid
 
@@ -130,20 +128,7 @@ def gem5_test(test,
                 fixup_callback(kwargs, isa, opt)
             TestFunction(test, name=name, fixtures=fixtures)
 
-#def Gem5ProgramTest(name, program, config):
-#    '''
-#    Runs the given program using the given config and passes if no exception
-#    was thrown.
-#
-#    Note this is not an actual testcase, it generates a test function which
-#    can be used by gem5_test.
-#
-#    :param name: Name of the test.
-#    :param config: The config to give gem5.
-#    :param program: The executable to run using the config.
-#    '''
-
-def Gem5Test(name,
+def gem5_verify_config(name,
              config,
              config_args,
              verifiers,
@@ -154,18 +139,24 @@ def Gem5Test(name,
     Runs the given program using the given config and passes if no exception
     was thrown.
 
-    Note this is not an actual testcase, it generates a group of tests which
+    NOTE: This is not an actual testcase, it generates a group of tests which
     can be used by gem5_test.
 
     :param name: Name of the test.
     :param config: The config to give gem5.
     :param program: The executable to run using the config.
+
     :param verifiers: An iterable with Verifier instances which will be placed
     into a suite that will be ran after a gem5 run.
+
     :param valid_isas: An interable with the isas that this test can be ran
     for.
-    :param valid_optimizations:
+
+    :param valid_optimizations: An interable with the optimization levels that
+    this test can be ran for. (E.g. opt, debug)
     '''
+    if valid_isas is None:
+        valid_isas = constants.supported_isas
 
     tempdir = fixture.TempdirFixture(cached=True, lazy_init=True)
     # Testsuite to hold all verifiers for gem.
