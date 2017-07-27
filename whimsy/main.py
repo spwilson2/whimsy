@@ -36,8 +36,8 @@ def dorun():
         if results is not None:
             formatter = result.ConsoleFormatter(results)
             logger.log.display(str(formatter))
-            formatter = result.InternalFormatter(results)
-            logger.log.display(str(formatter))
+            #formatter = result.InternalFormatter(results)
+            #logger.log.display(str(formatter))
 
 def dolist():
     loader = load_tests()

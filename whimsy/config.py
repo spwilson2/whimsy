@@ -274,6 +274,21 @@ class RunParser(ArgParser):
                                  ' tags.')
         mytags.add_to(parser)
 
+        # TODO: Need to think about how reruns should work. There are probably
+        # a lot of edge cases...
+        # For instance:
+        #
+        # A verifier for gem5 stdout would be in its own suite, but it would
+        # need gem5 to run again to make it pass.
+        # Might require rethinking/additional param to TestSuite to make it
+        # a toplevel or something.
+        Argument(
+            '--rerun',
+            action='store_true',
+            default=False,
+            help='Only run previous test suites that failed.'
+        ).add_to(parser)
+
 
 class ListParser(ArgParser):
     '''
