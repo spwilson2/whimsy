@@ -8,6 +8,10 @@ import shutil
 import stat
 import helper
 
+# For now expose this here, we might need to make an implementation if not
+# everyone has python 2.7
+from collections import OrderedDict
+
 def kwonlyargs(given_kwargs, **available_kwargs):
     unrequested_kwargs = {}
     requested_kwargs = available_kwargs

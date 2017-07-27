@@ -78,8 +78,8 @@ class TestLoader(object):
         # enforces uniqueness - both so users and the test system can identify
         # unique tests.
         # Reverse index: item->uid
-        self._test_index  = {}
-        self._suite_index = {}
+        self._test_index  = _util.OrderedDict()
+        self._suite_index = _util.OrderedDict()
         # Reverse index: uid->item
         self._test_rindex = {}
         self._suite_rindex = {}
@@ -318,7 +318,7 @@ class TestLoader(object):
             elif isinstance(item, TestSuite):
                 testsuites.append(item)
 
-        self._index(*(testsuites + testcases))
+        self._index(*self._collected_test_items)
         self._fixtures.extend(self._collected_fixtures)
 
         if testcases:

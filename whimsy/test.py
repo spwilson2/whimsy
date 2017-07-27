@@ -198,7 +198,7 @@ def gem5_verify_config(name,
             _name = name + ' [{isa} - {opt}]'.format(isa=isa, opt=opt)
 
             # Testsuite to hold all verifiers for gem.
-            verifier_suite = suite.TestSuite('%s gem5 verifiers' % _name,
+            verifier_suite = suite.TestSuite('%s (Gem5 Verifiers)' % _name,
                                              failfast=False)
             for verifier in verifiers:
                 verifier = copy.copy(verifier)
