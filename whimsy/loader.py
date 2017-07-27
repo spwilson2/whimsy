@@ -38,11 +38,12 @@ def path_as_testsuite(filepath, *args, **kwargs):
     TestSuite(os.path.split(os.path.dirname(os.path.abspath(filepath)))[-1],
               *args, **kwargs)
 
-def _assert_files_in_same_dir(files):
-    if files:
-        directory = os.path.dirname(files[0])
-        for f in files:
-            assert os.path.dirname(f) == directory
+if __debug__:
+    def _assert_files_in_same_dir(files):
+        if files:
+            directory = os.path.dirname(files[0])
+            for f in files:
+                assert os.path.dirname(f) == directory
 
 class TestLoader(object):
     '''
@@ -53,8 +54,7 @@ class TestLoader(object):
     '''
     def __init__(self, filepath_filter=default_filepath_filter, tags=None):
 
-        self._suite = TestSuite('Default Suite Collection',
-                                failfast=False)
+        self._suite = TestSuite('Default Suite Collection', failfast=False)
         self.filepath_filter = filepath_filter
 
         if __debug__:
@@ -66,25 +66,33 @@ class TestLoader(object):
             tags = set()
         if isinstance(tags, str):
             tags = (tags,)
+        # NOTE: Purposely use the property version to drop cache
         self.tags = tags
 
+        # Member variables used to keep track of instances of suites, cases,
+        # and fixtures when execfile'ing. Should be reset for each file we
+        # load.
         self._wrapped_classes = {}
         self._collected_test_items = helper.OrderedSet()
         self._collected_fixtures = helper.OrderedSet()
 
+        # List of all the fixtures we have collected.
         self._fixtures = []
 
         # Tests and suites are identified by the test loader in a format that
         # enforces uniqueness - both so users and the test system can identify
         # unique tests.
-        # Reverse index: item->uid
+        # Reverse index: testitem->uid
         self._test_index  = _util.OrderedDict()
         self._suite_index = _util.OrderedDict()
-        # Reverse index: uid->item
+
+        # Reverse index: uid->testitem NOTE: Currently unused.
         self._test_rindex = {}
         self._suite_rindex = {}
 
+        # Holds a mapping of tag->testitem
         self._cached_tag_index = None
+        # Holds a test suite which contains tests which have our self.tags
         self._cached_suitecall = None
 
     @property
