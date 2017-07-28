@@ -84,12 +84,15 @@ class _Config(object):
 
 config = _Config()
 # Defaults are provided by the config if the attribute is not found in the
-# config.
+# config or commandline. For instance, if we are using the list command
+# fixtures might not be able to count on the build_dir being provided since we
+# aren't going to build anything.
 _defaults = config._defaults
 constants = config.constants
 _defaults.base_dir = os.path.abspath(os.path.join(helper.absdirpath(__file__),
                                                   os.pardir,
                                                   os.pardir))
+_defaults.result_path = os.path.join(os.getcwd(), '.testing-results')
 
 constants.x86_tag = 'X86'
 constants.sparc_tag = 'SPARC'
@@ -212,6 +215,18 @@ common_args = [
         default=False,
         help='Skip the building component of SCons targets.'
     ),
+    Argument(
+        '--result-path',
+        action='store',
+        default=_defaults.result_path,
+        help='The path to store results in.'
+    ),
+    Argument(
+        '--list-only-failed',
+        action='store_true',
+        default=False,
+        help='Only list tests that failed.'
+    )
 ]
 # NOTE: There is a limitation which arises due to this format. If you have
 # multiple arguments with the same name only the final one in the list will be
@@ -267,34 +282,13 @@ class RunParser(ArgParser):
         common_args.base_dir.add_to(parser)
         common_args.fail_fast.add_to(parser)
         common_args.threads.add_to(parser)
+        common_args.list_only_failed.add_to(parser)
 
         # Modify the help statement for the tags common_arg
         mytags = common_args.tags.copy()
         mytags.kwargs['help'] = ('Only run items marked with one of the given'
                                  ' tags.')
         mytags.add_to(parser)
-
-        # TODO: Need to think about how reruns should work. There are probably
-        # a lot of edge cases...
-        # For instance:
-        #
-        # A verifier for gem5 stdout would be in its own suite, but it would
-        # need gem5 to run again to make it pass.
-        # Might require rethinking/additional param to TestSuite to make it
-        # a toplevel or something.
-        Argument(
-            '--rerun',
-            action='store_true',
-            default=False,
-            help='Only run previous test suites that failed.'
-        ).add_to(parser)
-        Argument(
-            '--list-only-failed',
-            action='store_true',
-            default=False,
-            help='Only list tests that failed.'
-        ).add_to(parser)
-
 
 class ListParser(ArgParser):
     '''
@@ -320,8 +314,25 @@ class ListParser(ArgParser):
                                  ' given tags.')
         mytags.add_to(parser)
 
+class RerunParser(ArgParser):
+    def __init__(self, subparser):
+        parser = subparser.add_parser(
+            'rerun',
+            help='''Rerun failed tests.'''
+        )
+        super(RerunParser, self).__init__(parser)
+
+        common_args.skip_build.add_to(parser)
+        common_args.directory.add_to(parser)
+        common_args.build_dir.add_to(parser)
+        common_args.base_dir.add_to(parser)
+        common_args.fail_fast.add_to(parser)
+        common_args.threads.add_to(parser)
+        common_args.list_only_failed.add_to(parser)
+
 
 # Setup parser and subcommands
 baseparser = CommandParser()
 runparser = RunParser(baseparser.subparser)
 listparser = ListParser(baseparser.subparser)
+rerunparser = RerunParser(baseparser.subparser)

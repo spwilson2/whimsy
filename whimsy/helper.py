@@ -163,7 +163,7 @@ class OrderedSet(collections.MutableSet):
         return key in self.map
 
     def add(self, key):
-        if key not in self.map or update:
+        if key not in self.map:
             end = self.end
             curr = end[1]
             curr[2] = end[1] = self.map[key] = [key, curr, end]

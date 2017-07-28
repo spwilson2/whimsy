@@ -89,32 +89,17 @@ class TestCaseResult(TestResult):
         return self._name
 
 
-class TestSuiteResult(TestResult):
-    '''
-    Holds information containing one or more test cases or suites.
-    '''
-    def __init__(self, testsuite, *args, **kwargs):
-        super(TestSuiteResult, self).__init__(*args, **kwargs)
-        assert isinstance(testsuite, TestSuite)
-        self._name = testsuite.name
-        self.uid = testsuite.uid
-        self.self_contained = testsuite.self_contained
+class TestResultContainer(object):
+    def __init__(self, results=None):
+        if results is None:
+            results = []
+        self.results = results
 
-        self.results = []
-
-    def iter_inorder(self):
+    def __iter__(self):
         '''
-        Iterate over all the testsuite results and testcase results contained
-        in this collection of results. Traverses the tree in in-order fashion.
+        Return an iterator over the test suites and cases just in this suite.
         '''
-        return _util.iter_recursively(self, inorder=True)
-
-    def iter_leaves(self):
-        '''
-        Recursively iterate over all the TestCaseResult's contained in this
-        TestSuiteResult and TestSuiteResult's we contain.
-        '''
-        return _util.iter_recursively(self, inorder=False)
+        return iter(self.results)
 
     @property
     def outcome(self):
@@ -149,16 +134,57 @@ class TestSuiteResult(TestResult):
             return SKIP
         return PASS
 
+    def iter_inorder(self):
+        '''
+        Iterate over all the testsuite results and testcase results contained
+        in this collection of results. Traverses the tree in in-order fashion.
+        '''
+        return _util.iter_recursively(self, inorder=True)
+
+    def iter_leaves(self):
+        '''
+        Recursively iterate over all the TestCaseResult's contained in this
+        TestSuiteResult and TestSuiteResult's we contain.
+        '''
+        return _util.iter_recursively(self, inorder=False)
+
+    def iter_self_contained(self):
+        '''
+        Iterate through all items that are self_contained.
+        '''
+        for item in self.iter_inorder():
+            if getattr(item, 'self_contained', False):
+                yield item
+
+    def add_results(self, *results):
+        self.results.extend(results)
+
+    @property
+    def runtime(self):
+        time = 0
+        for testresult in self:
+            time += testresult.runtime
+        return time
+
+
+class TestSuiteResult(TestResultContainer, TestResult):
+    '''
+    Holds information containing one or more test cases or suites.
+    '''
+    def __init__(self, testsuite, *args, **kwargs):
+        # Explicityly bypass python MRO
+        TestResult.__init__(self, *args, **kwargs)
+        assert isinstance(testsuite, TestSuite)
+        #self.runtime = testsuite.runtime
+        self._name = testsuite.name
+        self.uid = testsuite.uid
+        self.self_contained = testsuite.self_contained
+
+        self.results = []
+
     @property
     def name(self):
         return self._name
-
-    def __iter__(self):
-        '''
-        Return an iterator over the test suites and cases just in this suite.
-        '''
-        return iter(self.results)
-
 
 class ResultFormatter(object):
     '''
@@ -332,7 +358,7 @@ class InternalFormatter(ResultFormatter):
         super(InternalFormatter, self).__init__(arg)
         if fromfile:
             with open(arg, 'r') as f:
-                self.undump(f, protocol=constants.pickle_protocol)
+                self.undump(f)
 
     def __str__(self):
         return pickle.dumps(self.result, protocol=constants.pickle_protocol)
@@ -341,7 +367,7 @@ class InternalFormatter(ResultFormatter):
         pickle.dump(self.result, dumpfile, protocol=constants.pickle_protocol)
 
     def undump(self, dumpfile):
-        self.result = pickle.load(dumpfile, protocol=constants.pickle_protocol)
+        self.result = pickle.load(dumpfile)
 
 class JUnitFormatter(ResultFormatter):
     '''

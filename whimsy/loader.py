@@ -226,9 +226,6 @@ class TestLoader(object):
         self._cached_suitecall = None
         self._cached_tag_index = None
 
-    def enumerate_fixtures(self):
-        pass
-
     def discover_files(self, root):
         files = []
 
@@ -339,6 +336,17 @@ class TestLoader(object):
                 testcases = helper.OrderedSet(testcases)
                 for testsuite in testsuites:
                     test_items -= helper.OrderedSet(testsuite.iter_inorder())
+
+            # Add any remaining tests to their own self_contained testsuite.
+            replaced_tests = []
+            for test_item in test_items:
+                if isinstance(test_item, TestCase):
+                    newsuite = TestSuite(test_item.name, (test_item,))
+                    replaced_tests.append((test_item, newsuite))
+            for old_item, newsuite in replaced_tests:
+                test_items.remove(old_item)
+                test_items.add(newsuite)
+
             self._suite.add_items(*test_items)
         elif testsuites:
             log.warn('No tests discovered in %s, but found %d '
