@@ -54,12 +54,8 @@ class _EnumVal(object):
     def __str__(self):
         return self.name
 
-    def __name__(self):
-        return self.name
-
     def __cmp__(self, other):
-        return self.val > other.val
-        return self.enums.index(self) > self.enums.index(other)
+        return self.val.__cmp__(other.val)
 
 class Timer(object):
     def __init__(self, start=False):

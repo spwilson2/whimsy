@@ -288,6 +288,12 @@ class RunParser(ArgParser):
             default=False,
             help='Only run previous test suites that failed.'
         ).add_to(parser)
+        Argument(
+            '--list-only-failed',
+            action='store_true',
+            default=False,
+            help='Only list tests that failed.'
+        ).add_to(parser)
 
 
 class ListParser(ArgParser):

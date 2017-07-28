@@ -8,7 +8,7 @@ import pickle
 
 import _util
 import terminal as termcap
-from config import constants
+from config import constants, config
 
 class InvalidResultException(Exception):
     pass
@@ -160,9 +160,7 @@ class ResultFormatter(object):
 
     @abc.abstractmethod
     def dump(self, dumpfile):
-        '''
-        Dumps the result to the given dumpfile
-        '''
+        '''Dumps the result to the given dumpfile'''
 
 class ConsoleFormatter(ResultFormatter):
     '''
@@ -184,29 +182,40 @@ class ConsoleFormatter(ResultFormatter):
             'INFO',
             'DEBUG',])
 
-    def __init__(self, result, verbosity=verbosity_levels.INFO, only_testcases=True):
+    def __init__(self, result, verbosity=verbosity_levels.INFO,
+                 only_testcases=True,
+                 only_failed=config.list_only_failed):
         super(ConsoleFormatter, self).__init__(result)
         self.only_testcases = only_testcases
         self.verbosity = verbosity
+        self.only_failed = only_failed
 
     def format_test(self, test):
-        string = '{color}{result}: {name}{reset}\n'.format(
-                color=self.result_colormap[test.outcome],
-                result=test.outcome,
-                name=test.name,
-                reset=self.reset)
-        if self.verbosity > self.verbosity_levels.DEBUG:
-            if test.reason:
-                string += 'Reason:\n\n'
-                string += '%s\n\n' % test.reason
+        string = ''
+        if (not self.only_failed) or test.outcome == FAIL:
+            string += '{color}{result}: {name}{reset}\n'.format(
+                    color=self.result_colormap[test.outcome],
+                    result=test.outcome,
+                    name=test.name,
+                    reset=self.reset)
+            if self.verbosity > self.verbosity_levels.DEBUG:
+                if test.reason:
+                    string += 'Reason:\n\n'
+                    string += '%s\n\n' % test.reason
         return string
 
     def format_tests(self, suite):
-        string = bytearray('')
+        string = ''
+        if self.only_failed:
+            only_failed_string = 'Only printing failed tests.\n'
+            string = only_failed_string
         for testcase in suite:
             string += self.format_test(testcase)
 
-        return str(string)
+        if self.only_failed and string == only_failed_string:
+            string += self.color.Bold + 'No tests failed.\n' + self.reset
+
+        return string
 
     def format_summary(self, summary):
         result_heading = 'Result'
@@ -235,7 +244,7 @@ class ConsoleFormatter(ResultFormatter):
         formatstring = '{name: <{maxname}}{h_sep}{count: >{maxresult}}\n'
 
         # Actually start building our string now.
-        string = bytearray(summarystring)
+        string = summarystring
         string += len(summarystring) * '-' + '\n'
         # Iterate through the results in the specified order by the enum type.
         for key in Result.enums:
@@ -245,7 +254,7 @@ class ConsoleFormatter(ResultFormatter):
                     count=summary[key],
                     maxname=maxname,
                     maxresult=maxresult)
-        return str(string)
+        return string
 
     def summarize_results(self):
         # If only_testcases don't summarize information about suites.
@@ -260,16 +269,37 @@ class ConsoleFormatter(ResultFormatter):
         format_separators = {self.sep_fmtkey: '='*termw}
         return string.format(**format_separators)
 
+    def format_efficient_summary(self, summarized_results):
+        fmt = ' {count} {outcome} in {time:.2} seconds '
+
+        # Outcomes should be ordered from lowest severity to highest.
+        for outcome in range(len(Result.enums)-1, -1, -1):
+            outcome = Result.enums[outcome]
+            if summarized_results[outcome]:
+                fmt = fmt.format(count=len(summarized_results[outcome]),
+                                 outcome=str(outcome),
+                                 time=self.result.runtime)
+                return termcap.insert_separator(
+                        fmt,
+                        color=self.result_colormap[outcome] + self.color.Bold)
+
+        return self.sep_fmtstr
+
+
     def __str__(self):
-        string = ''
-        string += self.sep_fmtstr
+        string = self.sep_fmtstr
         # If we only care about printing test cases logic looks simpler.
         if self.only_testcases:
             string += self.format_tests(self.result.iter_leaves())
 
-        string += self.sep_fmtstr
-        string += self.format_summary(self.summarize_results())
-        string += self.sep_fmtstr
+        if not self.only_failed:
+            # Create separator between previous results.
+            if self.only_testcases:
+                string += self.sep_fmtstr
+            string += self.format_summary(self.summarize_results())
+
+        # The final format separator contains the efficient summary.
+        string += self.format_efficient_summary(self.summarize_results())
 
         return self.format_separators(string)
 

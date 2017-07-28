@@ -30,7 +30,7 @@ def log_call(command, *popenargs, **kwargs):
     else:
         cmdstr = ' '.join(command)
 
-    logger.log.trace('Logging call to command %s' % cmdstr)
+    logger.log.trace('Logging call to command: %s' % cmdstr)
 
     stdout_redirect = kwargs.get('stdout', tuple())
     stderr_redirect = kwargs.get('stderr', tuple())

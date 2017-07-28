@@ -6,11 +6,12 @@ import traceback
 import types
 import warnings
 import copy
+import pickle
 
 from test import TestCase
 from suite import TestSuite
 from fixture import Fixture
-import logger
+from logger import log
 import helper
 import _util
 
@@ -309,9 +310,9 @@ class TestLoader(object):
         try:
             execfile(path, newdict, newdict)
         except Exception as e:
-            logger.log.warn('Tried to load tests from %s but failed with an'
+            log.warn('Tried to load tests from %s but failed with an'
                     ' exception.' % path)
-            logger.log.debug(traceback.format_exc())
+            log.debug(traceback.format_exc())
             cleanup()
             return
 
@@ -330,7 +331,7 @@ class TestLoader(object):
         self._fixtures.extend(self._collected_fixtures)
 
         if testcases:
-            logger.log.info('Discovered %d tests and %d testsuites in %s'
+            log.display('Discovered %d tests and %d testsuites in %s'
                              '' % (len(testcases), len(testsuites), path))
             if testsuites:
                 # Remove all tests contained in testsuites from being attached
@@ -340,10 +341,10 @@ class TestLoader(object):
                     test_items -= helper.OrderedSet(testsuite.iter_inorder())
             self._suite.add_items(*test_items)
         elif testsuites:
-            logger.log.warn('No tests discovered in %s, but found %d '
+            log.warn('No tests discovered in %s, but found %d '
                             ' TestSuites' % (path, len(testsuites)))
         else:
-            logger.log.warn('No tests discovered in %s' % path)
+            log.warn('No tests discovered in %s' % path)
 
         cleanup()
 

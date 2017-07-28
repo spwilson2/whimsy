@@ -40,11 +40,17 @@ class Runner(object):
         log.info(terminal.separator())
         log.info("Building all non 'lazy_init' fixtures")
 
-        setup_unbuilt(self.test_suite.enumerate_fixtures(),
-                      setup_lazy_init=False)
-        log.info('Running Tests')
+        failed_builds = setup_unbuilt(self.test_suite.enumerate_fixtures(),
+                                      setup_lazy_init=False)
+        if failed_builds:
+            error_str = ''
+            for fixture, error in failed_builds:
+                error_str += 'Failed to build %s\n' % fixture
+                error_str += '%s' % error
+            log.warn('Error(s) while building non lazy_init fixtures.')
+            log.warn(error_str)
+
         results = self.run_suite(self.test_suite)
-        log.info(terminal.separator())
 
         return results
 
@@ -105,13 +111,15 @@ class Runner(object):
         # cleanup and override local fixtures.
         fixtures = fixtures.copy()
         fixtures.update(test_suite.fixtures)
-        log.warn('Running suite %s' % test_suite.name)
+        if test_suite.self_contained:
+            log.display('Running TestSuite %s' % test_suite.name)
+        else:
+            log.debug('Running non self_contained TestSuite %s' % test_suite.name)
 
         suite_iterator = enumerate(test_suite)
 
+        results.timer.start()
         for (idx, item) in suite_iterator:
-            log.info(terminal.separator())
-            log.warn('Running item %s' %item)
 
             if isinstance(item, suite.TestSuite):
                 result = self.run_suite(item, fixtures=fixtures)
@@ -135,6 +143,7 @@ class Runner(object):
                     log.bold('Test failed with the --fail-fast flag provided.')
                     log.bold('Ignoring remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
+        results.timer.stop()
 
         for fixture in test_suite.fixtures.values():
             fixture.teardown()
@@ -194,11 +203,11 @@ class Runner(object):
         failed_builds = setup_unbuilt(fixtures.values(), setup_lazy_init=True)
         if failed_builds:
             result.outcome = Result.ERROR
-            reason = bytes('')
+            reason = ''
             for fixture, error in failed_builds:
-                reason += b'Failed to build %s\n' % fixture
-                reason += b'%s' % error
-            result.reason = str(reason)
+                reason += 'Failed to build %s\n' % fixture
+                reason += '%s' % error
+            result.reason = reason
         else:
             _run_test()
 
@@ -209,8 +218,6 @@ class Runner(object):
                 result=result.outcome,
                 color=ConsoleFormatter.result_colormap[result.outcome],
                 reset=terminal.termcap.Normal))
-        log.info(terminal.insert_separator(' %s '%result.outcome,
-                color=ConsoleFormatter.result_colormap[result.outcome]))
 
         for fixture in testobj.fixtures.itervalues():
             fixture.teardown()

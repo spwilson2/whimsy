@@ -18,26 +18,34 @@ def load_tests():
     Create a TestLoader and load tests for the directory given by the config.
     '''
     testloader = loader.TestLoader()
-    logger.log.info(terminal.separator())
-    logger.log.info('Loading Tests')
+    logger.log.display(terminal.separator())
+    logger.log.bold('Loading Tests')
+    logger.log.display('')
     testloader.load_root(config.directory)
-    logger.log.info(terminal.separator())
     return testloader
 
 def dorun():
         loader = load_tests()
         testrunner = runner.Runner(loader.suite)
 
+        logger.log.display(terminal.separator())
+        logger.log.bold('Running Tests')
+        logger.log.display('')
         if config.uid:
             results = testrunner.run_uid(config.uid)
         else:
             results = testrunner.run()
 
         if results is not None:
+            logger.log.display(terminal.separator())
+            logger.log.bold('Summarizing Test Results')
+            logger.log.display('')
             formatter = result.ConsoleFormatter(results)
+            # This will always contain a summary separator.
             logger.log.display(str(formatter))
-            #formatter = result.InternalFormatter(results)
-            #logger.log.display(str(formatter))
+        else:
+            logger.log.display(terminal.separator())
+
 
 def dolist():
     loader = load_tests()
