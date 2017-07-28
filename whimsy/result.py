@@ -9,6 +9,9 @@ import pickle
 import _util
 import terminal as termcap
 from config import constants, config
+if __debug__:
+    from test import TestCase
+    from suite import TestSuite
 
 class InvalidResultException(Exception):
     pass
@@ -64,10 +67,13 @@ class TestCaseResult(TestResult):
     '''
     Holds information corresponding to a single test case result.
     '''
-    def __init__(self, name, outcome=None, reason=None, *args, **kwargs):
+    def __init__(self, testcase, outcome=None, reason=None, *args, **kwargs):
         super(TestCaseResult, self).__init__(*args, **kwargs)
+        assert isinstance(testcase, TestCase)
+        self._name = testcase.name
+        self.uid = testcase.uid
+
         self._outcome = outcome
-        self._name = name
         self.reason = reason
 
     @property
@@ -87,9 +93,13 @@ class TestSuiteResult(TestResult):
     '''
     Holds information containing one or more test cases or suites.
     '''
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, testsuite, *args, **kwargs):
         super(TestSuiteResult, self).__init__(*args, **kwargs)
-        self._name = name
+        assert isinstance(testsuite, TestSuite)
+        self._name = testsuite.name
+        self.uid = testsuite.uid
+        self.self_contained = testsuite.self_contained
+
         self.results = []
 
     def iter_inorder(self):
@@ -328,7 +338,7 @@ class InternalFormatter(ResultFormatter):
         return pickle.dumps(self.result, protocol=constants.pickle_protocol)
 
     def dump(self, dumpfile):
-        pickle.dump(self.result, savefile, protocol=constants.pickle_protocol)
+        pickle.dump(self.result, dumpfile, protocol=constants.pickle_protocol)
 
     def undump(self, dumpfile):
         self.result = pickle.load(dumpfile, protocol=constants.pickle_protocol)

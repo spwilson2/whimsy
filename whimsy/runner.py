@@ -70,9 +70,13 @@ class Runner(object):
                 raise AssertionError(_util.unexpected_item_msg)
 
     def run_uid(self, uid):
+        '''
+        Traverse our tree looking for the uid, if we can find it, we also
+        want to enumerate the fixtures that that testcase will have.
 
-        # Traverse our tree looking for the uid, if we can find it, we also
-        # want to enumerate the fixtures that that testcase will have.
+        Note: This is an expensive call, if you know that the uid is a
+        self_contained suite. Use run self_contained instead.
+        '''
         result = self._find_uid(uid, self.test_suite, {})
         if result is not None:
             (testitem, fixtures) = result
@@ -81,7 +85,7 @@ class Runner(object):
             elif isinstance(testitem, test.TestCase):
                 # We need to create a parent suite result to attach this
                 # to.
-                test_container = TestSuiteResult(testitem.name)
+                test_container = TestSuiteResult(testitem)
                 test_container.results.append(
                         self.run_test(testitem, fixtures=fixtures))
 
@@ -103,7 +107,7 @@ class Runner(object):
         3. Handle teardown for all fixtures in the test_suite.
         '''
         if results is None:
-            results = TestSuiteResult(test_suite.name)
+            results = TestSuiteResult(test_suite)
         if fixtures is None:
             fixtures = {}
 
@@ -163,7 +167,7 @@ class Runner(object):
         if fixtures is None:
             fixtures = {}
         if result is None:
-            result = TestCaseResult(testobj.name)
+            result = TestCaseResult(testobj)
         else:
             # If we are given a result. We'll be updating its outcome by
             # testing.
@@ -231,9 +235,9 @@ class Runner(object):
         '''
         for (idx, item) in remaining_iterator:
             if isinstance(item, suite.TestSuite):
-                result = TestSuiteResult(item.name)
+                result = TestSuiteResult(item)
             elif isinstance(item, test.TestCase):
-                result = TestCaseResult(item.name)
+                result = TestCaseResult(item)
                 result.reason = ("Previous test '%s' failed in a failfast"
                         " TestSuite." % failed_test)
                 result.outcome = Result.SKIP
