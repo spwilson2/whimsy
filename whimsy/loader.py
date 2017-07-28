@@ -108,12 +108,12 @@ class TestLoader(object):
     @property
     def suites(self):
         assert self._loaded_a_file
-        return tuple(self._suite_index)
+        return tuple(self._suite_rindex)
 
     @property
     def tests(self):
         assert self._loaded_a_file
-        return tuple(self._test_index)
+        return tuple(self._test_rindex)
 
     @property
     def fixtures(self):

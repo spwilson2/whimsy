@@ -13,14 +13,15 @@ def list_tests(loader):
     log.display('Listing all TestCases.')
     log.display(separator())
     for test in loader.tests:
-        log.display(test)
+        log.display(test.uid)
 
 def list_suites(loader):
     log.display(separator())
-    log.display('Listing all TestSuites.')
+    log.display('Listing all self contained TestSuites.')
     log.display(separator())
     for suite in loader.suites:
-        log.display(suite)
+        if suite.self_contained:
+            log.display(suite.uid)
 
 def list_tags(loader):
     tags = set()

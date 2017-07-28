@@ -12,27 +12,30 @@ class TestSuite(object):
     clsname = 'Testsuite'
 
     '''An object containing a collection of tests or other test suites.'''
-    def __init__(self, name, items=None, tags=None, fixtures=None, failfast=True, parallelizable=False):
+    def __init__(self, name, items=None, tags=None, fixtures=None,
+                 failfast=True, self_contained=None):
         '''
-        All test suites are implicitly added into the top_level TestSuite.
         This forms a DAG so test runners can traverse this running test suite
         collections.
 
-        :param items: A list of TestCase classes or TestSuite objects.
-
-        :param name:
+        :param items: An iterable of TestCase or TestSuite objects.
+        :param name: Name of the TestSuite
 
         :param failfast: If True indicates the first test to fail in the test
         suite will cause the execution of the test suite to halt.
 
-        :param paralleizable: keyword only arg - indicates that tests and
-        suites contained within are parallelizable with respect to eachother.
+        :param self_contained: Indicates that this entire TestSuite does not
+        rely on any parent suites to be reran. Defaults to failfast value if
+        None given.
+
+        :ivar self_contained: Means that when tests are reran to update FAIL
+        outcome, this suite and all of its children form an top level entity
+        that will be ran.
         '''
 
         self.name = name
         self.items = []
         self.failfast = failfast
-        self.parallelizable = parallelizable
         self.path = os.getcwd()
 
         if fixtures is None:
@@ -47,6 +50,12 @@ class TestSuite(object):
 
         if items is not None:
             self.add_items(*items)
+
+        # TODO: Either update description or think of way to assert that we
+        # don't rely on parent fixtures.
+        if self_contained is None:
+            self_contained = failfast
+        self.self_contained = self_contained
 
     @property
     def uid(self):
@@ -68,31 +77,25 @@ class TestSuite(object):
             self._detect_cycle()
         self.items.extend(items)
 
-    def require_fixture():
-        '''
-        Require the given fixture to run this test suite and all its
-        elements.
-        '''
-        pass
+    if __debug__:
+        def _detect_cycle(self):
+            '''
+            Traverse the DAG looking for cycles.
 
-    def _detect_cycle(self):
-        '''
-        Traverse the DAG looking for cycles.
-
-        Note: Since we don\'t currently allow duplicates in test suites, this
-        logic is simple and we can just check that there are no duplicates as
-        we recurse down the tree.
-        '''
-        collected_set = set()
-        def recursive_check(test_suite):
-            if type(test_suite) == TestSuite:
-                for item in test_suite:
-                    if item in collected_set:
-                        return True
-                    collected_set.add(item)
-                    recursive_check(item)
-            return False
-        return recursive_check(self)
+            Note: Since we don\'t currently allow duplicates in test suites, this
+            logic is simple and we can just check that there are no duplicates as
+            we recurse down the tree.
+            '''
+            collected_set = set()
+            def recursive_check(test_suite):
+                if type(test_suite) == TestSuite:
+                    for item in test_suite:
+                        if item in collected_set:
+                            return True
+                        collected_set.add(item)
+                        recursive_check(item)
+                return False
+            return recursive_check(self)
 
     def __len__(self):
         return len(self.items)
