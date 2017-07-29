@@ -56,7 +56,6 @@ class Runner(object):
         want to enumerate the fixtures that that testcase will have.
         '''
         for testitem in _util.iter_recursively(self.suites, inorder=True):
-            print testitem.uid
             if testitem.uid == uid:
                 break
         else:
@@ -93,16 +92,24 @@ class Runner(object):
         suite_iterator = enumerate(test_suite)
 
         results.timer.start()
-        for (idx, item) in suite_iterator:
-            assert isinstance(item, TestCase)
-            result = self.run_test(item, fixtures=test_suite.fixtures)
+        for (idx, (testlist, testcase)) in suite_iterator:
+            assert isinstance(testcase, TestCase)
+            result = self.run_test(testcase, fixtures=test_suite.fixtures)
             results.append(result)
 
             # If there was a chance we might need to skip the remaining
             # tests...
             if result.outcome in Result.failfast \
                     and idx < len(test_suite) - 1:
-                if config.fail_fast:
+                if testlist.fail_fast:
+                    log.bold('Test failed with the --fail-fast flag provided.')
+                    log.bold('Ignoring remaining tests.')
+                    self._generate_skips(result.name, results, suite_iterator)
+                elif test_suite.fail_fast:
+                    log.bold('Test failed with the --fail-fast flag provided.')
+                    log.bold('Ignoring remaining tests.')
+                    self._generate_skips(result.name, results, suite_iterator)
+                elif config.fail_fast:
                     log.bold('Test failed with the --fail-fast flag provided.')
                     log.bold('Ignoring remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
@@ -135,31 +142,24 @@ class Runner(object):
         def _run_test():
             log.info('TestCase: %s' % testobj.name)
             result.timer.start()
-            for idx, testunit in enumerate(testobj):
-                try:
-                    testunit(fixtures=fixtures)
-                except AssertionError as e:
-                    result.reason = e.message
-                    if not result.reason:
-                        result.reason = traceback.format_exc()
-                    result.outcome = Result.FAIL
-                except test.TestSkipException as e:
-                    result.reason = e.message
-                    result.outcome = Result.SKIP
-                except test.TestFailException as e:
-                    result.reason = e.message
-                    result.outcome = Result.FAIL
-                except Exception as e:
+            try:
+                testobj(fixtures=fixtures)
+            except AssertionError as e:
+                result.reason = e.message
+                if not result.reason:
                     result.reason = traceback.format_exc()
-                    result.outcome = Result.FAIL
-                else:
-                    result.outcome = Result.PASS
-                if result.outcome in Result.failfast \
-                        and idx < len(testobj) - 1:
-                    if config.fail_fast:
-                        log.bold('Test failed with the --fail-fast flag provided.')
-                        log.bold('Ignoring remaining tests.')
-                        break
+                result.outcome = Result.FAIL
+            except test.TestSkipException as e:
+                result.reason = e.message
+                result.outcome = Result.SKIP
+            except test.TestFailException as e:
+                result.reason = e.message
+                result.outcome = Result.FAIL
+            except Exception as e:
+                result.reason = traceback.format_exc()
+                result.outcome = Result.FAIL
+            else:
+                result.outcome = Result.PASS
             result.timer.stop()
 
         # Build any fixtures that haven't been built yet.
@@ -193,11 +193,9 @@ class Runner(object):
         Generate SKIP for all remaining tests (for use with the failfast
         suite option)
         '''
-        for (idx, item) in remaining_iterator:
-            if isinstance(item, TestSuite):
-                result = TestSuiteResult(item)
-            elif isinstance(item, TestCase):
-                result = TestCaseResult(item)
+        for (idx, (testlist, testcase)) in remaining_iterator:
+            if isinstance(testcase, TestCase):
+                result = TestCaseResult(testcase)
                 result.reason = ("Previous test '%s' failed in a failfast"
                         " TestSuite." % failed_test)
                 result.outcome = Result.SKIP
@@ -205,5 +203,5 @@ class Runner(object):
                 result.timer.stop()
             elif __debug__:
                 raise AssertionError(_util.unexpected_item_msg)
-            log.info('Skipping: %s' % item.name)
+            log.info('Skipping: %s' % testcase.name)
             results.results.append(result)

@@ -8,7 +8,7 @@ import copy
 import helper
 from fixture import Fixture
 from logger import log
-from suite import TestSuite, SuiteCollection
+from suite import TestSuite, SuiteList, TestList
 from test import TestCase
 import _util
 
@@ -52,7 +52,7 @@ class TestLoader(object):
     '''
     def __init__(self, filepath_filter=default_filepath_filter, tags=None):
 
-        self._suites = SuiteCollection()
+        self._suites = SuiteList()
         self.filepath_filter = filepath_filter
 
         if __debug__:
@@ -332,6 +332,7 @@ class TestLoader(object):
             if testsuites:
                 testcases = helper.OrderedSet(testcases)
                 for testsuite in testsuites:
+                    import pdb; pdb.set_trace()
                     testcases -= helper.OrderedSet(testsuite.testcases)
 
             # Add any remaining tests to the module TestSuite.

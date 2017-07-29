@@ -17,7 +17,7 @@ def _iterable_regex(regex):
 class Verifier(test.TestFunction):
     tempdir_fixture_name = constants.tempdir_fixture_name
 
-class MatchGoldStandard(test.TestUnitFunction):
+class MatchGoldStandard(test.TestFunction):
     '''
     Compares a standard output to the test output and passes if they match,
     fails if they do not.
@@ -84,7 +84,7 @@ class MatchStats(MatchGoldStandard):
                                           name=MatchStats.__name__,
                                           ignore_regex=ignore_regex)
 
-class MatchRegex(test.TestUnitFunction):
+class MatchRegex(test.TestFunction):
     def __init__(self, regex, name=None, match_stderr=True, match_stdout=True):
         super(MatchRegex, self).__init__(self.test, name=name)
         self.regex = _iterable_regex(regex)

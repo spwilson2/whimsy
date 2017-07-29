@@ -43,56 +43,19 @@ def skip(message):
     '''Cause the current test to skip with the given message.'''
     raise TestSkipException(message)
 
-class BaseTestCase(object):
-    __metaclass__ = abc.ABCMeta
-    @abc.abstractmethod
-    def __init__(self, name):
-        self._path = os.getcwd()
-        self._name = name
-    @property
-    def uid(self):
-        return _util.uid(self)
-    @property
-    def path(self):
-        return self._path
-    @property
-    def name(self):
-        return self._name
-
-class TestUnit(BaseTestCase):
+class TestCase(object):
     '''
-    Represents a non-self contained test entity. See TestCase for more details.
-    '''
-    def __init__(self, name):
-        super(TestUnit, self).__init__(name)
-
-    @abc.abstractmethod
-    def __call__(self, fixtures):
-        pass
-
-class TestCase(BaseTestCase):
-    '''
-    The TestCase represents a single test (TestCaseFunction) or collection of
-    tests (Subtest) which form a completely self contained entity, that is if
-    they need to be re-ran they can be re-ran without any other tests running.
-
-    This default TestCase implementation assumes that a SubtestCollection is
-    given as the `subtests` argument. It's expected that subclasses might
-    ignore the `subtests` kwarg if they do not plan to contain subtests.
-
     For example: in a test were we run gem5 and verify output. The combination
     of running gem5 and verifying output forms a TestCase. Whereas it would be
     imposible to run verify output if gem5 was not run first. In this example
     both gem5 and verify output would be subtests of a single TestCase.
     '''
-    def __init__(self, name, subtests, tags=None, fixtures=None,  **kwargs):
+    __metaclass__ = abc.ABCMeta
+    def __init__(self, name, tags=None, fixtures=None):
         '''
         __init__ must be called in subclasses for self contained tests to be
         recognized by the test loader.
         '''
-        super(TestCase, self).__init__(name, **kwargs)
-        self.subtests = subtests
-
         if fixtures is None:
             fixtures = {}
         elif not isinstance(fixtures, dict):
@@ -104,20 +67,28 @@ class TestCase(BaseTestCase):
         self.tags = set(tags)
 
         self._name = name
+        self._path = os.getcwd()
 
-    def __iter__(self):
-        return _util.iter_recursively(self.subtests, inorder=False)
+    @property
+    def uid(self):
+        return _util.uid(self)
+    @property
+    def path(self):
+        return self._path
+    @property
+    def name(self):
+        return self._name
+    @abc.abstractmethod
+    def __call__(self, fixtures):
+        pass
 
-    def __len__(self):
-        return sum(1 for _ in self)
-
-class TestFunction(object):
+class TestFunction(TestCase):
     __metaclass__ = abc.ABCMeta
-    def __init__(self, test, name=None):
+    def __init__(self, test, name=None, *args, **kwargs):
         if name is None:
             # If not given a name, take the name of the function.
             name = test.__name__
-        self._name = name
+        super(TestFunction, self).__init__(name, *args, **kwargs)
         self._test_function = test
 
     def __call__(self, fixtures):
@@ -126,34 +97,6 @@ class TestFunction(object):
         '''
         self._test_function(fixtures)
 
-class TestCaseFunction(TestCase):
-    '''
-    Class which wraps functions to use as a testcase.
-    '''
-    def __init__(self, test, name=None, *args, **kwargs):
-        testunit = TestUnitFunction(test, name)
-        testunit = SubtestCollection((testunit,))
-        super(TestCaseFunction, self).__init__(name, testunit, *args, **kwargs)
-
-
-class TestUnitFunction(TestFunction, TestUnit):
-    '''
-    Class which wraps functions to use as a TestUnit.
-    '''
-    def __init__(self, test, name=None):
-        TestUnit.__init__(self, name)
-        TestFunction.__init__(self, test, name)
-
-class SubtestCollection(list):
-    '''
-    Contains TestUnits or other SubtestCollections
-    '''
-    def __init__(self, subtests=tuple(), fail_fast=False):
-        self.fail_fast = fail_fast
-        self.extend(subtests)
-
-    def __add__(self, rhs):
-        return SubtestCollection(list.__add__(self, rhs), self.fail_fast)
 
 def gem5_verify_config(name,
                        config,
@@ -200,19 +143,17 @@ def gem5_verify_config(name,
 
             # Create copies of the verifier subtests for this isa and
             # optimization.
-            verifier_subtests = []
+            verifier_tests = []
             for verifier in verifiers:
                 #verifier = copy.copy(verifier)
                 verifier._name = '{name} ({vname} verifier)'.format(
                         name=_name,
                         vname=verifier.name)
 
-                verifier_subtests.append(verifier)
+                verifier_tests.append(verifier)
 
             # Place the verifier subtests into a collection.
-            verifier_collection = SubtestCollection(
-                    fail_fast=False,
-                    subtests=verifier_subtests)
+            verifier_collection = TestList(verifier_tests, fail_fast=False)
 
             # Create the gem5 target for the specific architecture and
             # optimization level.
@@ -224,23 +165,24 @@ def gem5_verify_config(name,
             tags.extend((opt, isa))
 
             # Create the running of gem5 subtest.
-            gem5_subtest = TestUnitFunction(
+            gem5_subtest = TestFunction(
                     _create_test_run_gem5(config, config_args),
                     name=_name)
 
             # Place our gem5 run and verifiers into a failfast test
             # collection. We failfast because if a gem5 run fails, there's no
             # reason to verify results.
-            gem5_test_collection =  SubtestCollection(
-                    fail_fast=True,
-                    subtests=(gem5_subtest, verifier_collection))
-            # Finally construct the self contained TestCase out of our
-            # subtests.
-            a = TestCase(
+            gem5_test_collection =  TestList(
+                    (gem5_subtest, verifier_collection),
+                    fail_fast=True)
+
+            # Finally construct the self contained TestSuite out of our
+            # tests.
+            a = suite.TestSuite(
                     _name,
                     fixtures=fixtures,
                     tags=tags,
-                    subtests=gem5_test_collection)
+                    tests=gem5_test_collection)
 
 def _create_test_run_gem5(config, config_args):
     def test_run_gem5(fixtures):
@@ -278,7 +220,7 @@ def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
 
     def testfunctiondecorator(function):
         '''Decorator used to mark a function as a test case.'''
-        TestCaseFunction(function, name=name, tags=tags, fixtures=fixtures)
+        TestFunction(function, name=name, tags=tags, fixtures=fixtures)
         return function
     if function is not None:
         return testfunctiondecorator(function)

@@ -83,7 +83,7 @@ def singleton(cls):
         return instances[cls]
     return getinstance
 
-def iter_recursively(self, inorder=True):
+def iter_recursively(self, inorder=True, yield_container=False):
     '''
     Recursively iterate over all items contained in this collection.
 
@@ -92,16 +92,19 @@ def iter_recursively(self, inorder=True):
     '''
     for item in self:
         if isinstance(item, collections.Iterable):
-            if inorder:
+            if inorder and not yield_container:
                 # yield the node first
                 yield item
 
             # Recurse into that node.
-            for item_of_item in iter_recursively(item, inorder):
+            for item_of_item in iter_recursively(item, inorder, yield_container):
                 yield item_of_item
         else:
             # Otherwise just yield the leaf
-            yield item
+            if yield_container:
+                yield (self, item)
+            else:
+                yield item
 
 unexpected_item_msg = \
         'Only TestSuites and TestCases should be contained in a TestSuite'
