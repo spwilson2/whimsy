@@ -30,15 +30,17 @@ def load_tests():
 
 def dorun():
         loader = load_tests()
-        testrunner = runner.Runner(loader.suites)
+        with open(config.result_path, 'w') as result_file:
+            testrunner = runner.Runner(loader.suites,
+                    (result.InternalLogger(result_file),))
 
-        logger.log.display(terminal.separator())
-        logger.log.bold('Running Tests')
-        logger.log.display('')
-        if config.uid:
-            results = testrunner.run_uid(config.uid)
-        else:
-            results = testrunner.run()
+            logger.log.display(terminal.separator())
+            logger.log.bold('Running Tests')
+            logger.log.display('')
+            if config.uid:
+                results = testrunner.run_uid(config.uid)
+            else:
+                results = testrunner.run()
 
         #if results is not None:
         #    logger.log.display(terminal.separator())
