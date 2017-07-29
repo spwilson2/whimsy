@@ -40,22 +40,22 @@ def dorun():
         else:
             results = testrunner.run()
 
-        if results is not None:
-            logger.log.display(terminal.separator())
-            logger.log.bold('Summarizing Test Results')
-            logger.log.display('')
+        #if results is not None:
+        #    logger.log.display(terminal.separator())
+        #    logger.log.bold('Summarizing Test Results')
+        #    logger.log.display('')
 
-            # Save the results in a format which we can retrieve later.
-            formatter = result.InternalFormatter(results)
+        #    # Save the results in a format which we can retrieve later.
+        #    formatter = result.InternalFormatter(results)
 
-            with open(config.result_path, 'w') as result_file:
-                formatter.dump(result_file)
+        #    with open(config.result_path, 'w') as result_file:
+        #        formatter.dump(result_file)
 
-            formatter = result.ConsoleFormatter(results)
-            # This will always contain a summary separator.
-            logger.log.display(str(formatter))
-        else:
-            logger.log.display(terminal.separator())
+        #    formatter = result.ConsoleFormatter(results)
+        #    # This will always contain a summary separator.
+        #    logger.log.display(str(formatter))
+        #else:
+        #    logger.log.display(terminal.separator())
 
 def dorerun():
     # Load previous results

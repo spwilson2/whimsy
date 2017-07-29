@@ -332,7 +332,6 @@ class TestLoader(object):
             if testsuites:
                 testcases = helper.OrderedSet(testcases)
                 for testsuite in testsuites:
-                    import pdb; pdb.set_trace()
                     testcases -= helper.OrderedSet(testsuite.testcases)
 
             # Add any remaining tests to the module TestSuite.
