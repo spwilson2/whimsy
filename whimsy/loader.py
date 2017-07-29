@@ -1,18 +1,15 @@
-import imp
 import os
 import re
 import sys
 import traceback
 import types
-import warnings
 import copy
-import pickle
 
-from test import TestCase
-from suite import TestSuite, SuiteCollection
+import helper
 from fixture import Fixture
 from logger import log
-import helper
+from suite import TestSuite, SuiteCollection
+from test import TestCase
 import _util
 
 # Ignores filenames that begin with '.'
@@ -70,13 +67,6 @@ class TestLoader(object):
         # NOTE: Purposely use the property version to drop cache
         self.tags = tags
 
-        # Member variables used to keep track of instances of suites, cases,
-        # and fixtures when execfile'ing.
-        # They are temporary and will be reset for each file we load.
-        self._wrapped_classes = {}
-        self._collected_test_items = helper.OrderedSet()
-        self._collected_fixtures = helper.OrderedSet()
-
         # List of all the fixtures we have collected.
         self._fixtures = []
 
@@ -95,6 +85,14 @@ class TestLoader(object):
         self._cached_tag_index = None
         # Holds a test suite which contains tests which have our self.tags
         self._cached_suitecall = None
+
+        # Member variables used to keep track of instances of suites, cases,
+        # and fixtures when execfile'ing.
+        # They are temporary and will be reset for each file we load.
+        self._wrapped_classes = {}
+        self._collected_test_items = helper.OrderedSet()
+        self._collected_fixtures = helper.OrderedSet()
+
 
     @property
     def tags(self):
@@ -121,11 +119,10 @@ class TestLoader(object):
         assert self._loaded_a_file
         return tuple(self._fixtures)
 
-    @property
-    def suite(self):
+    def collection_with_tags(self):
         '''
-        Return a suite containing all tests/suites that are marked with all of our
-        tags.
+        Return a suite collection containing all tests/suites that are marked
+        with all of our tags.
 
         NOTE: This is an expensive operation since we need to recurse the
         tree of suites to build tag indexes.
