@@ -49,12 +49,6 @@ class BaseTestCase(object):
     def __init__(self, name):
         self._path = os.getcwd()
         self._name = name
-    @abc.abstractmethod
-    def __call__(self, fixtures):
-        pass
-    @abc.abstractproperty
-    def clsname(self):
-        pass
     @property
     def uid(self):
         return _util.uid(self)
@@ -63,26 +57,18 @@ class BaseTestCase(object):
         return self._path
     @property
     def name(self):
-        return self.name
+        return self._name
 
-class Subtest(BaseTestCase):
+class TestUnit(BaseTestCase):
     '''
     Represents a non-self contained test entity. See TestCase for more details.
-
-    A subtest may contain other subtests. Subtests should be ran in in-order fashion.
-
-    :param fail_fast: If a single subtest fails, skip the remaining subtests.
     '''
-    clsname = __class__
-    def __init__(self, name, subtests=None, fail_fast=True):
-        super(Subtest, self).__init__(name)
-        self.subtests = subtests
-        self.fail_fast = fail_fast
+    def __init__(self, name):
+        super(TestUnit, self).__init__(name)
 
-    def __iter__(self):
-        if subtests is not None:
-            for subtest in self.subtests:
-                yield subtest
+    @abc.abstractmethod
+    def __call__(self, fixtures):
+        pass
 
 class TestCase(BaseTestCase):
     '''
@@ -99,8 +85,11 @@ class TestCase(BaseTestCase):
     imposible to run verify output if gem5 was not run first. In this example
     both gem5 and verify output would be subtests of a single TestCase.
     '''
-    clsname = 'Testcase'
-    def __init__(self, name, tags=None, fixtures=None, subtests=None, **kwargs):
+    def __init__(self, name, subtests, tags=None, fixtures=None,  **kwargs):
+        '''
+        __init__ must be called in subclasses for self contained tests to be
+        recognized by the test loader.
+        '''
         super(TestCase, self).__init__(name, **kwargs)
         self.subtests = subtests
 
@@ -116,8 +105,11 @@ class TestCase(BaseTestCase):
 
         self._name = name
 
-    def __call__(self, fixtures):
-        subtests(fixtures)
+    def __iter__(self):
+        return _util.iter_recursively(self.subtests, inorder=False)
+
+    def __len__(self):
+        return sum(1 for _ in self)
 
 class TestFunction(object):
     __metaclass__ = abc.ABCMeta
@@ -139,22 +131,21 @@ class TestCaseFunction(TestFunction, TestCase):
     Class which wraps functions to use as a testcase.
     '''
 
-class SubtestFunction(TestFunction, Subtest):
+class TestUnitFunction(TestFunction, TestUnit):
     '''
-    Class which wraps functions to use as a subtest.
+    Class which wraps functions to use as a TestUnit.
     '''
 
 class SubtestCollection(list):
     '''
-    Contains Subtests or other SubtestsCollections
+    Contains TestUnits or other SubtestCollections
     '''
-    def __init__(self, subtests=tuple()):
-        super(list, self).__init__(subtests)
+    def __init__(self, subtests=tuple(), fail_fast=False):
+        self.fail_fast = fail_fast
+        self.extend(subtests)
 
-    def __call__(self, fixtures):
-        '''Run all subtests contained in this collection.'''
-        for subtest in self:
-            subtest(fixtures)
+    def __add__(self, rhs):
+        return SubtestCollection(list.__add__(self, rhs), self.fail_fast)
 
 def gem5_verify_config(name,
                        config,
@@ -193,7 +184,7 @@ def gem5_verify_config(name,
             # Create a tempdir fixture to be shared throughout the test.
             tempdir = fixture.TempdirFixture(cached=True, lazy_init=True)
 
-            # Common name of this generated testsuite.
+            # Common name of this generated testcase.
             _name = '{given_name} [{isa} - {opt}]'.format(
                     given_name=name,
                     isa=isa,
@@ -203,7 +194,7 @@ def gem5_verify_config(name,
             # optimization.
             verifier_subtests = []
             for verifier in verifiers:
-                verifier = copy.copy(verifier)
+                #verifier = copy.copy(verifier)
                 verifier._name = '{name} ({vname} verifier)'.format(
                         name=_name,
                         vname=verifier.name)
@@ -212,19 +203,20 @@ def gem5_verify_config(name,
 
             # Place the verifier subtests into a collection.
             verifier_collection = SubtestCollection(
-                    failfast=False,
+                    fail_fast=False,
                     subtests=verifier_subtests)
 
             # Create the gem5 target for the specific architecture and
             # optimization level.
             fixtures = copy.copy(fixtures)
             fixtures.append(fixture.Gem5Fixture(isa, opt))
+            fixtures.append(tempdir)
             # Add the isa and optimization to tags list.
             tags = copy.copy(tags)
             tags.extend((opt, isa))
 
             # Create the running of gem5 subtest.
-            gem5_subtest = SubtestFunction(
+            gem5_subtest = TestUnitFunction(
                     _create_test_run_gem5(config, config_args),
                     name=_name)
 
@@ -232,15 +224,15 @@ def gem5_verify_config(name,
             # collection. We failfast because if a gem5 run fails, there's no
             # reason to verify results.
             gem5_test_collection =  SubtestCollection(
-                    failfast=True,
-                    subtests=(gem5_run, verifier_collection))
+                    fail_fast=True,
+                    subtests=(gem5_subtest, verifier_collection))
             # Finally construct the self contained TestCase out of our
             # subtests.
-            yield suite.TestCase(
+            a = TestCase(
                     _name,
-                    fixtures=(tempdir,),
+                    fixtures=fixtures,
                     tags=tags,
-                    subtest=gem5_test_collection)
+                    subtests=gem5_test_collection)
 
 def _create_test_run_gem5(config, config_args):
     def test_run_gem5(fixtures):

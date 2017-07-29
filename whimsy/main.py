@@ -30,7 +30,7 @@ def load_tests():
 
 def dorun():
         loader = load_tests()
-        testrunner = runner.Runner(loader.suite)
+        testrunner = runner.Runner(loader.suites)
 
         logger.log.display(terminal.separator())
         logger.log.bold('Running Tests')

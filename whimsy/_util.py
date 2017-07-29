@@ -183,4 +183,4 @@ def diff_out_file(ref_file, out_file, ignore_regexes=tuple()):
 def uid(testitem):
     fmt = '{file}:{class_}:{name}'
     return fmt.format(file=testitem.path, name=testitem.name,
-                      class_=testitem.clsname)
+                      class_=testitem.__class__)

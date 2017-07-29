@@ -7,7 +7,7 @@ from logger import log
 import test as test
 import suite as suite
 from suite import TestSuite
-from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
+from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult, TestResultContainer
 import terminal as terminal
 from config import config
 import helper
@@ -30,17 +30,17 @@ class Runner(object):
     '''
     The default runner class used for running test suites and cases.
     '''
-    def __init__(self, test_suite, fixtures=None):
+    def __init__(self, suites, fixtures=None):
         if fixtures is None:
             fixtures = {}
         self.fixtures = fixtures
-        self.test_suite = test_suite
+        self.suites = suites
 
     def run(self):
         log.info(terminal.separator())
         log.info("Building all non 'lazy_init' fixtures")
 
-        failed_builds = setup_unbuilt(self.test_suite.enumerate_fixtures(),
+        failed_builds = setup_unbuilt(self.suites.iter_fixtures(),
                                       setup_lazy_init=False)
         if failed_builds:
             error_str = ''
@@ -50,9 +50,8 @@ class Runner(object):
             log.warn('Error(s) while building non lazy_init fixtures.')
             log.warn(error_str)
 
-        results = self.run_suite(self.test_suite)
-
-        return results
+        results = [self.run_suite(suite) for suite in self.suites]
+        return TestResultContainer(results)
 
     def _find_uid(self, uid, suite, fixtures):
         # Update the fixtures for test items contained at this level.
@@ -73,9 +72,6 @@ class Runner(object):
         '''
         Traverse our tree looking for the uid, if we can find it, we also
         want to enumerate the fixtures that that testcase will have.
-
-        Note: This is an expensive call, if you know that the uid is a
-        self_contained suite. Use run self_contained instead.
         '''
         result = self._find_uid(uid, self.test_suite, {})
         if result is not None:
@@ -115,10 +111,7 @@ class Runner(object):
         # cleanup and override local fixtures.
         fixtures = fixtures.copy()
         fixtures.update(test_suite.fixtures)
-        if test_suite.self_contained:
-            log.display('Running TestSuite %s' % test_suite.name)
-        else:
-            log.debug('Running non self_contained TestSuite %s' % test_suite.name)
+        log.display('Running TestSuite %s' % test_suite.name)
 
         suite_iterator = enumerate(test_suite)
 
@@ -139,11 +132,7 @@ class Runner(object):
             # tests...
             if result.outcome in Result.failfast \
                     and idx < len(test_suite) - 1:
-                if test_suite.failfast:
-                    log.bold('Test failed in a failfast suite,'
-                             ' skipping remaining tests.')
-                    self._generate_skips(result.name, results, suite_iterator)
-                elif config.fail_fast:
+                if config.fail_fast:
                     log.bold('Test failed with the --fail-fast flag provided.')
                     log.bold('Ignoring remaining tests.')
                     self._generate_skips(result.name, results, suite_iterator)
@@ -184,24 +173,31 @@ class Runner(object):
         def _run_test():
             log.info('TestCase: %s' % testobj.name)
             result.timer.start()
-            try:
-                testobj.test(fixtures=fixtures)
-            except AssertionError as e:
-                result.reason = e.message
-                if not result.reason:
+            for idx, testunit in enumerate(testobj):
+                try:
+                    testunit(fixtures=fixtures)
+                except AssertionError as e:
+                    result.reason = e.message
+                    if not result.reason:
+                        result.reason = traceback.format_exc()
+                    result.outcome = Result.FAIL
+                except test.TestSkipException as e:
+                    result.reason = e.message
+                    result.outcome = Result.SKIP
+                except test.TestFailException as e:
+                    result.reason = e.message
+                    result.outcome = Result.FAIL
+                except Exception as e:
                     result.reason = traceback.format_exc()
-                result.outcome = Result.FAIL
-            except test.TestSkipException as e:
-                result.reason = e.message
-                result.outcome = Result.SKIP
-            except test.TestFailException as e:
-                result.reason = e.message
-                result.outcome = Result.FAIL
-            except Exception as e:
-                result.reason = traceback.format_exc()
-                result.outcome = Result.FAIL
-            else:
-                result.outcome = Result.PASS
+                    result.outcome = Result.FAIL
+                else:
+                    result.outcome = Result.PASS
+                if result.outcome in Result.failfast \
+                        and idx < len(testobj) - 1:
+                    if config.fail_fast:
+                        log.bold('Test failed with the --fail-fast flag provided.')
+                        log.bold('Ignoring remaining tests.')
+                        break
             result.timer.stop()
 
         failed_builds = setup_unbuilt(fixtures.values(), setup_lazy_init=True)
@@ -241,6 +237,8 @@ class Runner(object):
                 result.reason = ("Previous test '%s' failed in a failfast"
                         " TestSuite." % failed_test)
                 result.outcome = Result.SKIP
+                result.timer.start()
+                result.timer.stop()
             elif __debug__:
                 raise AssertionError(_util.unexpected_item_msg)
             log.info('Skipping: %s' % item.name)

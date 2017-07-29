@@ -197,15 +197,12 @@ class TestSuiteResult(TestResultContainer, TestResult):
     '''
     Holds information containing one or more test cases or suites.
     '''
-    def __init__(self, testsuite, *args, **kwargs):
+    def __init__(self, testsuite):
         # Explicityly bypass python MRO
-        TestResult.__init__(self, *args, **kwargs)
+        TestResult.__init__(self, testsuite.name)
         assert isinstance(testsuite, TestSuite)
         #self.runtime = testsuite.runtime
-        self._name = testsuite.name
         self.uid = testsuite.uid
-        self.self_contained = testsuite.self_contained
-
         self.results = []
 
     @property

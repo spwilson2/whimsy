@@ -95,6 +95,6 @@ def simple_testfunction1(fixtures):
     pass
 
 testsuite = suite.TestSuite('Simple testsuite')
-testsuite.add_items(test.TestFunction(simple_testfunction1))
+testsuite.append(test.TestFunction(simple_testfunction1))
 
 print('running code in %s' % __name__)

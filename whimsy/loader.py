@@ -36,8 +36,8 @@ def path_as_testsuite(filepath, *args, **kwargs):
 
     The testsuite will be named after the containing directory of the file.
     '''
-    TestSuite(os.path.split(os.path.dirname(os.path.abspath(filepath)))[-1],
-              *args, **kwargs)
+    return TestSuite(os.path.split(helper.absdirpath(filepath))[-1],
+        *args, **kwargs)
 
 if __debug__:
     def _assert_files_in_same_dir(files):
@@ -55,7 +55,7 @@ class TestLoader(object):
     '''
     def __init__(self, filepath_filter=default_filepath_filter, tags=None):
 
-        self._suites = SuiteCollection('Default Suite Collection', failfast=False)
+        self._suites = SuiteCollection()
         self.filepath_filter = filepath_filter
 
         if __debug__:
@@ -109,7 +109,7 @@ class TestLoader(object):
     @property
     def suites(self):
         assert self._loaded_a_file
-        return tuple(self._suite_rindex)
+        return self._suites
 
     @property
     def tests(self):
@@ -132,7 +132,7 @@ class TestLoader(object):
         '''
         assert self._loaded_a_file
         if not self.tags:
-            return self._suite
+            return self._suites
 
         if self._cached_suitecall is not None:
             return self._cached_suitecall
@@ -254,13 +254,10 @@ class TestLoader(object):
                 if __debug__:
                     _assert_files_in_same_dir(directory)
 
-                # Just use the pathname of the first file in the directory, they
-                # all should have the same dirname.
-                testsuite = path_as_testsuite(directory[0])
                 for f in directory:
                     self.load_file(f)
 
-    def load_file(self, path, testsuite=None):
+    def load_file(self, path, collection=None):
         '''
         Loads the given path for tests collecting suites and tests and placing
         them into the top_level_suite.
@@ -276,8 +273,8 @@ class TestLoader(object):
         # Remove our cache of tagged test items since they may be modified.
         self.drop_caches()
 
-        if testsuite is None:
-            testsuite = self._suite
+        if collection is None:
+            collection = self._suites
 
         newdict = {
             '__builtins__':__builtins__,
@@ -286,6 +283,8 @@ class TestLoader(object):
             '__directory__': os.path.dirname(path),
         }
 
+        # TODO: Change the wrapping to a newdict modifcation rather than global
+        # wrapping
         self._wrap_init(TestSuite, self._collected_test_items)
         self._wrap_init(TestCase, self._collected_test_items)
         self._wrap_init(Fixture, self._collected_fixtures)
@@ -316,11 +315,12 @@ class TestLoader(object):
         # Separate the instances so we can manipulate them more easily.
         # We also keep them together so we know ordering.
         test_items = self._collected_test_items
-        testcases = []
+        testcases = helper.OrderedSet()
         testsuites = []
+
         for item in test_items:
             if isinstance(item, TestCase):
-                testcases.append(item)
+                testcases.add(item)
             elif isinstance(item, TestSuite):
                 testsuites.append(item)
 
@@ -330,24 +330,23 @@ class TestLoader(object):
         if testcases:
             log.display('Discovered %d tests and %d testsuites in %s'
                              '' % (len(testcases), len(testsuites), path))
+
+            # Remove all tests already contained in a TestSuite.
             if testsuites:
-                # Remove all tests contained in testsuites from being attached
-                # directly to this module's test suite.
                 testcases = helper.OrderedSet(testcases)
                 for testsuite in testsuites:
-                    test_items -= helper.OrderedSet(testsuite.iter_inorder())
+                    testcases -= helper.OrderedSet(testsuite.testcases)
 
-            # Add any remaining tests to their own self_contained testsuite.
-            replaced_tests = []
-            for test_item in test_items:
-                if isinstance(test_item, TestCase):
-                    newsuite = TestSuite(test_item.name, (test_item,))
-                    replaced_tests.append((test_item, newsuite))
-            for old_item, newsuite in replaced_tests:
-                test_items.remove(old_item)
-                test_items.add(newsuite)
+            # Add any remaining tests to the module TestSuite.
+            if len(test_items) >= len(testcases):
+                module_testsuite = path_as_testsuite(path)
+                testsuites.append(module_testsuite)
+                for test_item in test_items:
+                    if isinstance(test_item, TestCase):
+                        module_testsuite.append(test_item)
 
-            self._suite.add_items(*test_items)
+            collection.extend(testsuites)
+
         elif testsuites:
             log.warn('No tests discovered in %s, but found %d '
                             ' TestSuites' % (path, len(testsuites)))
