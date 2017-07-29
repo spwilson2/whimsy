@@ -1,16 +1,12 @@
-import tempfile
-import sys
-import logging
 import traceback
 
-from logger import log
-import test as test
-import suite as suite
-from suite import TestSuite
-from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult, TestResultContainer
-import terminal as terminal
 from config import config
-import helper
+from logger import log
+from result import Result, ConsoleFormatter, TestSuiteResult, TestCaseResult
+from result import TestResultContainer
+from suite import TestSuite
+import terminal
+from test import TestCase
 import _util
 
 
@@ -30,10 +26,7 @@ class Runner(object):
     '''
     The default runner class used for running test suites and cases.
     '''
-    def __init__(self, suites, fixtures=None):
-        if fixtures is None:
-            fixtures = {}
-        self.fixtures = fixtures
+    def __init__(self, suites):
         self.suites = suites
 
     def run(self):
@@ -71,9 +64,9 @@ class Runner(object):
             return
 
         test_container = TestResultContainer()
-        if isinstance(testitem, suite.TestSuite):
-            test_container.append(self.run_suite(testitem, fixtures=fixtures))
-        elif isinstance(testitem, test.TestCase):
+        if isinstance(testitem, TestSuite):
+            test_container.append(self.run_suite(testitem))
+        elif isinstance(testitem, TestCase):
             # We need to create a parent suite result to attach this
             # to.
             test_container.append(self.run_test(testitem))
@@ -84,41 +77,26 @@ class Runner(object):
 
         # Create a new runner object with the suite we've found/created.
 
-    def run_suite(self, test_suite, results=None, fixtures=None):
+    def run_suite(self, test_suite, results=None):
         '''
         Run all tests/suites. From the given test_suite.
 
-        1. Handle setup for all fixtures in the test_suite
-        2. Run child tests and test_suites passing them their required
-           fixtures.
+        1. Run child testcases passing them their required fixtures.
+           - (We don't setup since the test case might override the fixture)
            - Collect results as tests are performed.
-        3. Handle teardown for all fixtures in the test_suite.
+        2. Handle teardown for all fixtures in the test_suite.
         '''
         if results is None:
             results = TestSuiteResult(test_suite)
-        if fixtures is None:
-            fixtures = {}
-
-        # We'll use a local shallow copy of fixtures to make it easier to
-        # cleanup and override local fixtures.
-        fixtures = fixtures.copy()
-        fixtures.update(test_suite.fixtures)
         log.display('Running TestSuite %s' % test_suite.name)
 
         suite_iterator = enumerate(test_suite)
 
         results.timer.start()
         for (idx, item) in suite_iterator:
-
-            if isinstance(item, suite.TestSuite):
-                result = self.run_suite(item, fixtures=fixtures)
-            elif isinstance(item, test.TestCase):
-                result = self.run_test(item, fixtures=fixtures)
-            elif __debug__:
-                raise AssertionError(_util.unexpected_item_msg)
-
-            # Add the result of the test or suite to our test_suite results.
-            results.results.append(result)
+            assert isinstance(item, TestCase)
+            result = self.run_test(item, fixtures=test_suite.fixtures)
+            results.append(result)
 
             # If there was a chance we might need to skip the remaining
             # tests...
@@ -135,7 +113,7 @@ class Runner(object):
 
         return results
 
-    def run_test(self, testobj, fixtures=None, result=None):
+    def run_test(self, testobj, fixtures=None):
         '''
         Run the given test.
 
@@ -143,25 +121,17 @@ class Runner(object):
         1. Handle setup for all fixtures required for the specific test.
         2. Run the test.
         3. Teardown the fixtures for the test which are tied locally to the
-           test?
+           test.
         '''
         if fixtures is None:
             fixtures = {}
-        if result is None:
-            result = TestCaseResult(testobj)
-        else:
-            # If we are given a result. We'll be updating its outcome by
-            # testing.
-            result.outcome = None
 
         # We'll use a local shallow copy of fixtures to make it easier to
         # cleanup and override suite level fixtures with testcase level ones.
         fixtures = fixtures.copy()
         fixtures.update(testobj.fixtures)
 
-        # Build any fixtures that haven't been built yet.
-        log.debug('Building fixtures for TestCase: %s' % testobj.name)
-
+        result = TestCaseResult(testobj)
         def _run_test():
             log.info('TestCase: %s' % testobj.name)
             result.timer.start()
@@ -192,6 +162,8 @@ class Runner(object):
                         break
             result.timer.stop()
 
+        # Build any fixtures that haven't been built yet.
+        log.debug('Building fixtures for TestCase: %s' % testobj.name)
         failed_builds = setup_unbuilt(fixtures.values(), setup_lazy_init=True)
         if failed_builds:
             result.outcome = Result.ERROR
@@ -211,7 +183,7 @@ class Runner(object):
                 color=ConsoleFormatter.result_colormap[result.outcome],
                 reset=terminal.termcap.Normal))
 
-        for fixture in testobj.fixtures.itervalues():
+        for fixture in testobj.fixtures.values():
             fixture.teardown()
 
         return result
@@ -222,9 +194,9 @@ class Runner(object):
         suite option)
         '''
         for (idx, item) in remaining_iterator:
-            if isinstance(item, suite.TestSuite):
+            if isinstance(item, TestSuite):
                 result = TestSuiteResult(item)
-            elif isinstance(item, test.TestCase):
+            elif isinstance(item, TestCase):
                 result = TestCaseResult(item)
                 result.reason = ("Previous test '%s' failed in a failfast"
                         " TestSuite." % failed_test)
