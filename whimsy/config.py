@@ -93,6 +93,7 @@ _defaults.base_dir = os.path.abspath(os.path.join(helper.absdirpath(__file__),
                                                   os.pardir,
                                                   os.pardir))
 _defaults.result_path = os.path.join(os.getcwd(), '.testing-results')
+_defaults.list_only_failed = False
 
 constants.x86_tag = 'X86'
 constants.sparc_tag = 'SPARC'

@@ -115,17 +115,9 @@ class TestCaseResult(TestResult):
         return self._name
 
 
-class TestResultContainer(object):
-    def __init__(self, results=None):
-        if results is None:
-            results = []
-        self.results = results
-
-    def __iter__(self):
-        '''
-        Return an iterator over the test suites and cases just in this suite.
-        '''
-        return iter(self.results)
+class TestResultContainer(list):
+    def __add__(self, rhs):
+        return TestResultContainer(list.__add__(self, rhs))
 
     @property
     def outcome(self):
@@ -181,9 +173,6 @@ class TestResultContainer(object):
         for item in self.iter_inorder():
             if getattr(item, 'self_contained', False):
                 yield item
-
-    def add_results(self, *results):
-        self.results.extend(results)
 
     @property
     def runtime(self):

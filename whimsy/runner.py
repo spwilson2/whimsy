@@ -37,6 +37,9 @@ class Runner(object):
         self.suites = suites
 
     def run(self):
+        '''
+        Run our entire collection of suites.
+        '''
         log.info(terminal.separator())
         log.info("Building all non 'lazy_init' fixtures")
 
@@ -53,42 +56,31 @@ class Runner(object):
         results = [self.run_suite(suite) for suite in self.suites]
         return TestResultContainer(results)
 
-    def _find_uid(self, uid, suite, fixtures):
-        # Update the fixtures for test items contained at this level.
-        fixtures = fixtures.copy()
-        fixtures.update(suite.fixtures)
-
-        for testitem in suite:
-            if testitem.uid == uid:
-                return (testitem, fixtures)
-            if isinstance(testitem, TestSuite):
-                result = self._find_uid(uid, testitem, fixtures=fixtures)
-                if result is not None:
-                    return (result[0], result[1])
-            elif __debug__ and not isinstance(testitem, test.TestCase):
-                raise AssertionError(_util.unexpected_item_msg)
 
     def run_uid(self, uid):
         '''
         Traverse our tree looking for the uid, if we can find it, we also
         want to enumerate the fixtures that that testcase will have.
         '''
-        result = self._find_uid(uid, self.test_suite, {})
-        if result is not None:
-            (testitem, fixtures) = result
-            if isinstance(testitem, suite.TestSuite):
-                return self.run_suite(testitem, fixtures=fixtures)
-            elif isinstance(testitem, test.TestCase):
-                # We need to create a parent suite result to attach this
-                # to.
-                test_container = TestSuiteResult(testitem)
-                test_container.results.append(
-                        self.run_test(testitem, fixtures=fixtures))
+        for testitem in _util.iter_recursively(self.suites, inorder=True):
+            print testitem.uid
+            if testitem.uid == uid:
+                break
+        else:
+            log.warn('No test found for uid %s' % uid)
+            return
 
-                return test_container
+        test_container = TestResultContainer()
+        if isinstance(testitem, suite.TestSuite):
+            test_container.append(self.run_suite(testitem, fixtures=fixtures))
+        elif isinstance(testitem, test.TestCase):
+            # We need to create a parent suite result to attach this
+            # to.
+            test_container.append(self.run_test(testitem))
+        elif __debug__:
+            raise AssertionError(_util.unexpected_item_msg)
 
-            elif __debug__:
-                raise AssertionError(_util.unexpected_item_msg)
+        return test_container
 
         # Create a new runner object with the suite we've found/created.
 
