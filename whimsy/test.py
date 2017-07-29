@@ -43,117 +43,118 @@ def skip(message):
     '''Cause the current test to skip with the given message.'''
     raise TestSkipException(message)
 
-
-class TestCase(object):
-    '''
-    Test Base Class.
-
-    All tests for must derive from this base class in order for them to be
-    enumerated by the test system.
-    '''
+class BaseTestCase(object):
     __metaclass__ = abc.ABCMeta
-    clsname = 'Testcase'
+    @abc.abstractmethod
+    def __init__(self, name):
+        self._path = os.getcwd()
+        self._name = name
+    @abc.abstractmethod
+    def __call__(self, fixtures):
+        pass
+    @abc.abstractproperty
+    def clsname(self):
+        pass
+    @property
+    def uid(self):
+        return _util.uid(self)
+    @property
+    def path(self):
+        return self._path
+    @property
+    def name(self):
+        return self.name
 
-    def __init__(self, tags=None, fixtures=None, directory=None):
-        '''
-        All subclasses must call this __init__ method for them to be
-        enumerated by the test loader.
-        '''
+class Subtest(BaseTestCase):
+    '''
+    Represents a non-self contained test entity. See TestCase for more details.
+
+    A subtest may contain other subtests. Subtests should be ran in in-order fashion.
+
+    :param fail_fast: If a single subtest fails, skip the remaining subtests.
+    '''
+    clsname = __class__
+    def __init__(self, name, subtests=None, fail_fast=True):
+        super(Subtest, self).__init__(name)
+        self.subtests = subtests
+        self.fail_fast = fail_fast
+
+    def __iter__(self):
+        if subtests is not None:
+            for subtest in self.subtests:
+                yield subtest
+
+class TestCase(BaseTestCase):
+    '''
+    The TestCase represents a single test (TestCaseFunction) or collection of
+    tests (Subtest) which form a completely self contained entity, that is if
+    they need to be re-ran they can be re-ran without any other tests running.
+
+    This default TestCase implementation assumes that a SubtestCollection is
+    given as the `subtests` argument. It's expected that subclasses might
+    ignore the `subtests` kwarg if they do not plan to contain subtests.
+
+    For example: in a test were we run gem5 and verify output. The combination
+    of running gem5 and verifying output forms a TestCase. Whereas it would be
+    imposible to run verify output if gem5 was not run first. In this example
+    both gem5 and verify output would be subtests of a single TestCase.
+    '''
+    clsname = 'Testcase'
+    def __init__(self, name, tags=None, fixtures=None, subtests=None, **kwargs):
+        super(TestCase, self).__init__(name, **kwargs)
+        self.subtests = subtests
+
         if fixtures is None:
             fixtures = {}
         elif not isinstance(fixtures, dict):
             fixtures = {fixture.name: fixture for fixture in fixtures}
         self.fixtures = fixtures
+
         if tags is None:
             tags = set()
         self.tags = set(tags)
 
-        self.directory = directory if directory else config.base_dir
-        self.path = os.getcwd()
+        self._name = name
 
-    @abc.abstractmethod
-    def test(self, fixtures):
-        pass
+    def __call__(self, fixtures):
+        subtests(fixtures)
 
-    @abc.abstractproperty
-    def name(self):
-        pass
+class TestFunction(object):
+    __metaclass__ = abc.ABCMeta
+    def __init__(self, test, name=None, *args, **kwargs):
+        if name is None:
+            # If not given a name, take the name of the function.
+            name = test.__name__
+        super(TestFunction, self).__init__(name, *args, **kwargs)
+        self._test_function = test
 
-    @property
-    def uid(self):
-        return _util.uid(self)
+    def __call__(self, fixtures):
+        '''
+        Override TestCase definition of __call__
+        '''
+        self._test_function(fixtures)
 
-    @abc.abstractmethod
-    def __copy__(self):
-        # When we copy we should create a completely new instance so it can be
-        # enumerated.
-        return TestCase(tags=self.tags.copy(),
-                        fixtures=self.fixtures.copy(),
-                        directory=self.directory)
-
-def gem5_test(test,
-              name,
-              tags=[],
-              fixtures=[],
-              valid_isas=None,
-              valid_optimizations=('opt',),
-              fixup_callback=None):
+class TestCaseFunction(TestFunction, TestCase):
     '''
-    Common test generator used to perform create tests for generic Gem5
-    testing.
-
-    :param test: Function to use for testing.
-
-    :param tags: Iterable of tags which will be attached to all test cases
-    generated.
-
-    :param fixtures: In addtional to all requested fixtures, the gem5.opt
-    binary will be provided.
-
-    :param valid_isas: If arch is not set assumes that the test will be
-    available for all ISAs. (And will create individual tests for
-    each ISA.)
-
-    :param valid_optimizations: If optimizations is not set assumes that the
-    test only works for \'gem5.opt\' targets.
-
-    :param config: Config file to use for Gem5.
-    :param config_args: List of arguments to pass to the config file.
-    :param gem5_args: List of arguments to pass to gem5.
-
-    :param fixup_callback: A final callback to make before creating each
-    instance of a testfunction. The callback is handed the kwargs as well as
-    the isa and optimization level which will be handed to instantiate
-    a TestFunction. This allows you to modify the arguments before they are
-    passed. (One such use case is to create additional fixtures based on isa.)
-
-    The fixup_callback function should look like:
-    .. :code-block: python
-        def callback(kwargs : dict, isa : str, optimization : str) -> None:
-            pass
-
+    Class which wraps functions to use as a testcase.
     '''
 
-    if valid_isas is None:
-        valid_isas = constants.supported_isas
+class SubtestFunction(TestFunction, Subtest):
+    '''
+    Class which wraps functions to use as a subtest.
+    '''
 
-    # TODO: assert that the valid_optimizations are all valid
+class SubtestCollection(list):
+    '''
+    Contains Subtests or other SubtestsCollections
+    '''
+    def __init__(self, subtests=tuple()):
+        super(list, self).__init__(subtests)
 
-    for opt in valid_optimizations:
-        for isa in valid_isas:
-            # Create the gem5 target for the specific architecture and
-            # optimization level.
-            fixtures = copy.copy(fixtures)
-            fixtures.append(fixture.Gem5Fixture(isa, opt))
-
-            tags = copy.copy(tags)
-            tags.extend((opt, isa))
-
-            kwargs = _as_kwargs(name=name, fixtures=fixtures)
-            if fixup_callback is not None:
-                fixup_callback(kwargs, isa, opt)
-
-            TestFunction(test, **kwargs)
+    def __call__(self, fixtures):
+        '''Run all subtests contained in this collection.'''
+        for subtest in self:
+            subtest(fixtures)
 
 def gem5_verify_config(name,
                        config,
@@ -183,49 +184,63 @@ def gem5_verify_config(name,
     :param valid_optimizations: An interable with the optimization levels that
     this test can be ran for. (E.g. opt, debug)
     '''
-    #TODO/FIXME: Use gem5_test so we don't repeat so much code.
-
     if valid_isas is None:
         valid_isas = constants.supported_isas
-
 
     for opt in valid_optimizations:
         for isa in valid_isas:
 
+            # Create a tempdir fixture to be shared throughout the test.
             tempdir = fixture.TempdirFixture(cached=True, lazy_init=True)
 
             # Common name of this generated testsuite.
-            _name = name + ' [{isa} - {opt}]'.format(isa=isa, opt=opt)
+            _name = '{given_name} [{isa} - {opt}]'.format(
+                    given_name=name,
+                    isa=isa,
+                    opt=opt)
 
-            # Testsuite to hold all verifiers for gem.
-            verifier_suite = suite.TestSuite('%s (Gem5 Verifiers)' % _name,
-                                             failfast=False)
+            # Create copies of the verifier subtests for this isa and
+            # optimization.
+            verifier_subtests = []
             for verifier in verifiers:
                 verifier = copy.copy(verifier)
-                verifier._name = '{name} ({vname} verifier)'.format(name=_name,
-                                                          vname=verifier.name)
-                verifier_suite.add_items(verifier)
+                verifier._name = '{name} ({vname} verifier)'.format(
+                        name=_name,
+                        vname=verifier.name)
+
+                verifier_subtests.append(verifier)
+
+            # Place the verifier subtests into a collection.
+            verifier_collection = SubtestCollection(
+                    failfast=False,
+                    subtests=verifier_subtests)
+
             # Create the gem5 target for the specific architecture and
             # optimization level.
             fixtures = copy.copy(fixtures)
             fixtures.append(fixture.Gem5Fixture(isa, opt))
-
+            # Add the isa and optimization to tags list.
             tags = copy.copy(tags)
             tags.extend((opt, isa))
 
+            # Create the running of gem5 subtest.
+            gem5_subtest = SubtestFunction(
+                    _create_test_run_gem5(config, config_args),
+                    name=_name)
 
-             # Create the test function.
-            gem5_run = TestFunction(_create_test_run_gem5(config, config_args),
-                                    name=_name,
-                                    fixtures=fixtures)
-
-            # Testsuite to hold our gem5 run in, we failfast because if a gem5 run
-            # fails, there's no reason to verify results.
-            suite.TestSuite(_name,
-                            fixtures=(tempdir,),
-                            failfast=True,
-                            tags=tags,
-                            items=(gem5_run, verifier_suite))
+            # Place our gem5 run and verifiers into a failfast test
+            # collection. We failfast because if a gem5 run fails, there's no
+            # reason to verify results.
+            gem5_test_collection =  SubtestCollection(
+                    failfast=True,
+                    subtests=(gem5_run, verifier_collection))
+            # Finally construct the self contained TestCase out of our
+            # subtests.
+            yield suite.TestCase(
+                    _name,
+                    fixtures=(tempdir,),
+                    tags=tags,
+                    subtest=gem5_test_collection)
 
 def _create_test_run_gem5(config, config_args):
     def test_run_gem5(fixtures):
@@ -252,33 +267,6 @@ def _create_test_run_gem5(config, config_args):
                 raise e
     return test_run_gem5
 
-
-
-class TestFunction(TestCase):
-    '''
-    Class which wraps functions to use as a test case.
-    '''
-    def __init__(self, test, name=None, *args, **kwargs):
-        super(TestFunction, self).__init__(*args, **kwargs)
-        self._test_function = test
-        if name is None:
-            name = test.__name__
-        self._name = name
-
-    def test(self, fixtures):
-        self._test_function(fixtures)
-
-    @property
-    def name(self):
-        return self._name
-
-    def __copy__(self):
-        # When we copy we should create a completely new instance so it can be
-        # enumerated.
-        return TestFunction(self.test, name=self.name,
-                            tags=self.tags.copy(),
-                            fixtures=self.fixtures.copy(),
-                            directory=self.directory)
 
 def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
     # If tag was given, then the test will be marked with that single tag.

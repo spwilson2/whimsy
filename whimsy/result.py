@@ -39,41 +39,67 @@ class TestResult(object):
     '''
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self):
+    def __init__(self, name):
         '''
         :var timer: A timer used for timing the Test.
         :var result: The Result value of the Test.
         '''
         self.timer = _util.Timer()
+        self._name = name
         # I want to be able to store all output from the test in this.
         #
         # Subclasses, such as a gem5 test result might contain more results,
         # but it's up to them to concatinate them into standard formats.
-
-    @property
-    def runtime(self):
-        return self.timer.runtime()
 
     @abc.abstractproperty
     def outcome():
         '''Should return the result of the TestResult.'''
         pass
 
-    @abc.abstractproperty
+    @property
+    def runtime(self):
+        return self.timer.runtime()
+
+    @property
     def name():
-        pass
+        return self._name
+
+class SubtestResult(TestResult):
+    '''
+    Holds information corresponding to a single test case result.
+    '''
+    def __init__(self, testcase, outcome=None, reason=None):
+        super(SubtestResult, self).__init__(testcase.name)
+        assert isinstance(testcase, Subtest)
+        self.uid = testcase.uid
+
+        self._outcome = outcome
+
+    @property
+    def outcome(self):
+        return self._outcome
+
+    @outcome.setter
+    def outcome(self, val):
+        self._outcome = val
+
+    @property
+    def name(self):
+        return self._name
 
 class TestCaseResult(TestResult):
     '''
     Holds information corresponding to a single test case result.
     '''
-    def __init__(self, testcase, outcome=None, reason=None, *args, **kwargs):
-        super(TestCaseResult, self).__init__(*args, **kwargs)
+    def __init__(self, testcase, outcome=None, reason=None):
+        super(TestCaseResult, self).__init__(testcase.name)
         assert isinstance(testcase, TestCase)
-        self._name = testcase.name
         self.uid = testcase.uid
 
         self._outcome = outcome
+        # TODO maybe?
+        #self.fstdout = fstdout
+        #self.fstderr = fstderr
         self.reason = reason
 
     @property

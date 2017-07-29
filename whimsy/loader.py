@@ -9,7 +9,7 @@ import copy
 import pickle
 
 from test import TestCase
-from suite import TestSuite
+from suite import TestSuite, SuiteCollection
 from fixture import Fixture
 from logger import log
 import helper
@@ -55,7 +55,7 @@ class TestLoader(object):
     '''
     def __init__(self, filepath_filter=default_filepath_filter, tags=None):
 
-        self._suite = TestSuite('Default Suite Collection', failfast=False)
+        self._suites = SuiteCollection('Default Suite Collection', failfast=False)
         self.filepath_filter = filepath_filter
 
         if __debug__:
@@ -71,8 +71,8 @@ class TestLoader(object):
         self.tags = tags
 
         # Member variables used to keep track of instances of suites, cases,
-        # and fixtures when execfile'ing. Should be reset for each file we
-        # load.
+        # and fixtures when execfile'ing.
+        # They are temporary and will be reset for each file we load.
         self._wrapped_classes = {}
         self._collected_test_items = helper.OrderedSet()
         self._collected_fixtures = helper.OrderedSet()
