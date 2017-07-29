@@ -113,11 +113,11 @@ class TestCase(BaseTestCase):
 
 class TestFunction(object):
     __metaclass__ = abc.ABCMeta
-    def __init__(self, test, name=None, *args, **kwargs):
+    def __init__(self, test, name=None):
         if name is None:
             # If not given a name, take the name of the function.
             name = test.__name__
-        super(TestFunction, self).__init__(name, *args, **kwargs)
+        self._name = name
         self._test_function = test
 
     def __call__(self, fixtures):
@@ -126,15 +126,23 @@ class TestFunction(object):
         '''
         self._test_function(fixtures)
 
-class TestCaseFunction(TestFunction, TestCase):
+class TestCaseFunction(TestCase):
     '''
     Class which wraps functions to use as a testcase.
     '''
+    def __init__(self, test, name=None, *args, **kwargs):
+        testunit = TestUnitFunction(test, name)
+        testunit = SubtestCollection((testunit,))
+        super(TestCaseFunction, self).__init__(name, testunit, *args, **kwargs)
+
 
 class TestUnitFunction(TestFunction, TestUnit):
     '''
     Class which wraps functions to use as a TestUnit.
     '''
+    def __init__(self, test, name=None):
+        TestUnit.__init__(self, name)
+        TestFunction.__init__(self, test, name)
 
 class SubtestCollection(list):
     '''
@@ -270,7 +278,7 @@ def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
 
     def testfunctiondecorator(function):
         '''Decorator used to mark a function as a test case.'''
-        TestFunction(function, name=name, tags=tags, fixtures=fixtures)
+        TestCaseFunction(function, name=name, tags=tags, fixtures=fixtures)
         return function
     if function is not None:
         return testfunctiondecorator(function)
