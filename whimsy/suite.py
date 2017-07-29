@@ -46,7 +46,7 @@ class TestSuite(object):
     def testcases(self):
         return tuple((testcase for (testlist, testcase) in self))
     def __iter__(self):
-        return self.testlist.iter_recursively()
+        return iter(self.testlist)
     def __len__(self):
         return len(self.testlist)
     def append(self, item):
@@ -103,8 +103,14 @@ class TestList(object):
         else:
             self.extend(items)
 
-    def iter_recursively(self):
-        return _util.iter_recursively(self, yield_container=True)
+    def __iter__(self):
+        for item in self.items:
+            if isinstance(item, TestList):
+                # Recurse into that list.
+                for item_of_item in item:
+                    yield item_of_item
+            else:
+                yield (self, item)
 
     def __len__(self):
         return len(self.items)
@@ -112,8 +118,6 @@ class TestList(object):
         self.items.append(item)
     def extend(self, items):
         self.items.extend(items)
-    def __iter__(self):
-        return iter(self.items)
 
 if __name__ == '__main__':
     TestSuite('')
