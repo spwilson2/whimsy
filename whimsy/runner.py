@@ -93,6 +93,8 @@ class Runner(object):
 
         outcomes = set()
 
+        suite_timer = _util.Timer()
+        suite_timer.start()
         for (idx, (testlist, testcase)) in suite_iterator:
             assert isinstance(testcase, TestCase)
             outcome = self.run_test(testcase, fixtures=test_suite.fixtures)
@@ -113,9 +115,10 @@ class Runner(object):
 
         for fixture in test_suite.fixtures.values():
             fixture.teardown()
+        suite_timer.stop()
 
         outcome = self._suite_outcome(outcomes)
-        self._log_outcome(outcome)
+        self._log_outcome(outcome, runtime=suite_timer.runtime())
         for logger in self.result_loggers:
             logger.end_current()
 
@@ -178,6 +181,9 @@ class Runner(object):
         fixtures.update(testobj.fixtures)
 
 
+        test_timer = _util.Timer()
+        test_timer.start()
+
         for logger in self.result_loggers:
             logger.begin(testobj)
 
@@ -219,17 +225,19 @@ class Runner(object):
         else:
             outcome = _run_test()
 
+        for fixture in testobj.fixtures.values():
+            fixture.teardown()
+
+        test_timer.stop()
         self._log_outcome(
                 outcome,
                 reason=reason,
+                runtime=test_timer.runtime(),
                 fstdout_name=fstdout_name,
                 fstderr_name=fstderr_name)
 
         for logger in self.result_loggers:
             logger.end_current()
-
-        for fixture in testobj.fixtures.values():
-            fixture.teardown()
 
         return outcome
 

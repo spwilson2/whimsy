@@ -1,11 +1,12 @@
 import abc
 import collections
 import time
-import xml.etree.ElementTree as ET
+from xml.sax.saxutils import escape as xml_escape
 import string
 import functools
 import pickle
 import os
+import textwrap
 
 import _util
 import terminal
@@ -83,9 +84,6 @@ class ResultLogger(object):
         results are done being logged.
         '''
         pass
-
-    def __del__(self):
-        self.end_testing()
 
 class ConsoleLogger(ResultLogger):
 
@@ -168,7 +166,7 @@ class ConsoleLogger(ResultLogger):
             color=self.colormap[Outcome.SKIP],
             name=test_case.name,
             reset=self.reset))
-        #log.display(reason)
+        self.outcome_count[Outcome.SKIP] += 1
 
     def end_current(self):
         if isinstance(self._current_item, TestSuite):
@@ -212,22 +210,29 @@ class ConsoleLogger(ResultLogger):
                 color=self.colormap[most_severe_outcome] + self.color.Bold)
 
 class TestResult(object):
-    def __init__(self, testitem, outcome, reason=None):
+    def __init__(self, testitem, outcome, runtime):
         self.name = testitem.name
         self.uid = testitem.uid
         self.outcome = outcome
-        # NOTE: For now we don't care to keep the reason saved since we only
-        # will care about outcomes.
-        #self.reason = reason
+        self.runtime = runtime
+
 class TestCaseResult(TestResult):
-    def __init__(self, testitem, outcome, fstdout_name,
-                 fstderr_name, *args, **kwargs):
+    def __init__(self, testitem, outcome, runtime, fstdout_name,
+                 fstderr_name, reason=None, **kwargs):
+
         self.fstdout_name = fstdout_name
         self.fstderr_name = fstderr_name
+        self.reason = reason
         super(TestCaseResult, self).__init__(testitem, outcome,
-                                             *args, **kwargs)
+                                             runtime,
+                                             **kwargs)
 class TestSuiteResult(TestResult):
-    pass
+    def __init__(self, testitem, outcome,
+                 runtime, test_case_results,
+                 *args, **kwargs):
+
+        super(TestSuiteResult, self).__init__(testitem, outcome, runtime)
+        self.test_case_results = test_case_results
 
 class InternalLogger(ResultLogger):
     def __init__(self, filestream):
@@ -237,12 +242,12 @@ class InternalLogger(ResultLogger):
         self.filestream = filestream
         self.results = []
 
+        self._current_suite_testcases = []
+
     def _write(self, obj):
-        print 'writing file'
         pickle.dump(obj, self.filestream)
 
     def begin_testing(self):
-        print 'Started running internal logger'
         self.timer.start()
 
     def begin(self, item):
@@ -251,24 +256,30 @@ class InternalLogger(ResultLogger):
 
     def skip(self, item, **kwargs):
         if isinstance(self._current_item, TestSuite):
-            result_class = TestSuiteResult
+            result = TestSuiteResult(self._current_item, Outcome.SKIP, 0, **kwargs)
+            self._current_suite_testcases = []
         elif isinstance(self._current_item, TestCase):
-            result_class = TestCaseResult
+            result = TestCaseResult(self._current_item, Outcome.SKIP, 0, **kwargs)
+            self._current_suite_testcases.append(result)
         elif __debug__:
             raise AssertionError(self.bad_item)
-        result = result_class(self._current_item, Outcome.SKIP, **kwargs)
         self._write(result)
         self.results.append(result)
 
-    def set_current_outcome(self, outcome, **kwargs):
+    def set_current_outcome(self, outcome, runtime, **kwargs):
         '''Set the outcome of the current item.'''
         if isinstance(self._current_item, TestSuite):
-            result_class = TestSuiteResult
+            result = TestSuiteResult(
+                    self._current_item, outcome, runtime,
+                    self._current_suite_testcases)
+            self._current_suite_testcases = []
+
         elif isinstance(self._current_item, TestCase):
-            result_class = TestCaseResult
+            result = TestCaseResult(self._current_item, outcome, runtime, **kwargs)
+            self._current_suite_testcases.append(result)
         elif __debug__:
             raise AssertionError(self.bad_item)
-        result = result_class(self._current_item, outcome, **kwargs)
+
         self._write(result)
         self.results.append(result)
 
@@ -276,7 +287,7 @@ class InternalLogger(ResultLogger):
         self._current_item = self._item_list.pop()
 
     def end_testing(self):
-        pass
+        self.timer.stop()
 
     def load(self, filename):
         '''Load results out of a dumped file replacing our own results.'''
@@ -288,125 +299,151 @@ class InternalLogger(ResultLogger):
 class JUnitLogger(InternalLogger):
     # We use an internal logger to stream the output into a format we can
     # retrieve at the end and then format it into JUnit.
-    xml_header = '<?xml version="1.0" encoding="UTF-8"?>'
+    def __init__(self, junit_fstream, internal_fstream):
+        super(JUnitLogger, self).__init__(internal_fstream)
+        self._junit_fstream = junit_fstream
 
     def end_testing(self):
         '''
         Signal the end of writing to the file stream. Indicates that
         results are done being logged.
         '''
-        JUnitFormatter()
+        super(JUnitLogger, self).end_testing()
+        JUnitFormatter(self).dump(self._junit_fstream)
 
 class JUnitFormatter(object):
     '''
     Formats TestResults into the JUnit XML format.
     '''
-    # Results considered passing under JUnit, we have a couple extra states
-    # that aren't traditionally reported under JUnit.
-    passing_results = {PASS, XFAIL}
+    # NOTE: We manually build the tags so we can place possibly large
+    # system-out system-err logs without storing them in memory.
 
-    def __init__(self, result, translate_names=True):
-        self.result = result
+    xml_header = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    passing_results = {PASS, XFAIL}
+    # Testcase stuff
+    testcase_opening = ('<testcase name="{name}" classname="{classname}"'
+                        ' status="{status}" time="{time}">\n')
+    # Indicates test skipped
+    skipped_tag = '<skipped/>'
+    error_tag = '<error message="{message}"></error>\n'
+    fail_tag = '<failure message="{message}"></error>\n'
+    system_out_opening = '<system-out>'
+    system_err_opening = '<system-err>'
+
+    # Testsuite stuff
+    testsuite_opening = ('<testsuite name="{name}" tests="{numtests}"'
+                         ' errors="{errors}" failures="{failures}"'
+                         ' skipped="{skipped}" id={suitenum}'
+                         ' time="{time}">\n'
+                         )
+    # Testsuites stuff
+    testsuites_opening = ('<testsuites errors="{errors}" failures="{failures}"'
+                          ' tests="{tests}"' # total number of sucessful tests.
+                          ' time="{time}">\n')
+    # Generic closing tag for any opening tag.
+    generic_closing = '</{tag}>\n'
+
+
+    def __init__(self, internal_results, translate_names=True):
+        self.results = internal_results.results
+        self.runtime = internal_results.timer.runtime()
 
         if translate_names:
-            self.name_table = string.maketrans("/.", ".-",)
+            self.name_table = string.maketrans('/.', '.-')
         else:
-            self.name_table = string.maketrans("", "")
+            self.name_table = string.maketrans('', '')
 
-    def __str__(self):
-        self.root = ET.Element("testsuites")
+    def dump_testcase(self, fstream, testcase):
 
-        results = self.result
-        if self.flatten:
-            results = JUnitFormatter.flatten_suites(results)
+        tag = ''
+        if testcase.outcome in self.passing_results:
+            outcome = PASS
+            status = 'passed'
+        elif testcase.outcome == SKIP:
+            outcome = SKIP
+            status = 'skipped'
+            tag = self.skipped_tag
+        elif testcase.outcome == FAIL:
+            outcome = SKIP
+            status = 'failed'
+            tag = self.fail_tag.format(message=testcase.reason)
+        elif testcase.outcome == ERROR:
+            outcome = SKIP
+            status = 'errored'
+            tag = self.error_tag.format(message=testcase.reason)
+        elif __debug__:
+            raise AssertionError('Unknown test state')
 
-        ET.ElementTree(self.convert_testsuite(self.root,
-                                              results,
-                                              self.flatten))
-        return ET.tostring(self.root)
+        fstream.write(self.testcase_opening.format(
+                name=testcase.name,
+                classname=testcase.name,
+                time=testcase.runtime,
+                status=status))
 
-    def convert_testcase(self, xtree, testcase):
-        xtest = ET.SubElement(xtree, "testcase",
-                               name=testcase.name,
-                               time="%f" % testcase.runtime)
+        fstream.write(tag)
 
-        if testcase.result in self.passing_results:
-            xstate = PASS
-        elif testcase.result == SKIP:
-            xstate = ET.SubElement(x_test, "skipped")
-        elif testcase.result == FAIL:
-            xstate = ET.SubElement(x_test, "failure")
-        elif testcase.result == ERROR:
-            xstate = ET.SubElement(x_test, "error")
-        else:
-            assert False, "Unknown test state"
+        # Write out systemout and systemerr from their containing files.
+        fstream.write(self.system_out_opening)
+        with open(testcase.fstdout_name, 'r') as testout_stdout:
+            for line in testout_stdout:
+                fstream.write(xml_escape(line))
+        fstream.write(self.generic_closing.format(tag='system-out'))
 
-        if xstate is not PASS:
-            #TODO: Add extra output to the text?
-            #xstate.text = "\n".join(msg)
-            # TODO: Use these subelements for text.
-            #<system-out>
-            #    I am stdout!
-            #</system-out>
-            #<system-err>
-            #    I am stderr!
-            #</system-err>
-            pass
+        fstream.write(self.system_err_opening)
+        with open(testcase.fstderr_name, 'r') as testout_stderr:
+            for line in testout_stderr:
+                fstream.write(xml_escape(line))
+        fstream.write(self.generic_closing.format(tag='system-err'))
 
-    def convert_testsuite(self, xtree, suite):
-        ''''''
-        errors = 0
-        failures = 0
-        skipped = 0
+        fstream.write(self.generic_closing.format(tag='testcase'))
 
-        xsuite = ET.SubElement(xtree, "testsuite",
-                                name=suite.name.translate(self.name_table),
-                                time="%f" % suite.runtime)
+    def dump_testsuite(self, fstream, suite, idx):
+        # Tally results first.
+        outcome_tally = dict.fromkeys((PASS, SKIP, FAIL, ERROR), 0)
+        for testcase in suite.test_case_results:
+            if testcase.outcome in self.passing_results:
+                outcome_tally[PASS] += 1
+            else:
+                outcome_tally[testcase.outcome] += 1
 
-        # Iterate over the tests and suites held in the test suite.
-        for testresult in suite:
-            # If the element is a test case attach it as such
-            self.convert_testcase(xsuite, testresult)
+        fstream.write(
+                self.testsuite_opening.format(
+                    name=suite.name,
+                    numtests=outcome_tally[PASS],
+                    errors=outcome_tally[ERROR],
+                    failures=outcome_tally[FAIL],
+                    skipped=outcome_tally[SKIP],
+                    suitenum=idx,
+                    time=suite.runtime))
 
-            # Check the return value to fill in metadata for our xsuite
-            if result.outcome not in self.passing_results:
-                if result.outcome == SKIP:
-                    skipped += 1
-                elif result.outcome == ERROR:
-                    errors += 1
-                elif result.outcome == FAIL:
-                    failures += 1
-                else:
-                    assert False, "Unknown test state"
+        for testcase in suite.test_case_results:
+            self.dump_testcase(fstream, testcase)
 
-            xsuite.set("errors", str(errors))
-            xsuite.set("failures", str(failures))
-            xsuite.set("skipped", str(skipped))
-            xsuite.set("tests", str(len(suite.results)))
+        fstream.write(self.generic_closing.format(tag='testsuite'))
 
     def dump(self, dumpfile):
-        dumpfile.write(str(self))
+        idx = 0
 
+        # First tally results.
+        outcome_tally = dict.fromkeys((PASS, SKIP, FAIL, ERROR), 0)
+        for item in self.results:
+            if isinstance(item, TestCaseResult):
+                if item.outcome in self.passing_results:
+                    outcome_tally[PASS] += 1
+                else:
+                    outcome_tally[item.outcome] += 1
 
-if __name__ == '__main__':
-    import suite
-    suiteresult = TestSuiteResult('Test Suite')
-    parentsuiteresult = TestSuiteResult('Parent Test Suite')
-    parentsuiteresult.results.append(suiteresult)
+        dumpfile.write(self.testsuites_opening.format(
+            tests=outcome_tally[PASS],
+            errors=outcome_tally[ERROR],
+            failures=outcome_tally[FAIL],
+            time=self.runtime))
 
-    parentsuiteresult.timer.start()
-    parentsuiteresult.timer.stop()
-    suiteresult.timer.start()
-    suiteresult.timer.stop()
+        for item in self.results:
+            # NOTE: We assume that all tests are contained within a testsuite,
+            # although as far as junit is concerned this isn't neccesary.
+            if isinstance(item, TestSuiteResult):
+                self.dump_testsuite(dumpfile, item, idx)
+                idx += 1
 
-
-    for _ in range(2):
-        testcase = TestCaseResult('testcase', result=PASS)
-        testcase.timer.start()
-        testcase.timer.stop()
-        suiteresult.results.append(testcase)
-
-    #formatter = JUnitFormatter(parentsuiteresult, flatten=True)
-    #print(formatter)
-    formatter = ConsoleFormatter(parentsuiteresult)
-    print(formatter)
+        dumpfile.write(self.generic_closing.format(tag='testsuites'))

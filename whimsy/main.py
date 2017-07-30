@@ -32,10 +32,11 @@ def load_tests():
 
 def dorun():
         loader = load_tests()
-        with open(joinpath(config.result_path, 'pickle'), 'w') as result_file:
+        with open(joinpath(config.result_path, 'pickle'), 'w') as result_file,\
+                open(joinpath(config.result_path, 'junit.xml'), 'w') as junit_f:
             testrunner = runner.Runner(
                     loader.suites,
-                    (result.InternalLogger(result_file),
+                    (result.JUnitLogger(junit_f, result_file),
                         result.ConsoleLogger()))
 
             #testrunner = runner.Runner(loader.suites)
