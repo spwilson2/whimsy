@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import string
 import functools
 import pickle
+import os
 
 import _util
 import terminal
@@ -34,6 +35,9 @@ for result in Outcome.enums:
 
 Outcome.failfast = {ERROR, FAIL}
 
+def test_results_output_path(test_case):
+    return os.path.join(
+            config.result_path, test_case.uid.replace('/','-'))
 
 class ResultLogger(object):
     '''

@@ -1,13 +1,15 @@
+import os
 import traceback
 
 from config import config
 from logger import log
 from suite import TestSuite
 import terminal
+from tee import tee
 import test
 from test import TestCase
 import _util
-from result import ConsoleLogger, Outcome
+from result import ConsoleLogger, Outcome, test_results_output_path
 
 
 class Runner(object):
@@ -150,6 +152,19 @@ class Runner(object):
         3. Teardown the fixtures for the test which are tied locally to the
            test.
         '''
+        outdir = test_results_output_path(testobj)
+        _util.mkdir_p(outdir)
+        print outdir
+
+        # Capture the output into a file.
+        with tee(os.path.join(outdir, config.constants.system_err_name),
+                stderr=True, stdout=False):
+            with tee(os.path.join(outdir, config.constants.system_out_name),
+                    stderr=False, stdout=True):
+
+                self._run_test(testobj, fixtures)
+
+    def _run_test(self, testobj, fixtures=None):
         if fixtures is None:
             fixtures = {}
 
