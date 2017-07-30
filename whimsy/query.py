@@ -17,11 +17,10 @@ def list_tests(loader):
 
 def list_suites(loader):
     log.display(separator())
-    log.display('Listing all self contained TestSuites.')
+    log.display('Listing all TestSuites.')
     log.display(separator())
     for suite in loader.suites:
-        if suite.self_contained:
-            log.display(suite.uid)
+        log.display(suite.uid)
 
 def list_tags(loader):
     tags = set()
@@ -38,4 +37,4 @@ def list_tests_with_tags(loader, tags):
         log.display("Tests marked with tag '%s':" % tag)
         log.display(separator())
         for test in loader.tag_index(tag):
-            log.display(test.name)
+            log.display(test.uid)

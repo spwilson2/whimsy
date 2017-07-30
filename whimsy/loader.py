@@ -189,39 +189,35 @@ class TestLoader(object):
         Return a list of test items with the given tag.
         '''
         if self._cached_tag_index is None:
-            item_to_tags = {}
             uniq_tags = set()
-            self._build_tags(self._suite,
-                             item_to_tags,
-                             self._suite.tags.copy(),
-                             uniq_tags)
+            item_to_tags = self._build_tags(self._suites, uniq_tags)
+
             # Build Reverse the index of single tag to list of items
             self._cached_tag_index = {}
-            for test, testtags in item_to_tags.iteritems():
+            for item, itemtags in item_to_tags.iteritems():
                 for _tag in uniq_tags:
-                    if _tag in testtags:
-                        testlist = self._cached_tag_index.setdefault(_tag,
-                                                                     [])
-                        testlist.append(test)
+                    if _tag in itemtags:
+                        testlist = self._cached_tag_index.setdefault(_tag, [])
+                        testlist.append(item)
 
         return self._cached_tag_index.get(tag, [])
 
-    def _build_tags(self, suite, itemtags, recursive_tags, uniq_tags):
+    def _build_tags(self, suites, uniq_tags):
         '''
         Build an dictionary index of all TestSuite and TestCases stored in the
         given suite mapped to their tags.
 
         NOTE: Currently unused, likely will be used by some querying tools.
         '''
-        for testitem in suite:
-            uniq_tags.update(testitem.tags)
-            if isinstance(testitem, TestCase):
-                itemtags[testitem] = recursive_tags | testitem.tags
-            elif isinstance(testitem, TestSuite):
-                self._build_tags(testitem, itemtags, testitem.tags
-                                 | recursive_tags, uniq_tags)
-            else:
-                assert False, _util.unexpected_item_msg
+        item_tags = {}
+        for test_suite in suites:
+            item_tags[test_suite] = test_suite.tags
+            uniq_tags.update(test_suite.tags)
+            for test in test_suite:
+                item_tags[test] = test.tags
+                uniq_tags.update(test.tags)
+        return item_tags
+
 
     def drop_caches(self):
         self._cached_suitecall = None

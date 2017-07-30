@@ -90,7 +90,7 @@ class Runner(object):
         for logger in self.result_loggers:
             logger.begin(test_suite)
 
-        suite_iterator = enumerate(test_suite)
+        suite_iterator = enumerate(test_suite.iter_testlists())
 
         outcomes = set()
 

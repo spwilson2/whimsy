@@ -44,7 +44,9 @@ class TestSuite(object):
 
     @property
     def testcases(self):
-        return tuple((testcase for (testlist, testcase) in self))
+        return tuple((testcase for testcase in self))
+    def iter_testlists(self):
+        return self.testlist.iter_keep_containers()
     def __iter__(self):
         return iter(self.testlist)
     def __len__(self):
@@ -103,15 +105,26 @@ class TestList(object):
         else:
             self.extend(items)
 
-    def __iter__(self):
+    def _iter(self, keep_containers):
         for item in self.items:
             if isinstance(item, TestList):
                 # Recurse into that list.
                 for item_of_item in item:
                     yield item_of_item
             else:
-                yield (self, item)
+                if keep_containers:
+                    yield (self, item)
+                else:
+                    yield item
 
+    def iter_keep_containers(self):
+        return self._iter(True)
+
+    def iter_tests(self):
+        return self._iter(False)
+
+    def __iter__(self):
+        return self.iter_tests()
     def __len__(self):
         return len(self.items)
     def append(self, item):

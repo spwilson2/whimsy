@@ -72,9 +72,10 @@ def dolist():
     loader = load_tests()
     if config.tags:
         query.list_tests_with_tags(loader, config.tags)
-    elif config.suites:
+    if config.suites:
         query.list_suites(loader)
-    query.list_tests(loader)
+    if config.tests:
+        query.list_tests(loader)
 
 def main():
     # Start logging verbosity at its minimum
