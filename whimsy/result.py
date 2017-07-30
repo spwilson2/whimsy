@@ -202,13 +202,22 @@ class ConsoleLogger(ResultLogger):
                 color=self.colormap[most_severe_outcome] + self.color.Bold)
 
 class TestResult(object):
-    def __init__(self, test_case, outcome, reason=None):
-        self.name = test_case.name
-        self.uid = test_case.uid
-        self.reason = reason
+    def __init__(self, testitem, outcome, reason=None):
+        self.name = testitem.name
+        self.uid = testitem.uid
         self.outcome = outcome
+        # NOTE: For now we don't care to keep the reason saved since we only
+        # will care about outcomes.
+        #self.reason = reason
+class TestCaseResult(TestResult):
+    pass
+class TestSuiteResult(TestResult):
+    pass
 
 class InternalLogger(ResultLogger):
+    # NOTE: If we ever expect to run tests which output might use and excesssive
+    # amount of memory to store output we'll need to change from a pickle file
+    # to streaming writer.
     def __init__(self, filestream):
         # TODO: We'll use an internal formatter to write streaming results to
         # a file, and then on completion write out the JUnit.
@@ -228,12 +237,24 @@ class InternalLogger(ResultLogger):
         self._current_item = item
 
     def skip(self, item, *args, **kwargs):
-        self._write(TestResult(self._current_item, Outcome.SKIP, *args,
+        if isinstance(self._current_item, TestSuite):
+            result_class = TestSuiteResult
+        elif isinstance(self._current_item, TestCase):
+            result_class = TestCaseResult
+        elif __debug__:
+            raise AssertionError(self.bad_item)
+        self._write(result_class(self._current_item, Outcome.SKIP, *args,
             **kwargs))
 
     def set_current_outcome(self, outcome, *args, **kwargs):
         '''Set the outcome of the current item.'''
-        self._write(TestResult(self._current_item, outcome, *args, **kwargs))
+        if isinstance(self._current_item, TestSuite):
+            result_class = TestSuiteResult
+        elif isinstance(self._current_item, TestCase):
+            result_class = TestCaseResult
+        elif __debug__:
+            raise AssertionError(self.bad_item)
+        self._write(result_class(self._current_item, outcome, *args, **kwargs))
 
     def end_current(self):
         self._current_item = self._item_list.pop()
@@ -241,63 +262,31 @@ class InternalLogger(ResultLogger):
     def end_testing(self):
         pass
 
-class JUnitLogger(ResultLogger):
+    def load(self):
+        '''Load results out of a dumped file.'''
+
+class JUnitLogger(InternalLogger):
+    # We use an internal logger to stream the output into a format we can
+    # retrieve at the end and then format it into JUnit.
     xml_header = '<?xml version="1.0" encoding="UTF-8"?>'
-
-    def __init__(self, filestream):
-        # TODO: We'll use an internal formatter to write streaming results to
-        # a file, and then on completion write out the JUnit.
-        self.filestream = open(filestream)
-        self.log = self.filestream.write
-
-    def begin_testing(self):
-        self.log(self.xml_header)
-
-    def begin(self, item):
-        '''
-        Signal the beginning of the given item.
-        '''
-        pass
-
-    def skip(self, item, *args, **kwargs):
-        '''Signal we are forcefully skipping the item due to some circumstance.'''
-
-    def set_current_outcome(self, outcome, *args, **kwargs):
-        '''Set the outcome of the current item.'''
-
-    def end_current(self):
-        '''
-        Signal the end of the current item.
-        '''
-        pass
 
     def end_testing(self):
         '''
         Signal the end of writing to the file stream. Indicates that
         results are done being logged.
         '''
-        pass
+        JUnitFormatter()
 
 class JUnitFormatter(object):
     '''
     Formats TestResults into the JUnit XML format.
     '''
-
     # Results considered passing under JUnit, we have a couple extra states
     # that aren't traditionally reported under JUnit.
     passing_results = {PASS, XFAIL}
 
-    def __init__(self,
-                 result,
-                 translate_names=True,
-                 flatten=True):
-        '''
-        :param flatten: Flatten out heirarchical tests in order to fit the
-        basic JUnit format (test suites traditionally cannot hold other test
-        suites).
-        '''
+    def __init__(self, result, translate_names=True):
         self.result = result
-        self.flatten = flatten
 
         if translate_names:
             self.name_table = string.maketrans("/.", ".-",)
@@ -315,54 +304,6 @@ class JUnitFormatter(object):
                                               results,
                                               self.flatten))
         return ET.tostring(self.root)
-
-    @staticmethod
-    def flatten_suites(toplevel_suite):
-        '''
-        JUnit doesn't officially have a concept of heirarchecal test suites as
-        far as I can tell, so to fix this we group tests at their finest
-        granularity. That is, test cases are grouped in the test suite that
-        directly contains them, not a suite of a suite.
-
-        :returns: A new toplevel_suite which contains flattened suites.
-        '''
-
-        def metadata_copy_suiteresult(suite):
-            copy = TestSuiteResult(suite.name)
-            copy.timer = suite.timer
-            return copy
-
-        def recurse_flatten(suite):
-            # Iterate over items in the suite, if they are other suites, we need
-            # to recurse and do the same.
-            # If they are tests then pull them out and save them. We'll attach
-            # them to us.
-            flattened_suite = metadata_copy_suiteresult(suite)
-            our_testcases = []
-            flat_suites = []
-
-            for result in suite:
-                if isinstance(result, TestCaseResult):
-                    our_testcases.append(result)
-                else:
-                    flat_suites.extend(recurse_flatten(result))
-
-            if our_testcases:
-                # If there were test cases held in this test suite, we should
-                # reattach them to our new copy and place us in the top level
-                # collection
-                flattened_suite.results.extend(our_testcases)
-                flat_suites.append(flattened_suite)
-
-            return flat_suites
-
-        # Just copy the name since we're going to update all the results.
-        new_toplevel_suite = metadata_copy_suiteresult(toplevel_suite)
-        flatted_results = recurse_flatten(toplevel_suite)
-        if flatted_results:
-            new_toplevel_suite.results.extend(flatted_results)
-
-        return new_toplevel_suite
 
     def convert_testcase(self, xtree, testcase):
         xtest = ET.SubElement(xtree, "testcase",
@@ -392,31 +333,20 @@ class JUnitFormatter(object):
             #</system-err>
             pass
 
-
-    def convert_testsuite(self, xtree, suite, _flatten=False):
-        '''
-        '''
+    def convert_testsuite(self, xtree, suite):
+        ''''''
         errors = 0
         failures = 0
         skipped = 0
 
-        # Remove the topmost suite that is containing other suites.
-        if _flatten:
-            xsuite = xtree
-            _flatten = False
-        else:
-            xsuite = ET.SubElement(xtree, "testsuite",
-                                    name=suite.name.translate(self.name_table),
-                                    time="%f" % suite.runtime)
+        xsuite = ET.SubElement(xtree, "testsuite",
+                                name=suite.name.translate(self.name_table),
+                                time="%f" % suite.runtime)
 
         # Iterate over the tests and suites held in the test suite.
-        for result in suite:
+        for testresult in suite:
             # If the element is a test case attach it as such
-            if isinstance(result, TestCaseResult):
-                self.convert_testcase(xsuite, result)
-            else:
-                # Otherwise recurse
-                self.convert_testsuite(xsuite, result, _flatten)
+            self.convert_testcase(xsuite, testresult)
 
             # Check the return value to fill in metadata for our xsuite
             if result.outcome not in self.passing_results:
@@ -429,7 +359,6 @@ class JUnitFormatter(object):
                 else:
                     assert False, "Unknown test state"
 
-        if not _flatten:
             xsuite.set("errors", str(errors))
             xsuite.set("failures", str(failures))
             xsuite.set("skipped", str(skipped))
