@@ -7,6 +7,7 @@ import tempfile
 import shutil
 import stat
 import helper
+import errno
 
 # For now expose this here, we might need to make an implementation if not
 # everyone has python 2.7
@@ -188,3 +189,17 @@ def uid(testitem):
     clsname = testitem.__class__.__name__
     return fmt.format(file=testitem.path, name=testitem.name,
                       class_=clsname)
+
+def mkdir_p(path):
+    '''
+    Same thing as mkdir -p
+
+    https://stackoverflow.com/a/600612
+    '''
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise

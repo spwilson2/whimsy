@@ -12,6 +12,7 @@ import result
 import terminal
 import query
 from config import config
+from tee import tee
 
 # TODO: Standardize separator usage.
 # Probably make it the caller responsiblity to place separators and internal
@@ -30,17 +31,18 @@ def load_tests():
 
 def dorun():
         loader = load_tests()
-        with open(config.result_path, 'w') as result_file:
-            testrunner = runner.Runner(loader.suites,
-                    (result.InternalLogger(result_file),))
+        #with open(config.result_path, 'w') as result_file:
+        #testrunner = runner.Runner(loader.suites,
+        #        (result.InternalLogger(result_file),))
 
-            logger.log.display(terminal.separator())
-            logger.log.bold('Running Tests')
-            logger.log.display('')
-            if config.uid:
-                results = testrunner.run_uid(config.uid)
-            else:
-                results = testrunner.run()
+        testrunner = runner.Runner(loader.suites)
+        logger.log.display(terminal.separator())
+        logger.log.bold('Running Tests')
+        logger.log.display('')
+        if config.uid:
+            results = testrunner.run_uid(config.uid)
+        else:
+            results = testrunner.run()
 
         #if results is not None:
         #    logger.log.display(terminal.separator())
