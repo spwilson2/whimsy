@@ -48,57 +48,25 @@ def dorun():
             else:
                 results = testrunner.run()
 
-        #if results is not None:
-        #    logger.log.display(terminal.separator())
-        #    logger.log.bold('Summarizing Test Results')
-        #    logger.log.display('')
-
-        #    # Save the results in a format which we can retrieve later.
-        #    formatter = result.InternalFormatter(results)
-
-        #    with open(config.result_path, 'w') as result_file:
-        #        formatter.dump(result_file)
-
-        #    formatter = result.ConsoleFormatter(results)
-        #    # This will always contain a summary separator.
-        #    logger.log.display(str(formatter))
-        #else:
-        #    logger.log.display(terminal.separator())
-
 def dorerun():
     # Load previous results
     # TODO Catch bad file path error or load error.
-    old_formatter = result.InternalFormatter(config.result_path, fromfile=True)
+    with open(joinpath(config.result_path, 'pickle'), 'r') as old_fstream:
+        old_formatter = result.InternalLogger.load(old_fstream)
 
     # Load tests
     loader = load_tests()
-    testrunner = runner.Runner(loader.suite)
 
-    results = result.TestResultContainer()
     # Get the self contained suites which hold tests that fail and run each.
-    for suite in old_formatter.result.iter_self_contained():
-        if suite.outcome == result.Result.FAIL:
-            #TODO: Likely will need to improve performance since this will
-            # require re-enumerating fixtures for this uid each time.
-            results.add_results(testrunner.run_uid(suite.uid))
+    reruns = []
+    for suite in old_formatter.suites:
+        if suite.outcome in (result.Outcome.FAIL, result.Outcome.ERROR):
+            suite = loader.get_uid(suite.uid)
+            reruns.append(suite)
 
-    if results is not None:
-        logger.log.display(terminal.separator())
-        logger.log.bold('Summarizing Test Results')
-        logger.log.display('')
-
-        # Save the results in a format which we can retrieve later.
-        formatter = result.InternalFormatter(results)
-
-        with open(config.result_path, 'w') as result_file:
-            formatter.dump(result_file)
-
-        formatter = result.ConsoleFormatter(results)
-        # This will always contain a summary separator.
-        logger.log.display(str(formatter))
-    else:
-        logger.log.display(terminal.separator())
-
+    # Run only the suites we need to rerun.
+    testrunner = runner.Runner(reruns)
+    testrunner.run()
 
 def dolist():
     loader = load_tests()

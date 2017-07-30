@@ -210,7 +210,7 @@ class ConsoleLogger(ResultLogger):
                 color=self.colormap[most_severe_outcome] + self.color.Bold)
 
 class TestResult(object):
-    def __init__(self, testitem, outcome, runtime):
+    def __init__(self, testitem, outcome, runtime, **kwargs):
         self.name = testitem.name
         self.uid = testitem.uid
         self.outcome = outcome
@@ -229,7 +229,7 @@ class TestCaseResult(TestResult):
 class TestSuiteResult(TestResult):
     def __init__(self, testitem, outcome,
                  runtime, test_case_results,
-                 *args, **kwargs):
+                 **kwargs):
 
         super(TestSuiteResult, self).__init__(testitem, outcome, runtime)
         self.test_case_results = test_case_results
@@ -256,7 +256,8 @@ class InternalLogger(ResultLogger):
 
     def skip(self, item, **kwargs):
         if isinstance(self._current_item, TestSuite):
-            result = TestSuiteResult(self._current_item, Outcome.SKIP, 0, **kwargs)
+            result = TestSuiteResult(self._current_item, Outcome.SKIP, 0,
+                    self._current_suite_testcases, **kwargs)
             self._current_suite_testcases = []
         elif isinstance(self._current_item, TestCase):
             result = TestCaseResult(self._current_item, Outcome.SKIP, 0, **kwargs)
@@ -289,12 +290,26 @@ class InternalLogger(ResultLogger):
     def end_testing(self):
         self.timer.stop()
 
-    def load(self, filename):
+    @staticmethod
+    def load(filestream):
         '''Load results out of a dumped file replacing our own results.'''
-        self.results = []
-        with open(filename, 'r') as picklefile:
+        loaded_results = []
+        try:
             while True:
-                pickle.load(picklefile)
+                item = pickle.load(filestream)
+                loaded_results.append(item)
+        except EOFError:
+            pass
+
+        new_logger = InternalLogger(filestream)
+        new_logger.results = loaded_results
+        return new_logger
+
+    @property
+    def suites(self):
+        for result in self.results:
+            if isinstance(result, TestSuiteResult):
+                yield result
 
 class JUnitLogger(InternalLogger):
     # We use an internal logger to stream the output into a format we can

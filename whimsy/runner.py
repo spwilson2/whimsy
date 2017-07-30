@@ -3,7 +3,7 @@ import traceback
 
 from config import config
 from logger import log
-from suite import TestSuite
+from suite import TestSuite, SuiteList
 import terminal
 from tee import tee
 import test
@@ -17,6 +17,8 @@ class Runner(object):
     The default runner class used for running test suites and cases.
     '''
     def __init__(self, suites, result_loggers=tuple()):
+        if not isinstance(suites, SuiteList):
+            suites = SuiteList(suites)
         self.suites = suites
         if not result_loggers:
             result_loggers = (ConsoleLogger(),)
@@ -27,7 +29,6 @@ class Runner(object):
         Run our entire collection of suites.
         '''
         for logger in self.result_loggers:
-            print logger
             logger.begin_testing()
 
         log.info(terminal.separator())
@@ -166,7 +167,7 @@ class Runner(object):
         # Capture the output into a file.
         with tee(fstderr_name, stderr=True, stdout=False),\
                 tee(fstdout_name, stderr=False, stdout=True):
-            self._run_test(testobj, fstdout_name, fstderr_name, fixtures)
+            return self._run_test(testobj, fstdout_name, fstderr_name, fixtures)
 
     def _run_test(self, testobj, fstdout_name, fstderr_name, fixtures):
         if fixtures is None:
@@ -251,7 +252,7 @@ class Runner(object):
                 reason = ("Previous test '%s' failed in a failfast"
                         " TestSuite." % failed_test)
                 for logger in self.result_loggers:
-                    logger.skip(testcase, reason)
+                    logger.skip(testcase, reason=reason)
             elif __debug__:
                 raise AssertionError(_util.unexpected_item_msg)
 

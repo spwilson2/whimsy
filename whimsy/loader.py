@@ -119,6 +119,10 @@ class TestLoader(object):
         assert self._loaded_a_file
         return tuple(self._fixtures)
 
+    def get_uid(self, uid):
+        '''Return the test item with the given uid.'''
+        return self._test_index.get(uid, self._suite_index.get(uid, None))
+
     def collection_with_tags(self):
         '''
         Return a suite collection containing all tests/suites that are marked
@@ -341,6 +345,10 @@ class TestLoader(object):
                 for test_item in test_items:
                     if isinstance(test_item, TestCase):
                         module_testsuite.append(test_item)
+
+                # Add our new testsuite into the index as well
+                self._index(module_testsuite)
+
 
             collection.extend(testsuites)
 
