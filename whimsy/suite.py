@@ -110,7 +110,7 @@ class TestList(object):
         for item in self.items:
             if isinstance(item, TestList):
                 # Recurse into that list.
-                for item_of_item in item:
+                for item_of_item in item._iter(keep_containers):
                     yield item_of_item
             else:
                 if keep_containers:

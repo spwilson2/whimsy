@@ -40,6 +40,41 @@ if __debug__:
             for f in files:
                 assert os.path.dirname(f) == directory
 
+class _MethodWrapper(object):
+    _sentinal = object()
+    def __init__(self, cls, method_name, callback):
+        self._callback = callback
+        self._cls = cls
+        self._method_name = method_name
+        self._old_method = self._sentinal
+        if __debug__:
+            self._replaced_method = None
+
+    def wrap(self):
+        old_method = getattr(self._cls, self._method_name, self._sentinal)
+        sentinal = self._sentinal
+        callback = self._callback
+
+        def combined_method(*args, **kwargs):
+            if old_method != sentinal:
+                old_method(*args, **kwargs)
+            callback(*args, **kwargs)
+
+        replacement = combined_method
+        self._old_method = old_method
+        setattr(self._cls, self._method_name, replacement)
+        self._replaced_method = getattr(self._cls, self._method_name)
+
+    def unwrap(self):
+        if self._old_method != self._sentinal:
+            assert getattr(self._cls, self._method_name) == self._replaced_method, \
+                    "%s's %s has changed, we can not restore it." \
+                    % (self._cls, self._method_name)
+            setattr(self._cls, self._method_name, self._old_method)
+        else:
+            delattr(self._cls, self._method_name)
+
+
 class TestLoader(object):
     '''
     Base class for discovering tests.
@@ -214,9 +249,9 @@ class TestLoader(object):
             '__directory__': os.path.dirname(path),
         }
 
-        self._wrap_init(TestSuite, self._collected_test_items)
-        self._wrap_init(TestCase, self._collected_test_items)
-        self._wrap_init(Fixture, self._collected_fixtures)
+        self._wrap_collection(TestSuite, self._collected_test_items)
+        self._wrap_collection(TestCase, self._collected_test_items)
+        self._wrap_collection(Fixture, self._collected_fixtures)
 
         # Add the file's containing directory to the system path.
         sys.path.insert(0, os.path.dirname(path))
@@ -224,9 +259,9 @@ class TestLoader(object):
         os.chdir(os.path.dirname(path))
 
         def cleanup():
-            self._unwrap_init(TestSuite)
-            self._unwrap_init(TestCase)
-            self._unwrap_init(Fixture)
+            self._unwrap_collection(TestSuite)
+            self._unwrap_collection(TestCase)
+            self._unwrap_collection(Fixture)
             self._collected_fixtures = OrderedSet()
             self._collected_test_items = OrderedSet()
             del sys.path[0]
@@ -289,47 +324,38 @@ class TestLoader(object):
         cleanup()
 
 
-    def _wrap_init(self, cls, collector):
+    def _wrap_collection(self, cls, collector):
         '''
         Wrap the given cls' __init__ method with a wrapper that will keep an
         OrderedSet of the instances.
 
         Note: If any other class monkey patches the __init__ method as well,
-        this will lead to issues. Keep __debug__ mode enabled to ensure this
-        never happens.
+        this will lead to issues. Keep __debug__ mode enabled to enable checks
+        that this never happens.
         '''
         assert cls not in self._wrapped_classes
-        old_init = cls.__init__
-
-        def instance_collect_wrapper(self, *args, **kwargs):
+        def instance_collector(self, *args, **kwargs):
             collector.add(self)
-            old_init(self, *args, **kwargs)
+        def instance_decollector(self):
+            collector.remove(self)
 
         # Python2 MethodTypes are different than functions.
-        our_wrapper = MethodType(instance_collect_wrapper, None, cls)
-        if __debug__:
-            self._wrapped_classes[cls] = (old_init, our_wrapper)
-        else:
-            self._wrapped_classes[cls] = old_init
+        #our_wrapper = MethodType(instance_collect_wrapper, None, cls)
+        init_wrapper = _MethodWrapper(cls, '__init__', instance_collector)
+        del_wrapper = _MethodWrapper(cls, 'unregister', instance_decollector)
+        init_wrapper.wrap()
+        del_wrapper.wrap()
+        self._wrapped_classes[cls] = (init_wrapper, del_wrapper)
 
-        cls.__init__ = our_wrapper
-
-    def _unwrap_init(self, cls):
+    def _unwrap_collection(self, cls):
         '''
-        Unwrap the given cls' __init__ method.
-
         Note: If any other class monkey patches the __init__ method as well,
-        this will lead to issues. Keep __debug__ mode enabled to ensure this
-        never happens.
+        this will lead to issues. Keep __debug__ mode enabled to enable checks
+        that this never happens.
         '''
-        if __debug__:
-            (old_init, our_init) = self._wrapped_classes[cls]
-            assert cls.__init__ == our_init, \
-                    "%s's __init__ has changed, we can not restore it." % cls
-        else:
-            old_init = self._wrapped_classes[cls]
-
-        cls.__init__ = old_init
+        (init_wrapper, del_wrapper) = self._wrapped_classes[cls]
+        init_wrapper.unwrap()
+        del_wrapper.unwrap()
         del self._wrapped_classes[cls]
 
     def _index(self, *testitems):

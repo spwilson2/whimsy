@@ -9,6 +9,7 @@ import fixture
 import suite
 import os
 import _util
+from suite import TestList
 
 def _as_kwargs(**kwargs):
     return kwargs
@@ -129,6 +130,9 @@ def gem5_verify_config(name,
     if valid_isas is None:
         valid_isas = constants.supported_isas
 
+    for verifier in verifiers:
+        verifier.unregister()
+
     for opt in valid_optimizations:
         for isa in valid_isas:
 
@@ -145,7 +149,7 @@ def gem5_verify_config(name,
             # optimization.
             verifier_tests = []
             for verifier in verifiers:
-                #verifier = copy.copy(verifier)
+                verifier = copy.copy(verifier)
                 verifier._name = '{name} ({vname} verifier)'.format(
                         name=_name,
                         vname=verifier.name)
