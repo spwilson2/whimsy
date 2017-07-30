@@ -2,15 +2,13 @@ import os
 import re
 import sys
 import traceback
-import types
-import copy
+from types import MethodType
 
-import helper
 from fixture import Fixture
+from helper import OrderedSet, absdirpath, OrderedDict
 from logger import log
 from suite import TestSuite, SuiteList, TestList
 from test import TestCase
-import _util
 
 # Ignores filenames that begin with '.'
 # Will match filenames that either begin or end with 'test' or tests and use
@@ -26,14 +24,13 @@ def path_as_modulename(filepath):
     # Remove the file extention .py
     return os.path.splitext(os.path.basename(filepath))[0]
 
-
 def path_as_testsuite(filepath, *args, **kwargs):
     '''
     Return the given filepath as a testsuite.
 
     The testsuite will be named after the containing directory of the file.
     '''
-    return TestSuite(os.path.split(helper.absdirpath(filepath))[-1],
+    return TestSuite(os.path.split(absdirpath(filepath))[-1],
         *args, **kwargs)
 
 if __debug__:
@@ -64,7 +61,6 @@ class TestLoader(object):
             tags = set()
         if isinstance(tags, str):
             tags = (tags,)
-        # NOTE: Purposely use the property version to drop cache
         self.tags = tags
 
         # List of all the fixtures we have collected.
@@ -74,8 +70,8 @@ class TestLoader(object):
         # enforces uniqueness - both so users and the test system can identify
         # unique tests.
         # Reverse index: testitem->uid
-        self._test_index  = _util.OrderedDict()
-        self._suite_index = _util.OrderedDict()
+        self._test_index  = OrderedDict()
+        self._suite_index = OrderedDict()
 
         # Reverse index: uid->testitem NOTE: Currently unused.
         self._test_rindex = {}
@@ -90,8 +86,8 @@ class TestLoader(object):
         # and fixtures when execfile'ing.
         # They are temporary and will be reset for each file we load.
         self._wrapped_classes = {}
-        self._collected_test_items = helper.OrderedSet()
-        self._collected_fixtures = helper.OrderedSet()
+        self._collected_test_items = OrderedSet()
+        self._collected_fixtures = OrderedSet()
 
 
     @property
@@ -123,82 +119,12 @@ class TestLoader(object):
         '''Return the test item with the given uid.'''
         return self._test_index.get(uid, self._suite_index.get(uid, None))
 
-    def collection_with_tags(self):
-        '''
-        Return a suite collection containing all tests/suites that are marked
-        with all of our tags.
-
-        NOTE: This is an expensive operation since we need to recurse the
-        tree of suites to build tag indexes.
-        '''
-        assert self._loaded_a_file
-        if not self.tags:
-            return self._suites
-
-        if self._cached_suitecall is not None:
-            return self._cached_suitecall
-
-        newsuite = copy.deepcopy(self._suite)
-        if self._collect_with_tags(newsuite, set()):
-            self._cached_suitecall = newsuite
-        else:
-            self._cached_suitecall = \
-                TestSuite('Default Suite Collection',
-                          failfast=False)
-        return self._cached_suitecall
-
-    def _collect_with_tags(self, suite, recursive_tags):
-        '''
-        Collect testsuites and testcases which have the given tags. Leaves the
-        testsuite heirarchy intact if a parent suite does not have the given
-        tags but at some level of he heirarchy a test or suite has the given
-        tags.
-
-        :param suite: The current level suite to search for tests/suites with
-        self._tags
-
-        :param recursive_tags: A recursively expanded variable which holds the
-        tags of the current test suite plus those of all suites that hold us.
-
-        NOTE: Right now suites are set up to be collected only if the test has
-        ALL the tags in self._tags, that is if the test suite set of tags is
-        a superset of the the tags in self._tags.
-        '''
-        # TODO: Discuss if should be issuperset or subset, or more than likely
-        # should be a config option.
-        kept_items = []
-        for testitem in suite:
-            if isinstance(testitem, TestCase):
-                if (recursive_tags or testitem.tags).issuperset(self._tags):
-                    kept_items.append(testitem)
-            elif isinstance(testitem, TestSuite):
-                suitetags = testitem.tags + recursive_tags
-                if suitetags.issuperset(self._tags):
-                    kept_items.append(testitem)
-                else:
-                    if self._collect_with_tags(testitem,
-                                               testitem.tags or tags):
-                        kept_items.append(testitem)
-        if kept_items:
-            suite.items = kept_items
-        return bool(kept_items)
-
-
     def tag_index(self, tag):
         '''
         Return a list of test items with the given tag.
         '''
         if self._cached_tag_index is None:
-            uniq_tags = set()
-            item_to_tags = self._build_tags(self._suites, uniq_tags)
-
-            # Build Reverse the index of single tag to list of items
-            self._cached_tag_index = {}
-            for item, itemtags in item_to_tags.iteritems():
-                for _tag in uniq_tags:
-                    if _tag in itemtags:
-                        testlist = self._cached_tag_index.setdefault(_tag, [])
-                        testlist.append(item)
+            self._build_tags(self._suites, uniq_tags)
 
         return self._cached_tag_index.get(tag, [])
 
@@ -210,13 +136,21 @@ class TestLoader(object):
         NOTE: Currently unused, likely will be used by some querying tools.
         '''
         item_tags = {}
+        uniq_tags = set()
         for test_suite in suites:
             item_tags[test_suite] = test_suite.tags
             uniq_tags.update(test_suite.tags)
             for test in test_suite:
                 item_tags[test] = test.tags
                 uniq_tags.update(test.tags)
-        return item_tags
+
+        # Build Reverse the index of single tag to list of items
+        self._cached_tag_index = {}
+        for item, itemtags in item_to_tags.iteritems():
+            for _tag in uniq_tags:
+                if _tag in itemtags:
+                    testlist = self._cached_tag_index.setdefault(_tag, [])
+                    testlist.append(item)
 
 
     def drop_caches(self):
@@ -280,8 +214,6 @@ class TestLoader(object):
             '__directory__': os.path.dirname(path),
         }
 
-        # TODO: Change the wrapping to a newdict modifcation rather than global
-        # wrapping
         self._wrap_init(TestSuite, self._collected_test_items)
         self._wrap_init(TestCase, self._collected_test_items)
         self._wrap_init(Fixture, self._collected_fixtures)
@@ -295,8 +227,8 @@ class TestLoader(object):
             self._unwrap_init(TestSuite)
             self._unwrap_init(TestCase)
             self._unwrap_init(Fixture)
-            self._collected_fixtures = helper.OrderedSet()
-            self._collected_test_items = helper.OrderedSet()
+            self._collected_fixtures = OrderedSet()
+            self._collected_test_items = OrderedSet()
             del sys.path[0]
             os.chdir(cwd)
 
@@ -312,7 +244,7 @@ class TestLoader(object):
         # Separate the instances so we can manipulate them more easily.
         # We also keep them together so we know ordering.
         test_items = self._collected_test_items
-        testcases = helper.OrderedSet()
+        testcases = OrderedSet()
         testsuites = []
 
         for item in test_items:
@@ -330,9 +262,9 @@ class TestLoader(object):
 
             # Remove all tests already contained in a TestSuite.
             if testsuites:
-                testcases = helper.OrderedSet(testcases)
+                testcases = OrderedSet(testcases)
                 for testsuite in testsuites:
-                    testcases -= helper.OrderedSet(testsuite.testcases)
+                    testcases -= OrderedSet(testsuite.testcases)
 
             # Add any remaining tests to the module TestSuite.
             if len(test_items) >= len(testcases):
@@ -373,7 +305,8 @@ class TestLoader(object):
             collector.add(self)
             old_init(self, *args, **kwargs)
 
-        our_wrapper = types.MethodType(instance_collect_wrapper, None, cls)
+        # Python2 MethodTypes are different than functions.
+        our_wrapper = MethodType(instance_collect_wrapper, None, cls)
         if __debug__:
             self._wrapped_classes[cls] = (old_init, our_wrapper)
         else:
@@ -401,8 +334,9 @@ class TestLoader(object):
 
     def _index(self, *testitems):
         def add_to_index(item, index, rindex):
-            if item in rindex:
-                raise DuplicateTestItemError()
+            if item in index:
+                raise DuplicateTestItemError(
+                        "Item uid: '%s' already exists" % item.uid)
             rindex[item] = item.uid
             index[item.uid] = item
 

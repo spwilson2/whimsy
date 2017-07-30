@@ -6,14 +6,15 @@ loaders.
 Discovers and runs all tests from a given root directory.
 '''
 import logger
-import loader
-import runner
-import result
-import terminal
 import query
+import result
+
+from helper import joinpath, mkdir_p
 from config import config
-from tee import tee
-from helper import joinpath
+from loader import TestLoader
+from logger import log
+from runner import Runner
+from terminal import separator
 
 # TODO: Standardize separator usage.
 # Probably make it the caller responsiblity to place separators and internal
@@ -23,26 +24,30 @@ def load_tests():
     '''
     Create a TestLoader and load tests for the directory given by the config.
     '''
-    testloader = loader.TestLoader()
-    logger.log.display(terminal.separator())
-    logger.log.bold('Loading Tests')
-    logger.log.display('')
+    testloader = TestLoader()
+    log.display(separator())
+    log.bold('Loading Tests')
+    log.display('')
     testloader.load_root(config.directory)
     return testloader
 
 def dorun():
         loader = load_tests()
+
+        # Create directory to save junit and internal results in.
+        mkdir_p(config.result_path)
+
         with open(joinpath(config.result_path, 'pickle'), 'w') as result_file,\
                 open(joinpath(config.result_path, 'junit.xml'), 'w') as junit_f:
-            testrunner = runner.Runner(
-                    loader.suites,
-                    (result.JUnitLogger(junit_f, result_file),
-                        result.ConsoleLogger()))
 
-            #testrunner = runner.Runner(loader.suites)
-            logger.log.display(terminal.separator())
-            logger.log.bold('Running Tests')
-            logger.log.display('')
+            junit_logger = result.JUnitLogger(junit_f, result_file)
+            console_logger = result.ConsoleLogger()
+            loggers = (junit_logger, console_logger)
+            testrunner = Runner(loader.suites, loggers)
+
+            log.display(separator())
+            log.bold('Running Tests')
+            log.display('')
             if config.uid:
                 results = testrunner.run_uid(config.uid)
             else:
@@ -65,7 +70,7 @@ def dorerun():
             reruns.append(suite)
 
     # Run only the suites we need to rerun.
-    testrunner = runner.Runner(reruns)
+    testrunner = Runner(reruns)
     testrunner.run()
 
 def dolist():
@@ -76,6 +81,8 @@ def dolist():
         query.list_suites(loader)
     if config.tests:
         query.list_tests(loader)
+    if config.fixtures:
+        query.list_fixtures(loader)
 
 def main():
     # Start logging verbosity at its minimum

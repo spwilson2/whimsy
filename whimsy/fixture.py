@@ -1,35 +1,9 @@
-# Requirements for Fixtures:
-#
-# - Should be able to specify level of caching (Global, Test Suite, or Test
-# Case, None [Equivalent to Test Case])
-#   - Should be able to attach fixtures to test cases, suites or make globally
-#   available.
-# - Optional (default) lazy_creation for delayed initialization - no reason to
-# make 40 temp dirs at the startup.
-# - Fixtures should be able to rely on other fixtures - all gem5 targets should
-# rely on scons, and scons can then be ran just before the initial test.
-#
-# Examples of Fixtures:
-# - Gem5 (built, then cached)
-# - Linux Images (downloaded, then cached)
-# - Test Programs (built, then cached)
-# - Gold Standard Files (possibly downloaded or in directory, cached)
-# - Temporary Directory
-#
-# Questions:
-# How to specify test requires fixture?
-# - TestCase have list of required fixtures
-# - Decorator for class with the required fixture?
-#
-# How do we access the fixtures from test cases which require them?
-# - Import them into the test class.
-#
 import os
+import tempfile
 
 from config import config
-import helper
-import logger
-import tempfile
+from helper import log_call, cacheresult, joinpath
+from logger import log
 
 class Fixture(object):
     '''Base Class for a test Fixture'''
@@ -54,7 +28,7 @@ class Fixture(object):
         self.lazy_init = lazy_init
 
         if cached:
-            self.setup = helper.cacheresult(self.setup)
+            self.setup = cacheresult(self.setup)
 
     def require(self, other_fixture):
         self.requires.append(other_fixture)
@@ -94,14 +68,14 @@ class SConsFixture(Fixture):
         self.directory = config.base_dir if directory is None else directory
         self.targets = []
 
-    @helper.cacheresult
+    @cacheresult
     def setup(self):
         super(SConsFixture, self).setup()
         targets = set(self.required_by)
         command = ['scons', '-C', self.directory, '-j', str(config.threads)]
         command.extend([target.target for target in targets])
-        logger.log.debug('Executing command: %s' % command)
-        helper.log_call(command)
+        log.debug('Executing command: %s' % command)
+        log_call(command)
 
     def teardown(self):
         pass
@@ -144,7 +118,7 @@ class SConsTarget(Fixture):
 
 class Gem5Fixture(SConsTarget):
     def __init__(self, isa, optimization):
-        target = helper.joinpath(isa.upper(), 'gem5.%s' % optimization)
+        target = joinpath(isa.upper(), 'gem5.%s' % optimization)
         super(Gem5Fixture, self).__init__(target)
         self.name = 'gem5'
         self.path = self.target
@@ -153,6 +127,6 @@ class Gem5Fixture(SConsTarget):
 
     def setup(self):
         if config.skip_build:
-            logger.log.debug('Skipping build of %s' % self.target)
+            log.debug('Skipping build of %s' % self.target)
         else:
             super(Gem5Fixture, self).setup()

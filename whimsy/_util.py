@@ -1,38 +1,16 @@
 import collections
-import time
-import os
 import difflib
+import helper
+import os
 import re
-import tempfile
 import shutil
 import stat
-import helper
-import errno
+import tempfile
+import time
 
 # For now expose this here, we might need to make an implementation if not
 # everyone has python 2.7
 from collections import OrderedDict
-
-def kwonlyargs(given_kwargs, **available_kwargs):
-    unrequested_kwargs = {}
-    requested_kwargs = available_kwargs
-
-    for key, val in given_kwargs.items():
-        if key in requested_kwargs:
-            requested_kwargs = key
-        else:
-            unrequested_kwargs[key] = val
-    return (requested_kwargs, unrequested_kwargs)
-
-class KwonlyargsError(TypeError):
-    def __init__(self, func, kwargs):
-        string = '%s got an unexpected keyword argument'\
-                ' %s' % (func, kwargs.keys()[0])
-        super(KwonlyargsError, self).__init__(string)
-
-
-class InvalidEnumException(Exception):
-    pass
 
 class Enum(object):
     '''
@@ -46,6 +24,7 @@ class Enum(object):
             self.enums.append(new_enum)
             setattr(self, enum, new_enum)
 
+
 class _EnumVal(object):
     def __init__(self, name, val, enums):
         self.val = val
@@ -57,6 +36,7 @@ class _EnumVal(object):
 
     def __cmp__(self, other):
         return self.val.__cmp__(other.val)
+
 
 class Timer(object):
     def __init__(self, start=False):
@@ -76,13 +56,6 @@ class Timer(object):
     def reset(self):
         self._start = self._finish = None
 
-def singleton(cls):
-    instances = {}
-    def getinstance():
-        if cls not in instances:
-            instances[cls] = cls()
-        return instances[cls]
-    return getinstance
 
 def iter_recursively(self, inorder=True, yield_container=False):
     '''
@@ -107,6 +80,7 @@ def iter_recursively(self, inorder=True, yield_container=False):
             else:
                 yield item
 
+
 unexpected_item_msg = \
         'Only TestSuites and TestCases should be contained in a TestSuite'
 
@@ -124,6 +98,7 @@ class AttrDict(object):
     def __setattr__(self, attr, val):
         self.__dict__[attr] = val
 
+
 def _filter_file(fname, filters):
     with open(fname, "r") as file_:
         for line in file_:
@@ -133,11 +108,13 @@ def _filter_file(fname, filters):
             else:
                 yield line
 
+
 def _copy_file_keep_perms(source, target):
     '''Copy a file keeping the original permisions of the target.'''
     st = os.stat(target)
     shutil.copy2(source, target)
     os.chown(target, st[stat.ST_UID], st[stat.ST_GID])
+
 
 def _filter_file_inplace(fname, filters):
     '''
@@ -184,22 +161,9 @@ def diff_out_file(ref_file, out_file, ignore_regexes=tuple()):
         else:
             return None
 
+
 def uid(testitem):
     fmt = '{file}:{class_}:{name}'
     clsname = testitem.__class__.__name__
     return fmt.format(file=testitem.path, name=testitem.name,
                       class_=clsname)
-
-def mkdir_p(path):
-    '''
-    Same thing as mkdir -p
-
-    https://stackoverflow.com/a/600612
-    '''
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise

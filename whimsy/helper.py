@@ -1,17 +1,32 @@
 '''
 Helper classes for writing tests with this test library.
 '''
-import logging
+import errno
 import subprocess
 import tempfile
-import threading
-import collections
 import os
+from threading import Thread
+from collections import MutableSet
 
-# Export CalledProcessError
+# We will export CalledProcessError
 from subprocess import CalledProcessError
 
+# For now expose this here, we might need to make an implementation if not
+# everyone has python 2.7
+from collections import OrderedDict
+
 import logger
+__all__ = [
+        'log_call',
+        'CalledProcessError',
+        'mkdir_p',
+        'cacheresult',
+        'OrderedSet',
+        'absdirpath',
+        'joinpath',
+        'OrderedDict'
+        ]
+
 
 def log_call(command, *popenargs, **kwargs):
     '''
@@ -52,16 +67,14 @@ def log_call(command, *popenargs, **kwargs):
             line = line.rstrip()
             logger.log.log(log_level, line)
 
-    stdout_thread = threading.Thread(target=log_output,
-                                     args=(logging.TRACE, p.stdout,
-                                           stdout_redirect))
+    stdout_thread = Thread(target=log_output,
+                           args=(logger.TRACE, p.stdout, stdout_redirect))
     stdout_thread.setDaemon(True)
-    stdout_thread.start()
-
-    stderr_thread = threading.Thread(target=log_output,
-                                     args=(logging.TRACE, p.stderr,
-                                           stderr_redirect))
+    stderr_thread = Thread(target=log_output,
+                           args=(logger.TRACE, p.stderr, stderr_redirect))
     stderr_thread.setDaemon(True)
+
+    stdout_thread.start()
     stderr_thread.start()
 
     retval = p.wait()
@@ -142,7 +155,7 @@ def cacheresult(function, typed=False):
         return result
     return wrapper
 
-class OrderedSet(collections.MutableSet):
+class OrderedSet(MutableSet):
     '''
     Maintain ordering of insertion in items to the set with quick iteration.
 
@@ -216,6 +229,20 @@ def absdirpath(path):
     return os.path.dirname(os.path.abspath(path))
 
 joinpath = os.path.join
+
+def mkdir_p(path):
+    '''
+    Same thing as mkdir -p
+
+    https://stackoverflow.com/a/600612
+    '''
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 if __name__ == '__main__':
     log_call(' '.join(['echo', 'hello', ';sleep 3', '; echo yo']), shell=True)

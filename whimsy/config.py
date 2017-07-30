@@ -1,16 +1,11 @@
-# TODO: Add support for using some kind of config file for testing.
 import abc
 import argparse
-import numbers
-import sys
-import types
 import copy
-import ConfigParser
 import os
-from pickle import HIGHEST_PROTOCOL as HIGHEST_PICKLE_PROTOCOL
+from pickle import HIGHEST_PROTOCOL as highest_pickle_protocol
 
-import helper
-import _util
+from helper import cacheresult, absdirpath
+from _util import AttrDict
 
 class _Config(object):
     '''
@@ -22,30 +17,19 @@ class _Config(object):
     _cli_args = _unconfigured
     _config_file_args = _unconfigured
     _config = {}
-    _defaults = _util.AttrDict()
+    _defaults = AttrDict()
     __shared_dict = {}
-    constants = _util.AttrDict()
+    constants = AttrDict()
 
     def __init__(self):
         self.__dict__ = self.__shared_dict
 
-    @helper.cacheresult
+    @cacheresult
     def _parse_config_file(self):
-        # First check if we have recieved a commandline argument telling us to
-        # look outside of the default location for our testing.ini file.
-        configpath = None
-        if self._config_file_args != self._unconfigured \
-                and common_args.configpath.name in self._config_file_args:
-            configpath = _config_file_args[common_args.configpath.name]
+        # TODO: Add support for config files.
+        self._config_file_args = None
 
-        if configpath is None:
-            self._config_file_args = None
-        #TODO: We'll need to check if values are already set in the config
-        # since we won't want to overwrite command line arguments with
-        # a config file. (Command line arguments should take precedence.)
-
-
-    @helper.cacheresult
+    @cacheresult
     def _parse_commandline_args(self):
         args = baseparser.parse_args()
         # Finish up our verbose args incrementing hack.
@@ -82,6 +66,7 @@ class _Config(object):
             else:
                 raise AttributeError('Could not find %s config value' % attr)
 
+
 config = _Config()
 # Defaults are provided by the config if the attribute is not found in the
 # config or commandline. For instance, if we are using the list command
@@ -89,7 +74,7 @@ config = _Config()
 # aren't going to build anything.
 _defaults = config._defaults
 constants = config.constants
-_defaults.base_dir = os.path.abspath(os.path.join(helper.absdirpath(__file__),
+_defaults.base_dir = os.path.abspath(os.path.join(absdirpath(__file__),
                                                   os.pardir,
                                                   os.pardir))
 _defaults.result_path = os.path.join(os.getcwd(), '.testing-results')
@@ -115,8 +100,7 @@ constants.tempdir_fixture_name = 'tempdir'
 constants.gem5_simulation_stderr = 'simerr'
 constants.gem5_simulation_stdout = 'simout'
 constants.gem5_simulation_stats = 'stats.txt'
-constants.pickle_protocol = HIGHEST_PICKLE_PROTOCOL
-
+constants.pickle_protocol = highest_pickle_protocol
 
 class Argument(object):
     '''
@@ -152,6 +136,7 @@ class Argument(object):
     def copy(self):
         return copy.deepcopy(self)
 
+
 class _StickyInt:
     '''
     A class that is used to cheat the verbosity count incrementer by
@@ -164,6 +149,7 @@ class _StickyInt:
     def __add__(self, other):
         self.val += other
         return self
+
 
 # A list of common arguments/flags used across cli parsers.
 common_args = [
@@ -232,13 +218,15 @@ common_args = [
         help='Only list tests that failed.'
     )
 ]
+
 # NOTE: There is a limitation which arises due to this format. If you have
 # multiple arguments with the same name only the final one in the list will be
 # saved.
+#
 # e.g. if you have a -v argument which increments verbosity level and
 # a separate --verbose flag which 'store's verbosity level. the final one in the
 # list will be saved.
-common_args = _util.AttrDict({arg.name:arg for arg in common_args})
+common_args = AttrDict({arg.name:arg for arg in common_args})
 
 
 class ArgParser(object):
@@ -294,6 +282,7 @@ class RunParser(ArgParser):
                                  ' tags.')
         mytags.add_to(parser)
 
+
 class ListParser(ArgParser):
     '''
     Parser for the \'list\' command.
@@ -317,12 +306,19 @@ class ListParser(ArgParser):
             default=False,
             help='List all test cases.'
         ).add_to(parser)
+        Argument(
+            '--fixtures',
+            action='store_true',
+            default=False,
+            help='List all fixtures.'
+        ).add_to(parser)
 
         common_args.directory.add_to(parser)
         mytags = common_args.tags.copy()
         mytags.kwargs['help'] = ('Only list items marked with one of the'
                                  ' given tags.')
         mytags.add_to(parser)
+
 
 class RerunParser(ArgParser):
     def __init__(self, subparser):

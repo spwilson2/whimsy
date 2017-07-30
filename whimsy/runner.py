@@ -1,15 +1,15 @@
-import os
 import traceback
 
-from config import config
-from logger import log
-from suite import TestSuite, SuiteList
-import terminal
-from tee import tee
+from terminal import separator
 import test
-from test import TestCase
 import _util
 from result import ConsoleLogger, Outcome, test_results_output_path
+from config import config
+from helper import mkdir_p, joinpath
+from logger import log
+from suite import TestSuite, SuiteList
+from tee import tee
+from test import TestCase
 
 
 class Runner(object):
@@ -31,7 +31,7 @@ class Runner(object):
         for logger in self.result_loggers:
             logger.begin_testing()
 
-        log.info(terminal.separator())
+        log.info(separator())
         log.info("Building all non 'lazy_init' fixtures")
 
         failed_builds = self.setup_unbuilt(
@@ -160,9 +160,9 @@ class Runner(object):
            test.
         '''
         outdir = test_results_output_path(testobj)
-        _util.mkdir_p(outdir)
-        fstdout_name = os.path.join(outdir, config.constants.system_err_name)
-        fstderr_name = os.path.join(outdir, config.constants.system_out_name)
+        mkdir_p(outdir)
+        fstdout_name = joinpath(outdir, config.constants.system_err_name)
+        fstderr_name = joinpath(outdir, config.constants.system_out_name)
 
         # Capture the output into a file.
         with tee(fstderr_name, stderr=True, stdout=False),\

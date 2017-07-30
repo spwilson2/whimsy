@@ -5,6 +5,9 @@ from logger import log
 from terminal import separator
 
 def list_fixtures(loader):
+    log.display(separator())
+    log.display('Listing all Fixtures.')
+    log.display(separator())
     for fixture in loader.fixtures:
         log.display(fixture.name)
 

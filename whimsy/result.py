@@ -1,25 +1,20 @@
 import abc
-import collections
-import time
-from xml.sax.saxutils import escape as xml_escape
-import string
-import functools
 import pickle
-import os
-import textwrap
+from xml.sax.saxutils import escape as xml_escape
+from string import maketrans
 
-import _util
 import terminal
-import terminal as termcap
-from config import constants, config
+from config import config
+from helper import joinpath
 from test import TestCase
 from suite import TestSuite
 from logger import log
+from _util import Timer, Enum
 
 class InvalidResultException(Exception):
     pass
 
-Outcome = _util.Enum(
+Outcome = Enum(
     [
     'PASS',   # The test passed successfully.
     'XFAIL',  # The test ran and failed as expected.
@@ -28,7 +23,6 @@ Outcome = _util.Enum(
     'FAIL',   # The test failed to pass.
     ],
 )
-Result = Outcome
 
 # Add all result enums to this module's namespace.
 for result in Outcome.enums:
@@ -37,8 +31,7 @@ for result in Outcome.enums:
 Outcome.failfast = {ERROR, FAIL}
 
 def test_results_output_path(test_case):
-    return os.path.join(
-            config.result_path, test_case.uid.replace('/','-'))
+    return joinpath(config.result_path, test_case.uid.replace('/','-'))
 
 class ResultLogger(object):
     '''
@@ -85,6 +78,7 @@ class ResultLogger(object):
         '''
         pass
 
+
 class ConsoleLogger(ResultLogger):
 
     color = terminal.get_termcap()
@@ -106,7 +100,7 @@ class ConsoleLogger(ResultLogger):
         self.outcome_count = {outcome: 0 for outcome in Outcome.enums}
         self._item_list = []
         self._current_item = None
-        self.timer = _util.Timer()
+        self.timer = Timer()
 
         self._started = False
 
@@ -205,9 +199,10 @@ class ConsoleLogger(ResultLogger):
             most_severe_outcome = Outcome.PASS
         string += ' in {time:.2} seconds '.format(time=self.timer.runtime())
 
-        return termcap.insert_separator(
+        return terminal.insert_separator(
                 string,
                 color=self.colormap[most_severe_outcome] + self.color.Bold)
+
 
 class TestResult(object):
     def __init__(self, testitem, outcome, runtime, **kwargs):
@@ -215,6 +210,7 @@ class TestResult(object):
         self.uid = testitem.uid
         self.outcome = outcome
         self.runtime = runtime
+
 
 class TestCaseResult(TestResult):
     def __init__(self, testitem, outcome, runtime, fstdout_name,
@@ -226,6 +222,8 @@ class TestCaseResult(TestResult):
         super(TestCaseResult, self).__init__(testitem, outcome,
                                              runtime,
                                              **kwargs)
+
+
 class TestSuiteResult(TestResult):
     def __init__(self, testitem, outcome,
                  runtime, test_case_results,
@@ -234,11 +232,12 @@ class TestSuiteResult(TestResult):
         super(TestSuiteResult, self).__init__(testitem, outcome, runtime)
         self.test_case_results = test_case_results
 
+
 class InternalLogger(ResultLogger):
     def __init__(self, filestream):
         self._item_list = []
         self._current_item = None
-        self.timer = _util.Timer()
+        self.timer = Timer()
         self.filestream = filestream
         self.results = []
 
@@ -311,6 +310,7 @@ class InternalLogger(ResultLogger):
             if isinstance(result, TestSuiteResult):
                 yield result
 
+
 class JUnitLogger(InternalLogger):
     # We use an internal logger to stream the output into a format we can
     # retrieve at the end and then format it into JUnit.
@@ -325,6 +325,7 @@ class JUnitLogger(InternalLogger):
         '''
         super(JUnitLogger, self).end_testing()
         JUnitFormatter(self).dump(self._junit_fstream)
+
 
 class JUnitFormatter(object):
     '''
@@ -364,9 +365,9 @@ class JUnitFormatter(object):
         self.runtime = internal_results.timer.runtime()
 
         if translate_names:
-            self.name_table = string.maketrans('/.', '.-')
+            self.name_table = maketrans('/.', '.-')
         else:
-            self.name_table = string.maketrans('', '')
+            self.name_table = maketrans('', '')
 
     def dump_testcase(self, fstream, testcase):
 

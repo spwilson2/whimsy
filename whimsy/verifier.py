@@ -1,12 +1,11 @@
 '''
 Built in test cases that verify particular details about a gem5 run.
 '''
-import difflib
-import _util
 import test
-import os
 import re
 from config import constants
+from _util import diff_out_file
+from helper import joinpath
 
 def _iterable_regex(regex):
     if isinstance(regex, _re_type) \
@@ -42,7 +41,7 @@ class MatchGoldStandard(test.TestFunction):
 
         # Get the file from the tempdir of the test.
         tempdir = fixtures[constants.tempdir_fixture_name].path
-        self.test_filename = os.path.join(tempdir, self.test_filename)
+        self.test_filename = joinpath(tempdir, self.test_filename)
 
         diff = _util.diff_out_file(self.standard_filename,
                                    self.test_filename,
@@ -102,12 +101,12 @@ class MatchRegex(test.TestFunction):
                         if re.match(regex, line):
                             return True
         if self.match_stdout:
-            if parse_file(os.path.join(tempdir,
-                                       constants.gem5_simulation_stdout)):
+            if parse_file(joinpath(tempdir,
+                                   constants.gem5_simulation_stdout)):
                 return # Success
         if self.match_stderr:
-            if parse_file(os.path.join(tempdir,
-                                       constants.gem5_simulation_stderr)):
+            if parse_file(joinpath(tempdir,
+                                   constants.gem5_simulation_stderr)):
                 return # Success
         test.fail('Could not match regex.')
 

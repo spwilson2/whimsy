@@ -1,8 +1,6 @@
-import os
+from os import getcwd
 
-import _util
-if __debug__:
-    import test
+from _util import uid
 
 class TestSuite(object):
     '''An object containing a collection of tests.'''
@@ -30,7 +28,7 @@ class TestSuite(object):
             tags = set()
         self.tags = set(tags)
 
-        self._path = os.getcwd()
+        self._path = getcwd()
 
     @property
     def name(self):
@@ -40,7 +38,7 @@ class TestSuite(object):
         return self._path
     @property
     def uid(self):
-        return _util.uid(self)
+        return uid(self)
 
     @property
     def testcases(self):
@@ -106,6 +104,9 @@ class TestList(object):
             self.extend(items)
 
     def _iter(self, keep_containers):
+
+        # We can't use the _util iter_recursively function to do this since we
+        # have defined a unusual __iter__
         for item in self.items:
             if isinstance(item, TestList):
                 # Recurse into that list.
@@ -131,7 +132,3 @@ class TestList(object):
         self.items.append(item)
     def extend(self, items):
         self.items.extend(items)
-
-if __name__ == '__main__':
-    TestSuite('')
-    SuiteCollection()

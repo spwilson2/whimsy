@@ -1,12 +1,12 @@
 import contextlib
-from functools import partial
-from multiprocessing import Process, Pipe
 import os
-import Queue
 import subprocess
 import sys
 import time
-import threading
+from functools import partial
+from multiprocessing import Process, Pipe
+from Queue import Queue
+from threading import Thread
 
 def _unbuffer():
     if sys.stdout is sys.__stdout__:
@@ -24,7 +24,7 @@ def _python_tee(filepath, infd, exit_signal_pipe, append=False):
     redir = open(filepath, flag)
     inpipe = os.fdopen(infd, 'r', 0)
 
-    queue = Queue.Queue(1)
+    queue = Queue(1)
 
     def finish_up(queue):
         # We have recieved instructions to terminate from our parent
@@ -36,7 +36,6 @@ def _python_tee(filepath, infd, exit_signal_pipe, append=False):
         queue.put(True)
         time.sleep(.1)
         finish_up(queue)
-        #threading.Timer(.1, finish_up).start()
 
     def wait_exit(queue):
         # Wait until we recieve the signal to exit.
@@ -50,7 +49,7 @@ def _python_tee(filepath, infd, exit_signal_pipe, append=False):
             if not queue.empty():
                 queue.get()
 
-    read_thread = threading.Thread(target=block_read, args=(queue,))
+    read_thread = Thread(target=block_read, args=(queue,))
     read_thread.setDaemon(True)
     read_thread.start()
     wait_exit(queue)
