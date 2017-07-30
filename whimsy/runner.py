@@ -16,15 +16,18 @@ class Runner(object):
     '''
     The default runner class used for running test suites and cases.
     '''
-    def __init__(self, suites, result_loggers=(ConsoleLogger(),)):
+    def __init__(self, suites, result_loggers=tuple()):
         self.suites = suites
-        self.result_loggers = result_loggers
+        if not result_loggers:
+            result_loggers = (ConsoleLogger(),)
+        self.result_loggers = tuple(result_loggers)
 
     def run(self):
         '''
         Run our entire collection of suites.
         '''
         for logger in self.result_loggers:
+            print logger
             logger.begin_testing()
 
         log.info(terminal.separator())
@@ -154,17 +157,15 @@ class Runner(object):
         '''
         outdir = test_results_output_path(testobj)
         _util.mkdir_p(outdir)
-        print outdir
+        fstdout_name = os.path.join(outdir, config.constants.system_err_name)
+        fstderr_name = os.path.join(outdir, config.constants.system_out_name)
 
         # Capture the output into a file.
-        with tee(os.path.join(outdir, config.constants.system_err_name),
-                stderr=True, stdout=False):
-            with tee(os.path.join(outdir, config.constants.system_out_name),
-                    stderr=False, stdout=True):
+        with tee(fstderr_name, stderr=True, stdout=False),\
+                tee(fstdout_name, stderr=False, stdout=True):
+            self._run_test(testobj, fstdout_name, fstderr_name, fixtures)
 
-                self._run_test(testobj, fixtures)
-
-    def _run_test(self, testobj, fixtures=None):
+    def _run_test(self, testobj, fstdout_name, fstderr_name, fixtures):
         if fixtures is None:
             fixtures = {}
 
@@ -218,7 +219,11 @@ class Runner(object):
         else:
             outcome = _run_test()
 
-        self._log_outcome(outcome, reason)
+        self._log_outcome(
+                outcome,
+                reason=reason,
+                fstdout_name=fstdout_name,
+                fstderr_name=fstderr_name)
 
         for logger in self.result_loggers:
             logger.end_current()
@@ -242,9 +247,9 @@ class Runner(object):
             elif __debug__:
                 raise AssertionError(_util.unexpected_item_msg)
 
-    def _log_outcome(self, outcome, *args, **kwargs):
+    def _log_outcome(self, outcome, **kwargs):
         for logger in self.result_loggers:
-            logger.set_current_outcome(outcome, *args, **kwargs)
+            logger.set_current_outcome(outcome, **kwargs)
 
     def setup_unbuilt(self, fixtures, setup_lazy_init=False):
         failures = []

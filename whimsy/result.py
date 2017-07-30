@@ -62,11 +62,11 @@ class ResultLogger(object):
 
 
     @abc.abstractmethod
-    def skip(self, item, *args, **kwargs):
+    def skip(self, item, **kwargs):
         '''Signal we are forcefully skipping the item due to some circumstance.'''
 
     @abc.abstractmethod
-    def set_current_outcome(self, outcome, *args, **kwargs):
+    def set_current_outcome(self, outcome, **kwargs):
         '''Set the outcome of the current item.'''
 
     @abc.abstractmethod
@@ -110,9 +110,11 @@ class ConsoleLogger(ResultLogger):
         self._current_item = None
         self.timer = _util.Timer()
 
+        self._started = False
+
     def begin_testing(self):
         self.timer.start()
-        pass
+        self._started = True
 
     def begin(self, item):
         '''
@@ -132,23 +134,23 @@ class ConsoleLogger(ResultLogger):
     def _begin_testcase(self, test_case):
         log.info('Starting TestCase: %s' % test_case.name)
 
-    def set_current_outcome(self, outcome, *args, **kwargs):
+    def set_current_outcome(self, outcome, **kwargs):
         '''Set the outcome of the current item.'''
         if isinstance(self._current_item, TestSuite):
             pass # TODO, for now we dont' do anything with this.
         elif isinstance(self._current_item, TestCase):
-            self._set_testcase_outcome(self._current_item, outcome, *args, **kwargs)
+            self._set_testcase_outcome(self._current_item, outcome, **kwargs)
         elif __debug__:
             raise AssertionError(self.bad_item)
 
-    def _set_testcase_outcome(self, test_case, outcome, reason=None):
+    def _set_testcase_outcome(self, test_case, outcome, reason=None, **kwargs):
         log.bold(
                 self.colormap[outcome]
                 + test_case.name
                 + self.reset)
         self.outcome_count[outcome] += 1
 
-    def _set_testsuite_outcome(self, test_suite, outcome):
+    def _set_testsuite_outcome(self, test_suite, outcome, **kwargs):
         pass
 
     # TODO: Change to force_set_outcome
@@ -183,9 +185,10 @@ class ConsoleLogger(ResultLogger):
         pass
 
     def end_testing(self):
-        self.timer.stop()
-        log.display(self._display_summary())
-        pass
+        if self._started:
+            self.timer.stop()
+            log.display(self._display_summary())
+            self._started = False
 
     def _display_summary(self):
         most_severe_outcome = None
@@ -199,6 +202,9 @@ class ConsoleLogger(ResultLogger):
                 strings.append(outcome_fmt.format(count=count, outcome=outcome.name))
                 most_severe_outcome = outcome
         string = ','.join(strings)
+        if most_severe_outcome is None:
+            string = ' No testing done'
+            most_severe_outcome = Outcome.PASS
         string += ' in {time:.2} seconds '.format(time=self.timer.runtime())
 
         return termcap.insert_separator(
@@ -214,43 +220,47 @@ class TestResult(object):
         # will care about outcomes.
         #self.reason = reason
 class TestCaseResult(TestResult):
-    pass
+    def __init__(self, testitem, outcome, fstdout_name,
+                 fstderr_name, *args, **kwargs):
+        self.fstdout_name = fstdout_name
+        self.fstderr_name = fstderr_name
+        super(TestCaseResult, self).__init__(testitem, outcome,
+                                             *args, **kwargs)
 class TestSuiteResult(TestResult):
     pass
 
 class InternalLogger(ResultLogger):
-    # NOTE: If we ever expect to run tests which output might use and excesssive
-    # amount of memory to store output we'll need to change from a pickle file
-    # to streaming writer.
     def __init__(self, filestream):
-        # TODO: We'll use an internal formatter to write streaming results to
-        # a file, and then on completion write out the JUnit.
         self._item_list = []
         self._current_item = None
         self.timer = _util.Timer()
         self.filestream = filestream
+        self.results = []
 
     def _write(self, obj):
+        print 'writing file'
         pickle.dump(obj, self.filestream)
 
     def begin_testing(self):
+        print 'Started running internal logger'
         self.timer.start()
 
     def begin(self, item):
         self._item_list.append(self._current_item)
         self._current_item = item
 
-    def skip(self, item, *args, **kwargs):
+    def skip(self, item, **kwargs):
         if isinstance(self._current_item, TestSuite):
             result_class = TestSuiteResult
         elif isinstance(self._current_item, TestCase):
             result_class = TestCaseResult
         elif __debug__:
             raise AssertionError(self.bad_item)
-        self._write(result_class(self._current_item, Outcome.SKIP, *args,
-            **kwargs))
+        result = result_class(self._current_item, Outcome.SKIP, **kwargs)
+        self._write(result)
+        self.results.append(result)
 
-    def set_current_outcome(self, outcome, *args, **kwargs):
+    def set_current_outcome(self, outcome, **kwargs):
         '''Set the outcome of the current item.'''
         if isinstance(self._current_item, TestSuite):
             result_class = TestSuiteResult
@@ -258,7 +268,9 @@ class InternalLogger(ResultLogger):
             result_class = TestCaseResult
         elif __debug__:
             raise AssertionError(self.bad_item)
-        self._write(result_class(self._current_item, outcome, *args, **kwargs))
+        result = result_class(self._current_item, outcome, **kwargs)
+        self._write(result)
+        self.results.append(result)
 
     def end_current(self):
         self._current_item = self._item_list.pop()
@@ -266,8 +278,12 @@ class InternalLogger(ResultLogger):
     def end_testing(self):
         pass
 
-    def load(self):
-        '''Load results out of a dumped file.'''
+    def load(self, filename):
+        '''Load results out of a dumped file replacing our own results.'''
+        self.results = []
+        with open(filename, 'r') as picklefile:
+            while True:
+                pickle.load(picklefile)
 
 class JUnitLogger(InternalLogger):
     # We use an internal logger to stream the output into a format we can
