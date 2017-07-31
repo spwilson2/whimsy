@@ -43,15 +43,15 @@ a `TestSuite` created for the module.
 
 ##### Digression on collection implementation.
 
-Actual collection of tests is done by modifying the `__init__` methods of
+Actual collection of tests is done by modifying the `__new__` methods of
 objects that the loader is attempting to collect (`Fixture`, `TestCase` and
 `TestSuite` instances). It also attaches a `__rem__` function to these classes
 as well. `__rem__` can be used to uncollect collected items. (Users should
 instead use the `loader.no_collect` function to do this instead of the member
 member function.)
 
-In addition to executing the original `__init__` implementation of these
-classes, the modified `__init__` call also adds instances to an `OrderedSet` in
+In addition to executing the original `__new__` implementation of these
+classes, the modified `__new__` call also adds instances to an `OrderedSet` in
 the loader. If the user then calls `no_collect` on a test item, the item is
 removed from the `OrderedSet` in the `TestLoader` and effectively will not be
 collected.
@@ -102,6 +102,8 @@ Reporting of test results is done as tests are ran.
 
 ## Test Writing By Example
 
+### Writing A Verifier Test
+
 Since all testing in gem5 right now entirely follows the same format, (run
 a config of gem5, then compare output to a known standard) Whimsy tries to make
 this common case simple and the intent explicit. Whimsy provides a general
@@ -133,36 +135,88 @@ $ ./main.py list . --tests
 ==============================================================================================================
 Loading Tests
 
-Discovered 15 tests and 15 testsuites in /home/swilson/Projects/whimsy/docs/examples/simple_returncode_test.py
+Discovered 30 tests and 15 testsuites in /home/swilson/Projects/whimsy/docs/examples/simple_returncode_test.py
 ==============================================================================================================
 Listing all TestCases.
 ==============================================================================================================
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ARM - opt]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ALPHA - fast]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ALPHA - debug]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [X86 - debug]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [SPARC - fast]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [SPARC - debug]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [X86 - fast]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [X86 - opt]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [RISCV - fast]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [SPARC - opt]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ARM - fast]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ARM - debug]
-/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ALPHA - opt]
+/home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [X86 - fast] (VerifyReturncode verifier)
 /home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [RISCV - opt]
+/home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [RISCV - fast] (VerifyReturncode verifier)
+/home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [ALPHA - debug] (VerifyReturncode verifier)
+/home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [X86 - opt] (VerifyReturncode verifier)
+/home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [ARM - fast] (VerifyReturncode verifier)
 /home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [RISCV - debug]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [X86 - opt]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [SPARC - fast]
+...
+... 21 More tests ellided...
+...
 ```
 
 A less contrived example is to run gem5 using a config and a test program.
-Here's an example of how to do this as well.
+Here's an example of how to do this as well:
 
 ```python
+from testlib import *
+
+verifiers = (
+        # Create a verifier that will check that the output 
+        # contains the regex 'hello'
+        verifier.MatchRegex('hello'),
+
+        # The se.py script is dumb and sets a strange return code on success.
+        verifier.VerifyReturncode(1),)
+hello_program = TestProgram('hello', 'X86', 'linux')
+
+gem5_verify_config(
+    name='test_hello',
+
+    # We now rely on the hello_program to be built before this test is run.
+    fixtures=(hello_program,),
+    verifiers=verifiers,
+
+    # Use the se.py config from configs/example/se.py
+    config=joinpath(config.base_dir, 'configs', 'example','se.py'),
+
+    # Give the config the command and path.
+    config_args=['--cmd', hello_program.path],
+
+    # The hello_program only works on the X86 ISA.
+    valid_isas=('X86',)
+)
 ```
 
-### Writing A Verifier Test
+The new additions to pick out from this example are:
+
+* We are handing a tuple of verifiers to `gem5_verify_config`. We can provide
+  any number of these.
+* We created a `TestProgram` - a fixture which will be `setup` before our suite
+  runs. We can also hand any number of these to `gem5_verify_config`.
+* We can hand config arguments by passing and array of flags/args under the
+  kwarg `config_args`
 
 ### Running Your Test
+
+There are now a few ways to run this last suite we've just created.
+
+First we could run every test in the directory it's stored in. Assuming you file is stored in `/tests/test-hello.py`.
+we would run it by executing the command:
+
+```bash
+./main.py run /tests
+```
+
+If we only want to run this specific suite we need to run by giving the uid:
+
+```bash
+./main.py run /tests --uid '/tests/test-hello:TestSuite:simple_gem5_returncode_test [X86 - opt]'
+```
+
+If we want to run all the tests with the X86 tag we could run it with one of
+the tags that was automatically added by `gem5_verify_config`:
+```bash
+./main.py run /tests --tags X86
+```
 
 ## Writing Your Own Test
 
