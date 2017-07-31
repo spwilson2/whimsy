@@ -8,21 +8,23 @@ from ..config import constants
 from .._util import diff_out_file
 from ..helper import joinpath
 
-def _iterable_regex(regex):
-    if isinstance(regex, _re_type) \
-            or isinstance(regex, str):
-        regex = (regex,)
-    return regex
-
 class Verifier(test.TestFunction):
-    tempdir_fixture_name = constants.tempdir_fixture_name
+    def __init__(self, name=None, **kwargs):
+        name = name if name is not None else self.__class__.__name__
+        super(Verifier, self).__init__(self.test, name, **kwargs)
 
-class MatchGoldStandard(test.TestFunction):
+
+class MatchGoldStandard(Verifier):
     '''
     Compares a standard output to the test output and passes if they match,
     fails if they do not.
     '''
-    def __init__(self, standard_filename, name='MatchGoldStandard', ignore_regex=tuple(), test_filename='simout'):
+    __ignore_regex_sentinel = object()
+    _default_ignore_regex = tuple()
+
+    def __init__(self, standard_filename, name=None,
+                 ignore_regex=__ignore_regex_sentinel,
+                 test_filename='simout'):
         '''
         :param standard: The path of the standard file to compare output to.
 
@@ -30,11 +32,13 @@ class MatchGoldStandard(test.TestFunction):
         either which will be ignored in 'standard' and test output files when
         diffing.
         '''
-        super(MatchGoldStandard, self).__init__(self.test, name)
+        super(MatchGoldStandard, self).__init__(name)
         self.standard_filename = standard_filename
         self.test_filename = test_filename
 
         # Put the regex into an iterable.
+        if ignore_regex == self.__ignore_regex_sentinel:
+            ignore_regex = self._default_ignore_regex
         self.ignore_regex = _iterable_regex(ignore_regex)
 
     def test(self, fixtures):
@@ -61,33 +65,75 @@ class MatchGoldStandard(test.TestFunction):
 
 class MatchStdout(MatchGoldStandard):
     __file = constants.gem5_simulation_stdout
-    def __init__(self, standard_filename, ignore_regex=tuple()):
+    _default_ignore_regex = [
+            re.compile('^Redirecting (stdout|stderr) to'),
+            re.compile('^gem5 compiled '),
+            re.compile('^gem5 started '),
+            re.compile('^gem5 executing on '),
+            re.compile('^command line:'),
+            re.compile("^Couldn't import dot_parser,"),
+            re.compile("^info: kernel located at:"),
+            re.compile("^Couldn't unlink "),
+            re.compile("^Using GPU kernel code file\(s\) "),
+        ]
+    def __init__(self, standard_filename, **kwargs):
         super(MatchStdout, self).__init__(standard_filename,
                                           test_filename=self.__file,
-                                          name=MatchStdout.__name__,
-                                          ignore_regex=ignore_regex)
+                                          **kwargs)
 
 class MatchStderr(MatchGoldStandard):
     __file = constants.gem5_simulation_stderr
-    def __init__(self, standard_filename, ignore_regex=tuple()):
-        super(MatchStderr, self).__init__(standard_filename,
-                                          test_filename=self.__file,
-                                          name=MatchStderr.__name__,
-                                          ignore_regex=ignore_regex)
+    _default_ignore_regex = []
+
+    def __init__(self, standard_filename, **kwargs):
+        self._generic_instance_warning(kwargs)
+        super(MatchStderr, self).__init__(
+                standard_filename,
+                test_filename=self.__file,
+                **kwargs)
 
 class MatchStats(MatchGoldStandard):
     __file = constants.gem5_simulation_stats
+    _default_ignore_regex = []
+
+    # TODO: Likely will want to change this verifier since we have the weird
+    # perl script right now. A simple diff probably isn't going to work.
+    def __init__(self, standard_filename, **kwargs):
+        self._generic_instance_warning(kwargs)
+        super(MatchStats, self).__init__(
+                standard_filename,
+                test_filename=self.__file,
+                **kwargs)
+
+class MatchConfigINI(MatchGoldStandard):
+    __file = constants.gem5_simulation_config_ini
+    _default_ignore_regex = (
+            re.compile("^(executable|readfile|kernel|image_file)="),
+            re.compile("^(cwd|input|codefile)="),
+            )
+
+    def __init__(self, standard_filename, **kwargs):
+        self._generic_instance_warning(kwargs)
+        super(MatchConfigINI, self).__init__(
+                standard_filename,
+                test_filename=self.__file,
+                **kwargs)
+
+class MatchConfigJSON(MatchGoldStandard):
+    __file = constants.gem5_simulation_config_json
+    _default_ignore_regex = (
+            re.compile(r'''^\s*"(executable|readfile|kernel|image_file)":'''),
+            re.compile(r'''^\s*"(cwd|input|codefile)":'''),
+            )
     def __init__(self, *args, **kwargs):
         self._generic_instance_warning(kwargs)
-        super(MatchStats, self).__init__(standard_filename,
+        super(MatchConfigJSON, self).__init__(standard_filename,
                                          test_filename=self.__file,
-                                          name=MatchStats.__name__,
                                           ignore_regex=ignore_regex)
 
-class MatchRegex(test.TestFunction):
+class MatchRegex(Verifier):
     def __init__(self, regex, name=None, match_stderr=True, match_stdout=True):
-        name = name if name is not None else MatchRegex.__name__
-        super(MatchRegex, self).__init__(self.test, name=name)
+        super(MatchRegex, self).__init__(name)
         self.regex = _iterable_regex(regex)
         self.match_stderr = match_stderr
         self.match_stdout = match_stdout
@@ -112,4 +158,19 @@ class MatchRegex(test.TestFunction):
                 return # Success
         test.fail('Could not match regex.')
 
+
+class VerifyReturncode(Verifier):
+    def __init__(self, returncode, name=None):
+        self.expected_returncode = returncode
+        super(VerifyReturncode, self).__init__(name)
+
+    def test(self, fixtures):
+        test.assertEquals(self.expected_returncode,
+                fixtures[constants.gem5_returncode_fixture_name].value)
+        pass
+
 _re_type = type(re.compile(''))
+def _iterable_regex(regex):
+    if isinstance(regex, _re_type) or isinstance(regex, str):
+        regex = (regex,)
+    return regex

@@ -5,7 +5,7 @@ from ..test import TestFunction
 from ..suite import TestList, TestSuite
 from ..helper import log_call, CalledProcessError
 from ..config import constants, config
-from fixture import TempdirFixture, Gem5Fixture
+from fixture import TempdirFixture, Gem5Fixture, VariableFixture
 import verifier
 
 def gem5_verify_config(name,
@@ -51,6 +51,8 @@ def gem5_verify_config(name,
 
             # Create a tempdir fixture to be shared throughout the test.
             tempdir = TempdirFixture(cached=True, lazy_init=True)
+            gem5_returncode = VariableFixture(
+                    name=constants.gem5_returncode_fixture_name)
 
             # Common name of this generated testcase.
             _name = '{given_name} [{isa} - {opt}]'.format(
@@ -77,6 +79,7 @@ def gem5_verify_config(name,
             fixtures = copy.copy(given_fixtures)
             fixtures.append(Gem5Fixture(isa, opt))
             fixtures.append(tempdir)
+            fixtures.append(gem5_returncode)
             # Add the isa and optimization to tags list.
             tags = copy.copy(tags)
             tags.extend((opt, isa))
@@ -108,8 +111,9 @@ def _create_test_run_gem5(config, config_args):
 
         NOTE: Requires fixtures: tempdir, gem5
         '''
-        tempdir = fixtures['tempdir'].path
-        gem5 = fixtures['gem5'].path
+        returncode = fixtures[constants.gem5_returncode_fixture_name]
+        tempdir = fixtures[constants.tempdir_fixture_name].path
+        gem5 = fixtures[constants.gem5_binary_fixture_name].path
         command = [
             gem5,
             '-d',  # Set redirect dir to tempdir.
@@ -122,6 +126,9 @@ def _create_test_run_gem5(config, config_args):
         try:
             log_call(command)
         except CalledProcessError as e:
+            returncode.value = e.returncode
             if e.returncode != 1:
                 raise e
+        else:
+            returncode.value = 0
     return test_run_gem5

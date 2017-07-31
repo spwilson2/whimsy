@@ -2,9 +2,16 @@ import os
 import tempfile
 
 from ..fixture import Fixture
-from ..config import config
+from ..config import config, constants
 from ..helper import log_call, cacheresult, joinpath, absdirpath
 from ..logger import log
+
+
+class VariableFixture(Fixture):
+    def __init__(self, value=None, name=None):
+        super(VariableFixture, self).__init__(name)
+        self.value = value
+        self.teardown = self.setup = lambda : None
 
 
 class TempdirFixture(Fixture):
@@ -83,7 +90,7 @@ class Gem5Fixture(SConsTarget):
     def __init__(self, isa, optimization):
         target = joinpath(isa.upper(), 'gem5.%s' % optimization)
         super(Gem5Fixture, self).__init__(target)
-        self.name = 'gem5'
+        self.name = constants.gem5_binary_fixture_name
         self.path = self.target
         self.isa = isa
         self.optimization = optimization

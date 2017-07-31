@@ -100,6 +100,10 @@ constants.tempdir_fixture_name = 'tempdir'
 constants.gem5_simulation_stderr = 'simerr'
 constants.gem5_simulation_stdout = 'simout'
 constants.gem5_simulation_stats = 'stats.txt'
+constants.gem5_simulation_config_ini = 'config.ini'
+constants.gem5_simulation_config_json = 'config.json'
+constants.gem5_returncode_fixture_name = 'gem5-returncode'
+constants.gem5_binary_fixture_name = 'gem5'
 constants.pickle_protocol = highest_pickle_protocol
 
 class Argument(object):
