@@ -44,7 +44,7 @@ class MatchGoldStandard(test.TestFunction):
         tempdir = fixtures[constants.tempdir_fixture_name].path
         self.test_filename = joinpath(tempdir, self.test_filename)
 
-        diff = _util.diff_out_file(self.standard_filename,
+        diff = diff_out_file(self.standard_filename,
                                    self.test_filename,
                                    self.ignore_regex)
         if diff is not None:

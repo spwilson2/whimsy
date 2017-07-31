@@ -85,11 +85,9 @@ class TestCase(object):
 class TestFunction(TestCase):
     __metaclass__ = ABCMeta
     def __init__(self, test, name=None, *args, **kwargs):
-        print name
         if name is None:
             # If not given a name, take the name of the function.
             name = test.__name__
-            print name
         super(TestFunction, self).__init__(name, *args, **kwargs)
         self._test_function = test
 

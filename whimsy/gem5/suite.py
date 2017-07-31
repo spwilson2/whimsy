@@ -4,7 +4,7 @@ import copy
 from .. import fixture
 from ..test import TestFunction
 from ..suite import TestList, TestSuite
-from ..helper import log_call
+from ..helper import log_call, CalledProcessError
 from ..config import constants, config
 import verifier
 
@@ -42,6 +42,8 @@ def gem5_verify_config(name,
     for verifier in verifiers:
         verifier.unregister()
 
+    given_fixtures = fixtures
+
     for opt in valid_optimizations:
         for isa in valid_isas:
 
@@ -70,7 +72,7 @@ def gem5_verify_config(name,
 
             # Create the gem5 target for the specific architecture and
             # optimization level.
-            fixtures = copy.copy(fixtures)
+            fixtures = copy.copy(given_fixtures)
             fixtures.append(fixture.Gem5Fixture(isa, opt))
             fixtures.append(tempdir)
             # Add the isa and optimization to tags list.
@@ -91,7 +93,7 @@ def gem5_verify_config(name,
 
             # Finally construct the self contained TestSuite out of our
             # tests.
-            a = TestSuite(
+            return TestSuite(
                     _name,
                     fixtures=fixtures,
                     tags=tags,
@@ -117,7 +119,7 @@ def _create_test_run_gem5(config, config_args):
         command.extend(config_args)
         try:
             log_call(command)
-        except helper.CalledProcessError as e:
+        except CalledProcessError as e:
             if e.returncode != 1:
                 raise e
     return test_run_gem5

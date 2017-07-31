@@ -52,32 +52,6 @@ class Runner(object):
         return self._suite_outcome(outcomes)
 
 
-    def run_uid(self, uid):
-        '''
-        Traverse our tree looking for the uid, if we can find it, we also
-        want to enumerate the fixtures that that testcase will have.
-        '''
-        for testitem in _util.iter_recursively(self.suites, inorder=True):
-            if testitem.uid == uid:
-                break
-        else:
-            log.warn('No test found for uid %s' % uid)
-            return
-
-        test_container = TestResultContainer()
-        if isinstance(testitem, TestSuite):
-            test_container.append(self.run_suite(testitem))
-        elif isinstance(testitem, TestCase):
-            # We need to create a parent suite result to attach this
-            # to.
-            test_container.append(self.run_test(testitem))
-        elif __debug__:
-            raise AssertionError(_util.unexpected_item_msg)
-
-        return test_container
-
-        # Create a new runner object with the suite we've found/created.
-
     def run_suite(self, test_suite):
         '''
         Run all tests/suites. From the given test_suite.

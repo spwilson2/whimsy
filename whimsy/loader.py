@@ -302,7 +302,7 @@ class TestLoader(object):
                     testcases -= OrderedSet(testsuite.testcases)
 
             # Add any remaining tests to the module TestSuite.
-            if len(test_items) >= len(testcases):
+            if testcases:
                 module_testsuite = path_as_testsuite(path)
                 testsuites.append(module_testsuite)
                 for test_item in test_items:
