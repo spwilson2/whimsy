@@ -199,6 +199,11 @@ class TestLoader(object):
             self._build_tags(self._suites)
         return self._cached_tag_index
 
+    def suites_with_tag(self, tag):
+        for item in self.tag_index(tag):
+            if isinstance(item, TestSuite):
+                yield item
+
     def tag_index(self, tag):
         '''
         Return a list of test items with the given tag.

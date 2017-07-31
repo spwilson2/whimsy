@@ -34,6 +34,14 @@ def load_tests():
 def dorun():
         loader = load_tests()
 
+        if config.tags:
+            suites = []
+            for tag in config.tags:
+                print tag
+                suites.extend(loader.suites_with_tag(tag))
+        else:
+            suites = loader.suites
+
         # Create directory to save junit and internal results in.
         mkdir_p(config.result_path)
 
@@ -43,7 +51,7 @@ def dorun():
             junit_logger = result.JUnitLogger(junit_f, result_file)
             console_logger = result.ConsoleLogger()
             loggers = (junit_logger, console_logger)
-            testrunner = Runner(loader.suites, loggers)
+            testrunner = Runner(suites, loggers)
 
             log.display(separator())
             log.bold('Running Tests')

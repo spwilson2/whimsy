@@ -17,7 +17,7 @@ class MakeFixture(fixture.Fixture):
     targets.
     '''
     def __init__(self, *args, **kwargs):
-        super(MakeFixture, self).__init__(cached=True, lazy_init=False,
+        super(MakeFixture, self).__init__(build_once=True, lazy_init=False,
                                           *args, **kwargs)
         self.targets = []
 
