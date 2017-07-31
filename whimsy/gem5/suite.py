@@ -42,7 +42,9 @@ def gem5_verify_config(name,
     for verifier in verifiers:
         verifier.unregister()
 
-    given_fixtures = fixtures
+    given_fixtures = []
+    given_fixtures.extend(fixtures)
+    fixtures = given_fixtures
 
     for opt in valid_optimizations:
         for isa in valid_isas:

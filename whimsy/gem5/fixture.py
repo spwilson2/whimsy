@@ -3,7 +3,7 @@ import tempfile
 
 from ..fixture import Fixture
 from ..config import config
-from ..helper import log_call, cacheresult, joinpath
+from ..helper import log_call, cacheresult, joinpath, absdirpath
 from ..logger import log
 
 
@@ -38,7 +38,6 @@ class SConsFixture(Fixture):
         targets = set(self.required_by)
         command = ['scons', '-C', self.directory, '-j', str(config.threads)]
         command.extend([target.target for target in targets])
-        log.debug('Executing command: %s' % command)
         log_call(command)
 
     def teardown(self):
@@ -94,3 +93,52 @@ class Gem5Fixture(SConsTarget):
             log.debug('Skipping build of %s' % self.target)
         else:
             super(Gem5Fixture, self).setup()
+
+
+class MakeFixture(Fixture):
+    def __init__(self, directory, *args, **kwargs):
+        name = 'make -C %s' % directory
+        super(MakeFixture, self).__init__(cached=True, lazy_init=False,
+                                          name=name,
+                                          *args, **kwargs)
+        self.targets = []
+        self.directory = directory
+
+    def setup(self):
+        super(MakeFixture, self).setup()
+        targets = set(self.required_by)
+        command = ['make', '-C', self.directory]
+        command.extend([target.target for target in targets])
+        log_call(command)
+
+
+class MakeTarget(Fixture):
+    def __init__(self, target, make_fixture=None, *args, **kwargs):
+        '''
+        :param make_fixture: The make invocation we will be attached to.
+        Since we don't have a single global instance of make in gem5 like we do
+        scons we need to know what invocation to attach to. If none given,
+        creates its own.
+        '''
+        super(MakeTarget, self).__init__(name=target, *args, **kwargs)
+        self.target = self.name
+
+        if make_fixture is None:
+            make_fixture = MakeFixture(absdirpath(target), lazy_init=True, cached=False)
+        self.make_fixture = make_fixture
+
+        # Add our self to the required targets of the main MakeFixture
+        self.require(self.make_fixture)
+
+    def setup(self):
+        super(MakeTarget, self).setup()
+        self.make_fixture.setup()
+        return self
+
+class TestProgram(MakeTarget):
+    def __init__(self, program, isa, os):
+        make_dir = joinpath('test-progs', program)
+        make_fixture = MakeFixture(make_dir)
+        target = joinpath('bin', isa, os, program)
+        super(TestProgram, self).__init__(target, make_fixture)
+        self.path = joinpath(make_dir, target)
