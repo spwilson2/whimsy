@@ -7,6 +7,8 @@ import re
 import sys
 import traceback
 from types import MethodType
+from functools import partial
+import types
 
 from fixture import Fixture
 from helper import OrderedSet, absdirpath, OrderedDict
@@ -59,7 +61,7 @@ class _MethodWrapper(object):
     callback function.
     '''
     _sentinal = object()
-    def __init__(self, cls, method_name, callback):
+    def __init__(self, cls, method_name, callback, clsmethod=False):
         '''
         :param cls: Class to wrap.
         :param method_name: Name of method to wrap
@@ -73,6 +75,7 @@ class _MethodWrapper(object):
         self._old_method = self._sentinal
         if __debug__:
             self._replaced_method = None
+        self.clsmethod = clsmethod
 
     def wrap(self):
         '''
@@ -85,8 +88,12 @@ class _MethodWrapper(object):
 
         def combined_method(*args, **kwargs):
             if old_method not in (sentinal, NotImplemented):
-                old_method(*args, **kwargs)
-            callback(*args, **kwargs)
+                return callback(__retval__=old_method(*args, **kwargs), *args, **kwargs)
+            else:
+                return callback(__retval__=None, *args, **kwargs)
+
+        if self.clsmethod:
+            combined_method = classmethod(combined_method)
 
         replacement = combined_method
         self._old_method = old_method
@@ -276,12 +283,12 @@ class TestLoader(object):
         First, the current working directory will change to the directory path
         of the file being loaded.
 
-        Second, in order to collect tests we wrap __init__ calls of collected
+        Second, in order to collect tests we wrap __new__ calls of collected
         objects before calling :code:`execfile`.  If a user wishes to prevent
         an instantiated object from being collected (possibly to create a copy
-        with a modified attribute) they should use :func:`no_collect` to
-        do so. (Internally a :code:`__rem__` method is added to objects we
-        plan to collect. This method will then remove the object from those
+        with a modified attribute) they should use :func:`no_collect` to do
+        so. (Internally a :code:`__rem__` method is added to objects we plan
+        to collect. This method will then remove the object from those
         collected from the file.)
 
         .. note:: Automatically drop_caches
@@ -391,7 +398,7 @@ class TestLoader(object):
 
     def _wrap_collection(self, cls, collector):
         '''
-        Wrap the given cls' __init__ method with a wrapper that will keep an
+        Wrap the given cls' __new__ method with a wrapper that will keep an
         OrderedSet of the instances. Also attach a __rem__ method which can be
         used to remove the object from our collected objects with the exposed
         :func:`no_collect`
@@ -401,32 +408,35 @@ class TestLoader(object):
         :param collector: The :code:`set` to add/remove collected instances
         to.
 
-        .. warning:: If any other class monkey patches the __init__ method as
+        .. warning:: If any other class monkey patches the __new__ method as
         well, this will lead to issues. Keep __debug__ mode enabled to enable
         checks that this never happens.
         '''
         assert cls not in self._wrapped_classes
-        def instance_collector(self, *args, **kwargs):
-            collector.add(self)
-        def instance_decollector(self):
+        def instance_decollector(self, *args, **kwargs):
             collector.remove(self)
+            return kwargs['__retval__']
+        def instance_new(*args, **kwargs):
+            _cls = kwargs['__retval__']
+            retval = super(cls, _cls).__new__(type(_cls), *args, **kwargs)
+            collector.add(retval)
+            return retval
 
         # Python2 MethodTypes are different than functions.
-        #our_wrapper = MethodType(instance_collect_wrapper, None, cls)
-        init_wrapper = _MethodWrapper(cls, '__init__', instance_collector)
         del_wrapper = _MethodWrapper(cls, '__rem__', instance_decollector)
-        init_wrapper.wrap()
+        new_wrapper = _MethodWrapper(cls, '__new__', instance_new, clsmethod=True)
         del_wrapper.wrap()
-        self._wrapped_classes[cls] = (init_wrapper, del_wrapper)
+        new_wrapper.wrap()
+        self._wrapped_classes[cls] = (new_wrapper, del_wrapper)
 
     def _unwrap_collection(self, cls):
         '''
-        .. warning:: If any other class monkey patches the __init__ method as
+        .. warning:: If any other class monkey patches the __new__  method as
         well, this will lead to issues. Keep __debug__ mode enabled to enable
         checks that this never happens.
         '''
-        (init_wrapper, del_wrapper) = self._wrapped_classes[cls]
-        init_wrapper.unwrap()
+        (new_wrapper, del_wrapper) = self._wrapped_classes[cls]
+        new_wrapper.unwrap()
         del_wrapper.unwrap()
         del self._wrapped_classes[cls]
 
@@ -446,6 +456,8 @@ class TestLoader(object):
             elif isinstance(item, TestSuite):
                 add_to_index(item, self._suite_index, self._suite_rindex)
             elif __debug__:
+                print item
+                import pdb; pdb.set_trace()
                 raise AssertionError('Only can enumerate TestCase and'
                                      ' TestSuite objects')
 

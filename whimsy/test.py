@@ -52,8 +52,7 @@ class TestCase(object):
     must be called by subclasses in order for them to be discovered by the
     :class:`TestLoader`.
     '''
-    __metaclass__ = ABCMeta
-    def __init__(self, name, tags=None, fixtures=None):
+    def __init__(self, name, tags=None, fixtures=None, path=None):
         '''
         This must be called in subclasses for tests to be recognized by the
         test loader.
@@ -81,7 +80,9 @@ class TestCase(object):
         self.tags = set(tags)
 
         self._name = name
-        self._path = getcwd()
+        if path is None:
+            path = getcwd()
+        self._path = path
 
     @property
     def uid(self):
@@ -125,7 +126,6 @@ class TestFunction(TestCase):
         Override TestCase definition of __call__
         '''
         self._test_function(fixtures)
-
 
 def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
     '''

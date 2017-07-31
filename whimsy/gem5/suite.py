@@ -49,7 +49,9 @@ def gem5_verify_config(name,
     given_fixtures = []
     given_fixtures.extend(fixtures)
     fixtures = given_fixtures
+    original_verifiers = verifiers
 
+    testsuites = []
     for opt in valid_optimizations:
         for isa in valid_isas:
 
@@ -67,8 +69,8 @@ def gem5_verify_config(name,
             # Create copies of the verifier subtests for this isa and
             # optimization.
             verifier_tests = []
-            for verifier in verifiers:
-                verifier = copy.copy(verifier)
+            for verifier in original_verifiers:
+                verifier = copy.deepcopy(verifier)
                 verifier._name = '{name} ({vname} verifier)'.format(
                         name=_name,
                         vname=verifier.name)
@@ -102,11 +104,12 @@ def gem5_verify_config(name,
 
             # Finally construct the self contained TestSuite out of our
             # tests.
-            return TestSuite(
-                    _name,
-                    fixtures=fixtures,
-                    tags=tags,
-                    tests=gem5_test_collection)
+            testsuites.append(TestSuite(
+                _name,
+                fixtures=fixtures,
+                tags=tags,
+                tests=gem5_test_collection))
+    return testsuites
 
 def _create_test_run_gem5(config, config_args, gem5_args):
     def test_run_gem5(fixtures):

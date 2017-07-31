@@ -98,15 +98,71 @@ The run of a `TestCase` follows these steps:
     * The test passes if no exceptions are thrown and the `__call__` returns.
 
 
-Reporting of test results is done as tests are being ran.
+Reporting of test results is done as tests are ran.
 
 ## Test Writing By Example
 
+Since all testing in gem5 right now entirely follows the same format, (run
+a config of gem5, then compare output to a known standard) Whimsy tries to make
+this common case simple and the intent explicit. Whimsy provides a general
+utility function `gem5_verify_config` and mixin `Verifier` classes.
+
+Let's create a simple test which can runs gem5 and a config file for all ISAs
+and optimization versions and checks that the exit status of gem5 was 0.
+
+```python
+from testlib import *
+
+verifier = VerifyReturncode(0)
+
+gem5_verify_config(
+    name='simple_gem5_returncode_test',
+
+    # Pass our returncode verifier here.
+    verifiers=(verifier,),
+
+    # Use the pretend config file in the same directory as this test.
+    config=joinpath(__directory__, 'simple-config.py'),
+)
+```
+
+We could then use the list command to look at the tests we have created.
+
+```bash
+$ ./main.py list . --tests
+==============================================================================================================
+Loading Tests
+
+Discovered 15 tests and 15 testsuites in /home/swilson/Projects/whimsy/docs/examples/simple_returncode_test.py
+==============================================================================================================
+Listing all TestCases.
+==============================================================================================================
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ARM - opt]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ALPHA - fast]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ALPHA - debug]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [X86 - debug]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [SPARC - fast]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [SPARC - debug]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [X86 - fast]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [X86 - opt]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [RISCV - fast]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [SPARC - opt]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ARM - fast]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ARM - debug]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [ALPHA - opt]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [RISCV - opt]
+/home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [RISCV - debug]
+```
+
+A less contrived example is to run gem5 using a config and a test program.
+Here's an example of how to do this as well.
+
+```python
+```
 
 ### Writing A Verifier Test
 
 ### Running Your Test
-
 
 ## Writing Your Own Test
 
