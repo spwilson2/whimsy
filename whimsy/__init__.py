@@ -5,7 +5,7 @@ from result import Outcome
 from helper import *
 from config import *
 from logger import log
-import verifier
+from gem5 import *
 
 #__all__ = [
 #    'fixture',

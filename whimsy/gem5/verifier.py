@@ -1,11 +1,12 @@
 '''
 Built in test cases that verify particular details about a gem5 run.
 '''
-import test
 import re
-from config import constants
-from _util import diff_out_file
-from helper import joinpath
+
+from .. import test
+from ..config import constants
+from .._util import diff_out_file
+from ..helper import joinpath
 
 def _iterable_regex(regex):
     if isinstance(regex, _re_type) \
@@ -85,6 +86,7 @@ class MatchStats(MatchGoldStandard):
 
 class MatchRegex(test.TestFunction):
     def __init__(self, regex, name=None, match_stderr=True, match_stdout=True):
+        name = name if name is not None else MatchRegex.__name__
         super(MatchRegex, self).__init__(self.test, name=name)
         self.regex = _iterable_regex(regex)
         self.match_stderr = match_stderr

@@ -142,6 +142,12 @@ class ConsoleLogger(ResultLogger):
                 + self.reset)
         self.outcome_count[outcome] += 1
 
+        if reason is not None:
+            log.info('')
+            log.info('Reason:')
+            log.info(reason)
+            log.info(terminal.separator('-'))
+
     def _set_testsuite_outcome(self, test_suite, outcome, **kwargs):
         pass
 

@@ -173,14 +173,10 @@ class Runner(object):
         if fixtures is None:
             fixtures = {}
 
-        outcome = None
-        reason = None
-
         # We'll use a local shallow copy of fixtures to make it easier to
         # cleanup and override suite level fixtures with testcase level ones.
         fixtures = fixtures.copy()
         fixtures.update(testobj.fixtures)
-
 
         test_timer = _util.Timer()
         test_timer.start()
@@ -189,6 +185,7 @@ class Runner(object):
             logger.begin(testobj)
 
         def _run_test():
+            reason = None
             try:
                 testobj(fixtures=fixtures)
             except AssertionError as e:
@@ -208,7 +205,7 @@ class Runner(object):
             else:
                 outcome = Outcome.PASS
 
-            return outcome
+            return (outcome, reason)
 
         # Build any fixtures that haven't been built yet.
         log.debug('Building fixtures for TestCase: %s' % testobj.name)
@@ -224,7 +221,7 @@ class Runner(object):
             reason = reason
             outcome = Outcome.ERROR
         else:
-            outcome = _run_test()
+            (outcome, reason) = _run_test()
 
         for fixture in testobj.fixtures.values():
             fixture.teardown()

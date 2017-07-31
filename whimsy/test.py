@@ -1,15 +1,11 @@
-import abc
-import copy
+from abc import ABCMeta, abstractmethod
+from os import getcwd
+
+from suite import TestList
 from unittest import FunctionTestCase as _Ftc
 from functools import partial
 
-from config import config, constants
-import helper
-import fixture
-import suite
-import os
-import _util
-from suite import TestList
+from _util import uid
 
 def _as_kwargs(**kwargs):
     return kwargs
@@ -51,7 +47,7 @@ class TestCase(object):
     imposible to run verify output if gem5 was not run first. In this example
     both gem5 and verify output would be subtests of a single TestCase.
     '''
-    __metaclass__ = abc.ABCMeta
+    __metaclass__ = ABCMeta
     def __init__(self, name, tags=None, fixtures=None):
         '''
         __init__ must be called in subclasses for self contained tests to be
@@ -68,18 +64,18 @@ class TestCase(object):
         self.tags = set(tags)
 
         self._name = name
-        self._path = os.getcwd()
+        self._path = getcwd()
 
     @property
     def uid(self):
-        return _util.uid(self)
+        return uid(self)
     @property
     def path(self):
         return self._path
     @property
     def name(self):
         return self._name
-    @abc.abstractmethod
+    @abstractmethod
     def __call__(self, fixtures):
         pass
     # This is a method that will be created by the test loader in order to
@@ -87,11 +83,13 @@ class TestCase(object):
     unregister = NotImplemented
 
 class TestFunction(TestCase):
-    __metaclass__ = abc.ABCMeta
+    __metaclass__ = ABCMeta
     def __init__(self, test, name=None, *args, **kwargs):
+        print name
         if name is None:
             # If not given a name, take the name of the function.
             name = test.__name__
+            print name
         super(TestFunction, self).__init__(name, *args, **kwargs)
         self._test_function = test
 
@@ -100,121 +98,6 @@ class TestFunction(TestCase):
         Override TestCase definition of __call__
         '''
         self._test_function(fixtures)
-
-
-def gem5_verify_config(name,
-                       config,
-                       config_args,
-                       verifiers,
-                       tags=[],
-                       fixtures=[],
-                       valid_isas=None,
-                       valid_optimizations=('opt',)):
-    '''
-    Runs the given program using the given config and passes if no exception
-    was thrown.
-
-    NOTE: This is not an actual testcase, it generates a group of tests which
-    can be used by gem5_test.
-
-    :param name: Name of the test.
-    :param config: The config to give gem5.
-    :param program: The executable to run using the config.
-
-    :param verifiers: An iterable with Verifier instances which will be placed
-    into a suite that will be ran after a gem5 run.
-
-    :param valid_isas: An interable with the isas that this test can be ran
-    for.
-
-    :param valid_optimizations: An interable with the optimization levels that
-    this test can be ran for. (E.g. opt, debug)
-    '''
-    if valid_isas is None:
-        valid_isas = constants.supported_isas
-
-    for verifier in verifiers:
-        verifier.unregister()
-
-    for opt in valid_optimizations:
-        for isa in valid_isas:
-
-            # Create a tempdir fixture to be shared throughout the test.
-            tempdir = fixture.TempdirFixture(cached=True, lazy_init=True)
-
-            # Common name of this generated testcase.
-            _name = '{given_name} [{isa} - {opt}]'.format(
-                    given_name=name,
-                    isa=isa,
-                    opt=opt)
-
-            # Create copies of the verifier subtests for this isa and
-            # optimization.
-            verifier_tests = []
-            for verifier in verifiers:
-                verifier = copy.copy(verifier)
-                verifier._name = '{name} ({vname} verifier)'.format(
-                        name=_name,
-                        vname=verifier.name)
-
-                verifier_tests.append(verifier)
-
-            # Place the verifier subtests into a collection.
-            verifier_collection = TestList(verifier_tests, fail_fast=False)
-
-            # Create the gem5 target for the specific architecture and
-            # optimization level.
-            fixtures = copy.copy(fixtures)
-            fixtures.append(fixture.Gem5Fixture(isa, opt))
-            fixtures.append(tempdir)
-            # Add the isa and optimization to tags list.
-            tags = copy.copy(tags)
-            tags.extend((opt, isa))
-
-            # Create the running of gem5 subtest.
-            gem5_subtest = TestFunction(
-                    _create_test_run_gem5(config, config_args),
-                    name=_name)
-
-            # Place our gem5 run and verifiers into a failfast test
-            # collection. We failfast because if a gem5 run fails, there's no
-            # reason to verify results.
-            gem5_test_collection =  TestList(
-                    (gem5_subtest, verifier_collection),
-                    fail_fast=True)
-
-            # Finally construct the self contained TestSuite out of our
-            # tests.
-            a = suite.TestSuite(
-                    _name,
-                    fixtures=fixtures,
-                    tags=tags,
-                    tests=gem5_test_collection)
-
-def _create_test_run_gem5(config, config_args):
-    def test_run_gem5(fixtures):
-        '''
-        Simple \'test\' which runs gem5 and saves the result into a tempdir.
-
-        NOTE: Requires fixtures: tempdir, gem5
-        '''
-        tempdir = fixtures['tempdir'].path
-        gem5 = fixtures['gem5'].path
-        command = [
-            gem5,
-            '-d',  # Set redirect dir to tempdir.
-            tempdir,
-            '-re',# TODO: Change to const. Redirect stdout and stderr
-            config
-        ]
-        # Config_args should set up the program args.
-        command.extend(config_args)
-        try:
-            helper.log_call(command)
-        except helper.CalledProcessError as e:
-            if e.returncode != 1:
-                raise e
-    return test_run_gem5
 
 
 def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
