@@ -1,5 +1,6 @@
 '''
-File which implements querying logic for metadata about loaded items.
+File which implements querying and display logic for metadata about loaded
+items.
 '''
 from logger import log
 from terminal import separator
@@ -26,11 +27,10 @@ def list_suites(loader):
         log.display(suite.uid)
 
 def list_tags(loader):
-    tags = set()
-    # Go through all suites and all testcases looking at their tags.
-    for item in loader.suite.iter_inorder():
-        tags.update(item.tags)
-    for tag in tags:
+    log.display(separator())
+    log.display('Listing all Tags.')
+    log.display(separator())
+    for tag in loader.tags:
         log.display(tag)
 
 def list_tests_with_tags(loader, tags):

@@ -5,6 +5,7 @@ from ..test import TestFunction
 from ..suite import TestList, TestSuite
 from ..helper import log_call, CalledProcessError
 from ..config import constants, config
+from ..loader import no_collect
 from fixture import TempdirFixture, Gem5Fixture, VariableFixture
 import verifier
 
@@ -12,35 +13,38 @@ def gem5_verify_config(name,
                        config,
                        config_args,
                        verifiers,
+                       gem5_args=tuple(),
                        tags=[],
                        fixtures=[],
-                       valid_isas=None,
-                       valid_optimizations=('opt',)):
+                       valid_isas=constants.supported_isas,
+                       valid_optimizations=constants.supported_optimizations):
     '''
-    Runs the given program using the given config and passes if no exception
-    was thrown.
+    Helper class to generate common gem5 tests using verifiers.
 
-    NOTE: This is not an actual testcase, it generates a group of tests which
-    can be used by gem5_test.
+    The generated TestSuite will run gem5 with the provided config and
+    config_args. After that it will run any provided verifiers to verify
+    details about the gem5 run.
+
+    .. seealso:: See :module:`gem5.verifier` for the verifiers.
 
     :param name: Name of the test.
     :param config: The config to give gem5.
-    :param program: The executable to run using the config.
+    :param config_args: A list of arguments to pass to the given config.
 
     :param verifiers: An iterable with Verifier instances which will be placed
     into a suite that will be ran after a gem5 run.
 
+    :param gem5_args: An iterable with arguments to give to gem5. (Arguments
+    that would normally go before the config path.)
+
     :param valid_isas: An interable with the isas that this test can be ran
-    for.
+    for. If None given, will run for all supported_isas.
 
     :param valid_optimizations: An interable with the optimization levels that
     this test can be ran for. (E.g. opt, debug)
     '''
-    if valid_isas is None:
-        valid_isas = constants.supported_isas
-
     for verifier in verifiers:
-        verifier.unregister()
+        no_collect(verifier)
 
     given_fixtures = []
     given_fixtures.extend(fixtures)
@@ -86,7 +90,7 @@ def gem5_verify_config(name,
 
             # Create the running of gem5 subtest.
             gem5_subtest = TestFunction(
-                    _create_test_run_gem5(config, config_args),
+                    _create_test_run_gem5(config, config_args, gem5_args),
                     name=_name)
 
             # Place our gem5 run and verifiers into a failfast test
@@ -104,13 +108,31 @@ def gem5_verify_config(name,
                     tags=tags,
                     tests=gem5_test_collection)
 
-def _create_test_run_gem5(config, config_args):
+def _create_test_run_gem5(config, config_args, gem5_args):
     def test_run_gem5(fixtures):
         '''
         Simple \'test\' which runs gem5 and saves the result into a tempdir.
 
         NOTE: Requires fixtures: tempdir, gem5
         '''
+
+        if gem5_args is None:
+            _gem5_args = tuple()
+        elif isinstance(gem5_args, str):
+            # If just a single str, place it in an iterable
+            _gem5_args = (gem5_args,)
+        else:
+            _gem5_args = gem5_args
+
+        # FIXME/TODO: I don't like the idea of having to modify this test run
+        # or always collect results even if not using a verifier. There should
+        # be some configuration in here that only gathers certain results for
+        # certain verifiers.
+        #
+        # I.E. Only the returncode verifier will use the gem5_returncode
+        # fixture, but we always require it even if that verifier isn't being
+        # ran.
+
         returncode = fixtures[constants.gem5_returncode_fixture_name]
         tempdir = fixtures[constants.tempdir_fixture_name].path
         gem5 = fixtures[constants.gem5_binary_fixture_name].path
@@ -119,8 +141,9 @@ def _create_test_run_gem5(config, config_args):
             '-d',  # Set redirect dir to tempdir.
             tempdir,
             '-re',# TODO: Change to const. Redirect stdout and stderr
-            config
         ]
+        command.extend(_gem5_args)
+        command.append(config)
         # Config_args should set up the program args.
         command.extend(config_args)
         try:

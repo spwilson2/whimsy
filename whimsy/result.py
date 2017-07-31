@@ -1,3 +1,8 @@
+'''
+Module which contains streaming result loggers. The main goal of these loggers
+is to support large amounts of results and not create large standing pools of
+strings.
+'''
 import abc
 import pickle
 from xml.sax.saxutils import escape as xml_escape
@@ -23,16 +28,37 @@ Outcome = Enum(
     'FAIL',   # The test failed to pass.
     ],
 )
+Outcome.__doc__ = \
+    '''
+    An :class:`Enum` which contains the different possible test outcomes.
+
+    PASS    - The test passed successfully.
+    XFAIL   - The test ran and failed as expected.
+    SKIP    - The test was skipped.
+    ERROR   - There was an error during the setup of the test.
+    FAIL    - The test failed to pass.
+    '''
 
 # Add all result enums to this module's namespace.
 for result in Outcome.enums:
     globals()[str(result)] = result
 
+# Hard fail cases which mean a test contained in a failfast container should
+# fail remaining test items.
 Outcome.failfast = {ERROR, FAIL}
 
 def test_results_output_path(test_case):
+    '''
+    Return the path which results for a specific test case should be
+    stored.
+    '''
     return joinpath(config.result_path, test_case.uid.replace('/','-'))
 
+
+# TODO: I'd like to re-factor this interface into an explicit callback
+# interface offered by the the Runner class. Right now the Runner needs to
+# know specifics about this interface. Instead the Runner should offer
+# generic enough hooks and loggers could do with them as they please.
 class ResultLogger(object):
     '''
     Interface which allows writing of streaming results to a file stream.
@@ -49,14 +75,14 @@ class ResultLogger(object):
 
     @abc.abstractmethod
     def begin(self, item):
-        '''
-        Signal the beginning of the given item.
-        '''
+        '''Signal the beginning of the given item.'''
         pass
-
 
     @abc.abstractmethod
     def skip(self, item, **kwargs):
+        # FIXME I reaally don't like this specific method being forced to be
+        # known in the Runner. There should be a fail_fast callback offered
+        # there instead whenever the refactor is done.
         '''
         Signal we are forcefully skipping the item due to some circumstance.
         '''
@@ -82,7 +108,10 @@ class ResultLogger(object):
 
 
 class ConsoleLogger(ResultLogger):
-
+    '''
+    A logger implementing the streaming ResultLogger interface. This logger is
+    used to stream testing result output to a user terminal.
+    '''
     color = terminal.get_termcap()
     reset = color.Normal
     colormap = {
@@ -111,9 +140,6 @@ class ConsoleLogger(ResultLogger):
         self._started = True
 
     def begin(self, item):
-        '''
-        Signal the beginning of the given item.
-        '''
         if isinstance(item, TestSuite):
             self._begin_testsuite(item)
         elif isinstance(item, TestCase):
@@ -151,9 +177,8 @@ class ConsoleLogger(ResultLogger):
             log.info(terminal.separator('-'))
 
     def _set_testsuite_outcome(self, test_suite, outcome, **kwargs):
-        pass
+        pass # Do nothing for test suites.
 
-    # TODO: Change to force_set_outcome
     def skip(self, item, reason):
         '''Set the outcome of the current item.'''
         if isinstance(item, TestSuite):
@@ -243,6 +268,15 @@ class TestSuiteResult(TestResult):
 
 
 class InternalLogger(ResultLogger):
+    '''
+    An internal logger which writes streaming pickle items on completion of
+    TestSuite items.
+
+    This logger also offers some metadata methods to and can load back out
+    previous results.
+
+    .. seealso:: :func:`load` :func:`suites`
+    '''
     def __init__(self, filestream):
         self._item_list = []
         self._current_item = None
@@ -319,12 +353,25 @@ class InternalLogger(ResultLogger):
 
     @property
     def suites(self):
+        '''
+        Return an iterator over all the test suite results loaded or collected.
+        '''
         for result in self.results:
             if isinstance(result, TestSuiteResult):
                 yield result
 
 
 class JUnitLogger(InternalLogger):
+    '''
+    Logger which uses the internal logger to collect streaming results to the
+    internal_fstream, and on completion of testing writes the results out to
+    a junit_fstream.
+
+    :param junit_fstream: File stream to write junit formatted results to.
+
+    :param internal_fstream: File stream to write internal formatted results to.
+    .. seealso:: :class:`InternalLogger`
+    '''
     # We use an internal logger to stream the output into a format we can
     # retrieve at the end and then format it into JUnit.
     def __init__(self, junit_fstream, internal_fstream):
@@ -333,8 +380,8 @@ class JUnitLogger(InternalLogger):
 
     def end_testing(self):
         '''
-        Signal the end of writing to the file stream. Indicates that
-        results are done being logged.
+        Signal the end of writing to the file stream. We will write all our
+        results to our junit_fstream.
         '''
         super(JUnitLogger, self).end_testing()
         JUnitFormatter(self).dump(self._junit_fstream)

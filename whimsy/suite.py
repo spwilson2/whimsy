@@ -3,12 +3,21 @@ from os import getcwd
 from _util import uid
 
 class TestSuite(object):
-    '''An object containing a collection of tests.'''
+    '''
+    An object containing a collection of tests, represents a completely
+    self-contained testing unit. That is, if it should be able to be ran
+    without relying on any other suites running.
+    '''
     def __init__(self, name, tests=tuple(), tags=None, fixtures=None,
             fail_fast=True):
         '''
-        :param testcases: An iterable of TestCase or TestSuite objects.
         :param name: Name of the TestSuite
+
+        :param tags: Iterable of tags to mark this suite and all containted
+        tests with.
+
+        :param tests: An interable of test cases. If is a TestList the
+        heirarchy will be maintained.
 
         :param fail_fast: If True indicates the first test to fail in the test
         suite will cause the execution of the test suite to halt.
@@ -42,27 +51,45 @@ class TestSuite(object):
 
     @property
     def testcases(self):
+        '''
+        Return a tuple containing all the test cases this TestSuite holds.
+        '''
         return tuple((testcase for testcase in self))
+
     def iter_testlists(self):
+        '''
+        Iterate through tests yielding a tuple of the containing TestList and
+        the TestCase.
+
+        :returns: iterator of :code:`(testlist, testcase)` objects.
+        '''
         return self.testlist.iter_keep_containers()
+
     def __iter__(self):
+        '''Iterates over all the contained test cases in this suite.'''
         return iter(self.testlist)
+
     def __len__(self):
+        '''Returns the number of test cases in this suite.'''
         return len(self.testlist)
+
     def append(self, item):
+        '''Adds the given TestCase or TestList to this TestSuite'''
         self.testlist.append(item)
     def extend(self, items):
+        '''Adds the given TestCases or TestLists to this TestSuite'''
         self.testlist.extend(items)
 
-    # This is a method that will be created by the test loader in order to
-    # manually remove a suite.
-    unregister = NotImplemented
+    if __debug__:
+        # This is a method that will be created by the test loader in order to
+        # manually remove a suite. See the TestLoader load_file description for
+        # more details.
+        __rem__ = NotImplemented
 
 
 class SuiteList(object):
     '''
-    Container class for test suites which provides some utility functions and
-    metadata.
+    Container class for test suites which provides some utility functions.
     '''
     def __init__(self, suites=[]):
         self.suites = []
@@ -79,13 +106,16 @@ class SuiteList(object):
 
     def iter_fixtures(self):
         '''
-        Return an iterable of all fixtures of all suites' testcases in this
-        collection.
+        Return an iterable of all fixtures of all TestSuites and their
+        contained TestCases in this collection.
 
-        NOTE: May return duplicates if fixtures are duplicated across test
-        cases.
+        .. note:: Will return duplicates if fixtures are duplicated across
+        test cases.
         '''
         for suite in self:
+            for fixture in suite.fixtures.values():
+                yield fixture
+
             for testcase in suite.testcases:
                 for fixture in testcase.fixtures.values():
                     yield fixture
@@ -95,11 +125,16 @@ class SuiteList(object):
 
 class TestList(object):
     '''
-    Container class for `TestCase`s which provides some utility functions and
-    metadata. `TestList`s can be heirarchical, in which case iteration returns
-    just tests in in-order traversal.
+    Container class for :class:`TestCase` objects which provides some utility
+    functions for iteration as well as the fail_fast variable.
+    A :class:`TestList` can be heirarchical, in which case iteration yields
+    tests in in-order traversal.
     '''
     def __init__(self, items=[], fail_fast=False):
+        '''
+        :param fail_fast: If any TestCase fails in this TestList, all remaing
+        tests in this collection should be skipped.
+        '''
         self.fail_fast = fail_fast
         self.items = []
         if isinstance(items, TestList):
@@ -123,16 +158,26 @@ class TestList(object):
                     yield item
 
     def iter_keep_containers(self):
+        '''
+        Iterate through tests yielding a tuple of the containing TestList and
+        the TestCase.
+
+        :returns: iterator of :code:`(testlist, testcase)` objects.
+        '''
         return self._iter(True)
 
     def iter_tests(self):
+        '''Iterate in-order over all contained tests.'''
         return self._iter(False)
-
     def __iter__(self):
+        '''Iterate in-order over all contained tests.'''
         return self.iter_tests()
     def __len__(self):
+        '''Return the number of tests contained in this tree.'''
         return len(self.items)
     def append(self, item):
+        '''Add the item to the end of this TestList.'''
         self.items.append(item)
     def extend(self, items):
+        '''Add the items to the end of this TestList.'''
         self.items.extend(items)

@@ -83,6 +83,8 @@ def dolist():
         query.list_tests(loader)
     if config.fixtures:
         query.list_fixtures(loader)
+    if config.all_tags:
+        query.list_tags(loader)
 
 def main():
     # Start logging verbosity at its minimum

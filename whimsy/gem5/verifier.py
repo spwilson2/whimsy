@@ -19,14 +19,10 @@ class MatchGoldStandard(Verifier):
     Compares a standard output to the test output and passes if they match,
     fails if they do not.
     '''
-    __ignore_regex_sentinel = object()
-    _default_ignore_regex = tuple()
-
-    def __init__(self, standard_filename, name=None,
-                 ignore_regex=__ignore_regex_sentinel,
+    def __init__(self, standard_filename, name=None, ignore_regex=None,
                  test_filename='simout'):
         '''
-        :param standard: The path of the standard file to compare output to.
+        :param standard_filename: The path of the standard file to compare output to.
 
         :param ignore_regex: A string, compiled regex, or iterable containing
         either which will be ignored in 'standard' and test output files when
@@ -36,9 +32,6 @@ class MatchGoldStandard(Verifier):
         self.standard_filename = standard_filename
         self.test_filename = test_filename
 
-        # Put the regex into an iterable.
-        if ignore_regex == self.__ignore_regex_sentinel:
-            ignore_regex = self._default_ignore_regex
         self.ignore_regex = _iterable_regex(ignore_regex)
 
     def test(self, fixtures):
@@ -64,8 +57,27 @@ class MatchGoldStandard(Verifier):
                              ' generic %s'
                              ' instead' % MatchGoldStandard.__name__)
 
-class MatchStdout(MatchGoldStandard):
-    __file = constants.gem5_simulation_stdout
+class DerivedGoldStandard(MatchGoldStandard):
+    __ignore_regex_sentinel = object()
+    _file = None
+    _default_ignore_regex = []
+
+    def __init__(self, standard_filename,
+                 ignore_regex=__ignore_regex_sentinel, **kwargs):
+
+        if ignore_regex == self.__ignore_regex_sentinel:
+            ignore_regex = self._default_ignore_regex
+
+        self._generic_instance_warning(kwargs)
+
+        super(DerivedGoldStandard, self).__init__(
+            standard_filename,
+            test_filename=self._file,
+            ignore_regex=ignore_regex,
+            **kwargs)
+
+class MatchStdout(DerivedGoldStandard):
+    _file = constants.gem5_simulation_stdout
     _default_ignore_regex = [
             re.compile('^Redirecting (stdout|stderr) to'),
             re.compile('^gem5 compiled '),
@@ -77,60 +89,30 @@ class MatchStdout(MatchGoldStandard):
             re.compile("^Couldn't unlink "),
             re.compile("^Using GPU kernel code file\(s\) "),
         ]
-    def __init__(self, standard_filename, **kwargs):
-        super(MatchStdout, self).__init__(standard_filename,
-                                          test_filename=self.__file,
-                                          **kwargs)
 
-class MatchStderr(MatchGoldStandard):
-    __file = constants.gem5_simulation_stderr
+class MatchStderr(DerivedGoldStandard):
+    _file = constants.gem5_simulation_stderr
     _default_ignore_regex = []
 
-    def __init__(self, standard_filename, **kwargs):
-        self._generic_instance_warning(kwargs)
-        super(MatchStderr, self).__init__(
-                standard_filename,
-                test_filename=self.__file,
-                **kwargs)
-
-class MatchStats(MatchGoldStandard):
-    __file = constants.gem5_simulation_stats
-    _default_ignore_regex = []
-
+class MatchStats(DerivedGoldStandard):
     # TODO: Likely will want to change this verifier since we have the weird
     # perl script right now. A simple diff probably isn't going to work.
-    def __init__(self, standard_filename, **kwargs):
-        self._generic_instance_warning(kwargs)
-        super(MatchStats, self).__init__(
-                standard_filename,
-                test_filename=self.__file,
-                **kwargs)
+    _file = constants.gem5_simulation_stats
+    _default_ignore_regex = []
 
-class MatchConfigINI(MatchGoldStandard):
-    __file = constants.gem5_simulation_config_ini
+class MatchConfigINI(DerivedGoldStandard):
+    _file = constants.gem5_simulation_config_ini
     _default_ignore_regex = (
             re.compile("^(executable|readfile|kernel|image_file)="),
             re.compile("^(cwd|input|codefile)="),
             )
 
-    def __init__(self, standard_filename, **kwargs):
-        self._generic_instance_warning(kwargs)
-        super(MatchConfigINI, self).__init__(
-                standard_filename,
-                test_filename=self.__file,
-                **kwargs)
-
-class MatchConfigJSON(MatchGoldStandard):
-    __file = constants.gem5_simulation_config_json
+class MatchConfigJSON(DerivedGoldStandard):
+    _file = constants.gem5_simulation_config_json
     _default_ignore_regex = (
             re.compile(r'''^\s*"(executable|readfile|kernel|image_file)":'''),
             re.compile(r'''^\s*"(cwd|input|codefile)":'''),
             )
-    def __init__(self, *args, **kwargs):
-        self._generic_instance_warning(kwargs)
-        super(MatchConfigJSON, self).__init__(standard_filename,
-                                         test_filename=self.__file,
-                                          ignore_regex=ignore_regex)
 
 class MatchRegex(Verifier):
     def __init__(self, regex, name=None, match_stderr=True, match_stdout=True):

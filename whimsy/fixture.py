@@ -74,6 +74,7 @@ class Fixture(object):
         '''Empty method, meant to be overriden if fixture requires teardown.'''
         pass
 
-    # This is a method that will be created by the test loader in order to
-    # manually remove a fixture.
-    deregister = NotImplemented
+    if __debug__:
+        # This is a method that will be created by the test loader in order to
+        # manually remove a fixture.
+        __rem__ = NotImplemented

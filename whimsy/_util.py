@@ -1,3 +1,6 @@
+'''
+Contains utility functions used throughout the testframework.
+'''
 import collections
 import difflib
 import helper
@@ -165,6 +168,9 @@ def diff_out_file(ref_file, out_file, ignore_regexes=tuple()):
 
 
 def uid(testitem):
+    '''
+    The generic function used to produce uid of test objects.
+    '''
     fmt = '{file}:{class_}:{name}'
     clsname = testitem.__class__.__name__
     return fmt.format(file=testitem.path, name=testitem.name,

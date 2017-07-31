@@ -1,8 +1,13 @@
+'''
+Provides a common logging system. With ability to add additional logging
+levels.
+'''
+# TODO: Should add a debug flag system.
+
 import logging as _logging
 import sys
-import functools
 
-import terminal as termcap
+import terminal
 
 # Logging level to be used to always display information to the user
 def add_logging_level(name, val):
@@ -13,11 +18,7 @@ def add_logging_level(name, val):
         if self.isEnabledFor(val):
             self._log(val, message, args, **kwargs)
     # Add the logging helper function as lowercase
-    setattr(
-        _logging.Logger,
-        name.lower(),
-        log_at_level
-    )
+    setattr(_logging.Logger, name.lower(), log_at_level)
 
     # Add the value to the naming module as CAPITALIZED
     globals()[name.upper()] = val
@@ -33,48 +34,27 @@ always_display_level = WARN
 add_logging_level('bold', 1000)
 # Logging level to always output (Use for UI stuff.)
 add_logging_level('display', 999)
-# Logging level used to log captured print statements
-# (any output to sys.stdout)
-add_logging_level('print', 998)
 
+# Make sure these items will always be displayed.
 assert DISPLAY > always_display_level
 assert BOLD > always_display_level
 
-# Logging level will be incredibly verbose, used to trace through testing.
+# Logging level will be incredibly verbose, use to trace through testing.
 add_logging_level('trace', 1)
 
 def set_logging_verbosity(verbosity):
+    '''
+    Set the logging level based on the number of verbosity flags given.
+    '''
     log.setLevel(max(always_display_level - verbosity * 10, TRACE))
-
-#
-class StreamToLogger(object):
-    '''
-    Fake file-like stream object that redirects writes to a logger instance.
-
-    Use to capture stdout and stderr from python.
-
-    https://www.electricmonk.nl/log/2011/08/14/\
-redirect-stdout-and-stderr-to-a-logger-in-python/
-    '''
-    def __init__(self, logger, log_level=INFO):
-        self.logger = logger
-        self.log_level = log_level
-
-    def write(self, buf):
-        for line in buf.rstrip().splitlines():
-            self.logger.log(self.log_level, line.rstrip())
-
-    def flush(self):
-        for handler in self.logger.handlers:
-            handler.flush()
 
 class ConsoleLogFormatter(object):
     '''
-    Formats output to be sent to an interactive terminal.
+    Formats output to be sent to an interactive terminal. Colors may be added
+    based on logging level.
     '''
-
     # For now, just change color based on the logging level.
-    color = termcap.get_termcap()
+    color = terminal.get_termcap()
     reset = color.Normal
     level_colormap = {
         BOLD: color.White + color.Bold,
@@ -89,11 +69,12 @@ class ConsoleLogFormatter(object):
         color_str = self.level_colormap.get(record.levelno, self.color.Normal)
         return color_str + record.msg + self.reset
 
-# The root logger for whimsy
-log = _logging.getLogger('Whimsy Console Logger')
 
-# Redirect log back to stdout so if we redirect the log we
-# still see it in the console.
+# The common logger used everywhere in the framework.
+log = _logging.getLogger('Main Console Logger')
+
+# Save stdout and stderr incase they are modified somewhere else. (Tee for
+# example.)
 saved_stderr = sys.stderr
 saved_stdout = sys.stdout
 

@@ -109,13 +109,14 @@ constants.sparc_tag = 'SPARC'
 constants.alpha_tag = 'ALPHA'
 constants.riscv_tag = 'RISCV'
 constants.arm_tag = 'ARM'
-constants.supported_isas = [
+constants.supported_isas = (
     constants.x86_tag,
     constants.sparc_tag,
     constants.alpha_tag,
     constants.riscv_tag,
     constants.arm_tag
-]
+)
+constants.supported_optimizations = ('opt', 'debug', 'fast')
 
 constants.tempdir_fixture_name = 'tempdir'
 constants.gem5_simulation_stderr = 'simerr'
@@ -342,6 +343,12 @@ class ListParser(ArgParser):
             action='store_true',
             default=False,
             help='List all fixtures.'
+        ).add_to(parser)
+        Argument(
+            '--all-tags',
+            action='store_true',
+            default=False,
+            help='List all tags.'
         ).add_to(parser)
 
         common_args.directory.add_to(parser)

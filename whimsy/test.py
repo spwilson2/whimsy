@@ -7,10 +7,7 @@ from functools import partial
 
 from _util import uid
 
-def _as_kwargs(**kwargs):
-    return kwargs
-
-def steal_unittest_assertions(module):
+def _steal_unittest_assertions(module):
     '''
     Attach all the unittest.TestCase assertion helpers to the given modules
     namespace.
@@ -23,7 +20,8 @@ def steal_unittest_assertions(module):
             module[item] = partial(getattr(_Ftc, item), fake_testcase)
 
 # Export the unittest assertion helpers from this module.
-steal_unittest_assertions(globals())
+_steal_unittest_assertions(globals())
+
 
 class TestingException(Exception):
     '''Common ancestor for manual Testing Exceptions.'''
@@ -42,16 +40,35 @@ def skip(message):
 
 class TestCase(object):
     '''
-    For example: in a test were we run gem5 and verify output. The combination
-    of running gem5 and verifying output forms a TestCase. Whereas it would be
-    imposible to run verify output if gem5 was not run first. In this example
-    both gem5 and verify output would be subtests of a single TestCase.
+    Abstract Base Class for test cases. All that's missing is
+    a :func:`__call__` implementation.
+
+    Represents a single major item of assertion. (Yes that's vague.) Some
+    examples are: Asserting that gem5 actually started, asserting that output
+    from gem5 standard out matched a gold standard diff file. (See
+    :module:`gem5.verifier` for some concrete examples.)
+
+    .. warning:: Although this class is abstract its :func:`__init__` method
+    must be called by subclasses in order for them to be discovered by the
+    :class:`TestLoader`.
     '''
     __metaclass__ = ABCMeta
     def __init__(self, name, tags=None, fixtures=None):
         '''
-        __init__ must be called in subclasses for self contained tests to be
-        recognized by the test loader.
+        This must be called in subclasses for tests to be recognized by the
+        test loader.
+
+        Internally fixtures are stored as a dictionary with their name as the
+        key. If multiple fixtures with the same name are provided, earlier
+        onces will be overriden. Fixtures provided by containing suites will
+        also be available. Fixtures with the same name in this testcase as the
+        containing suite will overwrite suite level fixtures with our own.
+
+        :param fixtures: An iterable container of :class:`Fixture` objects
+        which are required by this test.
+
+        :param tags: Iterable containg tags that this testcase will have (in
+        addition to those in the containing suite).
         '''
         if fixtures is None:
             fixtures = {}
@@ -77,13 +94,25 @@ class TestCase(object):
         return self._name
     @abstractmethod
     def __call__(self, fixtures):
+        '''
+        Run the test, recieving a dictionary of fixture.name->fixture.
+
+        :code:`fixtures` will contain all of this TestCase objects fixtures in
+        addition to all the containing suite's fixtures we have not overriden
+        locally.
+        '''
         pass
-    # This is a method that will be created by the test loader in order to
-    # manually remove a test.
-    unregister = NotImplemented
+
+    if __debug__:
+        # This is a method that will be created by the test loader in order to
+        # manually remove a test.
+        __rem__ = NotImplemented
 
 class TestFunction(TestCase):
-    __metaclass__ = ABCMeta
+    '''
+    A concrete implementation of the abc TestCase. Uses a function as
+    a test.
+    '''
     def __init__(self, test, name=None, *args, **kwargs):
         if name is None:
             # If not given a name, take the name of the function.
@@ -99,6 +128,9 @@ class TestFunction(TestCase):
 
 
 def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
+    '''
+    A decorator used to wrap a function as a TestFunction.
+    '''
     # If tag was given, then the test will be marked with that single tag.
     # elif tags was given, then the test will be marked with all those tags.
     if tag is not None:
@@ -114,20 +146,3 @@ def testfunction(function=None, name=None, tag=None, tags=None, fixtures=None):
         return testfunctiondecorator(function)
     else:
         return testfunctiondecorator
-
-if __name__ == '__main__':
-    print('Self-test')
-    print('Test that we can create a dereived tests from TestCase.')
-    class NewBase(TestCase):
-        def test(self, fixtures):
-            pass
-
-    print('Test that a test must have the test method defined.')
-    try:
-        class NewBase(TestCase):
-            pass
-    except:
-        pass
-    else:
-        assert False, ('Did not raise an exception'
-                       ' for an undefined test method.')

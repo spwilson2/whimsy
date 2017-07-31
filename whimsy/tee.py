@@ -1,3 +1,8 @@
+'''
+Contains two implementations of the classic unix tee command to tee output
+from this python process (and all of its subprocesses) into a file and keep
+directing output to stdout and stderr.
+'''
 import contextlib
 import os
 import subprocess
@@ -56,6 +61,13 @@ def _python_tee(filepath, infd, exit_signal_pipe, append=False):
 
 
 def python_tee(filepath, append=False, stdout=True, stderr=True):
+    '''
+    Python implementation of tee.
+
+    Spawns a multiprocessing python process, a full flegged python process to
+    avoid the GIL problem since the subprocess will likely spend a lot of time
+    spinning while reading single char bytes.
+    '''
     if stdout:
         original_stdout = os.dup(sys.stdout.fileno())
         # Unbuffer normal stdout
@@ -96,6 +108,10 @@ def python_tee(filepath, append=False, stdout=True, stderr=True):
         os.close(original_stderr)
 
 def system_tee(filepath, append=False, stdout=True, stderr=True):
+    '''
+    An implementation of tee using the system available program tee as
+    a subprocess.
+    '''
 
     def _unbuffer():
         if sys.stdout is sys.__stdout__:
@@ -140,6 +156,16 @@ def system_tee(filepath, append=False, stdout=True, stderr=True):
 
 @contextlib.contextmanager
 def tee(*args, **kwargs):
+    '''
+    A context manager for the tee command. Tries to default to the tee program
+    for the system for performance reasons, but if it is unavailable, will
+    use a pure python implementaion.
+
+    An example of usage:
+    >>> with tee('stdout', stdout=True, stderr=False):
+    >>>     print ('This is going to both the file and stdout')
+
+    '''
     # Test if there is a system tee program we'll use that if there is.
     if any(os.access(os.path.join(path, 'tee'), os.X_OK) for path in
             os.environ["PATH"].split(os.pathsep)):

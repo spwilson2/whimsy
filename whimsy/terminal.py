@@ -107,12 +107,17 @@ def get_termcap(use_colors = None):
         return no_termcap
 
 def terminal_size():
+    '''Return the (width, heigth) of the terminal screen.'''
     h, w, hp, wp = struct.unpack('HHHH',
         fcntl.ioctl(0, termios.TIOCGWINSZ,
         struct.pack('HHHH', 0, 0, 0, 0)))
     return w, h
 
 def separator(char=default_separator, color=None):
+    '''
+    Return a separator of the given character that is the length of the full
+    width of the terminal screen.
+    '''
     (w, h) = terminal_size()
     if color:
         return color + char*w + termcap.Normal
@@ -124,6 +129,8 @@ def insert_separator(inside, char=default_separator,
     '''
     Place the given string inside of the separator. If it does not fit inside,
     expand the separator to fit it with at least min_barrier.
+
+    .. seealso:: :func:`separator`
     '''
     # Use a bytearray so it's efficient to manipulate
     string = bytearray(separator(char, color=color))

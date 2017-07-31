@@ -39,6 +39,13 @@ def path_as_testsuite(filepath, *args, **kwargs):
     return TestSuite(os.path.split(absdirpath(filepath))[-1],
         *args, **kwargs)
 
+def no_collect(test_item):
+    '''
+    Prevent the collection of the test item by the :class:`TestLoader`.
+    '''
+    if hasattr(test_item, '__rem__'):
+        test_item.__rem__()
+
 if __debug__:
     def _assert_files_in_same_dir(files):
         if files:
@@ -109,6 +116,13 @@ class TestLoader(object):
     '''
     Base class for discovering tests.
 
+    To simply discover and load all tests using the default filter create an
+    instance and `load_root`.
+
+    >>> import os
+    >>> tl = TestLoader()
+    >>> tl.load_root(os.getcwd())
+
     .. note:: If tests are not manually placed in a TestSuite, they will
     automatically be placed into one for the module.
     '''
@@ -162,18 +176,27 @@ class TestLoader(object):
         assert self._loaded_a_file
         return tuple(self._fixtures)
 
+    @property
+    def tags(self):
+        assert self._loaded_a_file
+        return tuple(self._tag_index)
+
     def get_uid(self, uid):
         '''Return the test item with the given uid.'''
         return self._test_index.get(uid, self._suite_index.get(uid, None))
+
+    @property
+    def _tag_index(self):
+        '''Return dictionary of key->[testitem].'''
+        if self._cached_tag_index is None:
+            self._build_tags(self._suites)
+        return self._cached_tag_index
 
     def tag_index(self, tag):
         '''
         Return a list of test items with the given tag.
         '''
-        if self._cached_tag_index is None:
-            self._build_tags(self._suites)
-
-        return self._cached_tag_index.get(tag, [])
+        return self._tag_index.get(tag, [])
 
     def _build_tags(self, suites):
         '''
@@ -240,14 +263,33 @@ class TestLoader(object):
 
     def load_file(self, path, collection=None):
         '''
-        Loads the given path for tests collecting suites and tests and placing
-        them into the top_level_suite.
+        Load the given path for tests collecting all created instances of
+        :class:`TestSuite`, :class:`TestCase`, and :code:`Fixture` objects.
+
+        TestSuites are placed into self._suites (a private SuiteList).
+        TestCases which are not explicitly stored within a TestSuite are
+        placed into a TestSuite which is generated from the filepath name.
+
+        There are couple of things that might be unexpected to the user in the
+        loading namespace.
+
+        First, the current working directory will change to the directory path
+        of the file being loaded.
+
+        Second, in order to collect tests we wrap __init__ calls of collected
+        objects before calling :code:`execfile`.  If a user wishes to prevent
+        an instantiated object from being collected (possibly to create a copy
+        with a modified attribute) they should use :func:`no_collect` to
+        do so. (Internally a :code:`__rem__` method is added to objects we
+        plan to collect. This method will then remove the object from those
+        collected from the file.)
 
         .. note:: Automatically drop_caches
+
         .. warning:: There isn't a way to prevent reloading of test modules
         that are imported by other test modules. It's up to users to never
-        import a test module from a test module, otherwise those tests will be
-        enumerated twice.
+        import a test module from a test module, otherwise those tests
+        enumerated during the importer module's load.
         '''
         path = os.path.abspath(path)
         if __debug__:
@@ -259,6 +301,7 @@ class TestLoader(object):
         if collection is None:
             collection = self._suites
 
+        # Create a custom dictionary for the loaded module.
         newdict = {
             '__builtins__':__builtins__,
             '__name__': path_as_modulename(path),
@@ -270,12 +313,16 @@ class TestLoader(object):
         self._wrap_collection(TestCase, self._collected_test_items)
         self._wrap_collection(Fixture, self._collected_fixtures)
 
-        # Add the file's containing directory to the system path.
+        # Add the file's containing directory to the system path. So it can do
+        # relative imports naturally.
         sys.path.insert(0, os.path.dirname(path))
         cwd = os.getcwd()
         os.chdir(os.path.dirname(path))
 
         def cleanup():
+            # Undo all the wrapping of class methods used to gather test
+            # items. (Placed here to compare against the above stuff it
+            # undoes.)
             self._unwrap_collection(TestSuite)
             self._unwrap_collection(TestCase)
             self._unwrap_collection(Fixture)
@@ -294,7 +341,7 @@ class TestLoader(object):
             return
 
         # Separate the instances so we can manipulate them more easily.
-        # We also keep them together so we know ordering.
+        # We also keep them together so we maintain ordering.
         test_items = self._collected_test_items
         testcases = OrderedSet()
         testsuites = []
@@ -310,7 +357,7 @@ class TestLoader(object):
 
         if testcases:
             log.display('Discovered %d tests and %d testsuites in %s'
-                             '' % (len(testcases), len(testsuites), path))
+                        '' % (len(testcases), len(testsuites), path))
 
             # Remove all tests already contained in a TestSuite.
             if testsuites:
@@ -318,7 +365,8 @@ class TestLoader(object):
                 for testsuite in testsuites:
                     testcases -= OrderedSet(testsuite.testcases)
 
-            # Add any remaining tests to the module TestSuite.
+            # If there are any remaining tests, create a TestSuite for the
+            # module and place those tests into it.
             if testcases:
                 module_testsuite = path_as_testsuite(path)
                 testsuites.append(module_testsuite)
@@ -334,7 +382,7 @@ class TestLoader(object):
 
         elif testsuites:
             log.warn('No tests discovered in %s, but found %d '
-                            ' TestSuites' % (path, len(testsuites)))
+                     ' TestSuites' % (path, len(testsuites)))
         else:
             log.warn('No tests discovered in %s' % path)
 
@@ -344,11 +392,18 @@ class TestLoader(object):
     def _wrap_collection(self, cls, collector):
         '''
         Wrap the given cls' __init__ method with a wrapper that will keep an
-        OrderedSet of the instances.
+        OrderedSet of the instances. Also attach a __rem__ method which can be
+        used to remove the object from our collected objects with the exposed
+        :func:`no_collect`
 
-        Note: If any other class monkey patches the __init__ method as well,
-        this will lead to issues. Keep __debug__ mode enabled to enable checks
-        that this never happens.
+        :param cls: Class to wrap methods of for collection.
+
+        :param collector: The :code:`set` to add/remove collected instances
+        to.
+
+        .. warning:: If any other class monkey patches the __init__ method as
+        well, this will lead to issues. Keep __debug__ mode enabled to enable
+        checks that this never happens.
         '''
         assert cls not in self._wrapped_classes
         def instance_collector(self, *args, **kwargs):
@@ -359,16 +414,16 @@ class TestLoader(object):
         # Python2 MethodTypes are different than functions.
         #our_wrapper = MethodType(instance_collect_wrapper, None, cls)
         init_wrapper = _MethodWrapper(cls, '__init__', instance_collector)
-        del_wrapper = _MethodWrapper(cls, 'unregister', instance_decollector)
+        del_wrapper = _MethodWrapper(cls, '__rem__', instance_decollector)
         init_wrapper.wrap()
         del_wrapper.wrap()
         self._wrapped_classes[cls] = (init_wrapper, del_wrapper)
 
     def _unwrap_collection(self, cls):
         '''
-        Note: If any other class monkey patches the __init__ method as well,
-        this will lead to issues. Keep __debug__ mode enabled to enable checks
-        that this never happens.
+        .. warning:: If any other class monkey patches the __init__ method as
+        well, this will lead to issues. Keep __debug__ mode enabled to enable
+        checks that this never happens.
         '''
         (init_wrapper, del_wrapper) = self._wrapped_classes[cls]
         init_wrapper.unwrap()
@@ -376,6 +431,8 @@ class TestLoader(object):
         del self._wrapped_classes[cls]
 
     def _index(self, *testitems):
+        '''Adds collected testitems into our datastructures for querying.'''
+
         def add_to_index(item, index, rindex):
             if item in index:
                 raise DuplicateTestItemError(
