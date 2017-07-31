@@ -1,3 +1,23 @@
+'''
+Global configuration module which exposes two types of configuration
+variables
+    1. config
+    2. constants (Also attached to the config variable as an attribute)
+
+
+The config variable automatically parses the program arguments when attributes
+from it are requested. Program arguments/flag arguments are available from the
+config as attributes.
+
+
+There is also a third variable internal to this file. It's likely that at some
+point you might need to add a default value for a flag that isn't parsed for
+a certain command. This can be done by setting an attribute on the `_defaults`
+variable. For example, SCons fixtures need to know a build directory, however
+when a user gives the list command we don't want to provide them the
+--build-dir flag, so we need to set a `_defaults` value
+:code:`_defaults.build_dir = None`
+'''
 import abc
 import argparse
 import copy
@@ -136,16 +156,22 @@ class Argument(object):
         self.name = self.name.replace('-', '_')
 
     def add_to(self, parser):
+        '''Add this argument to the given parser.'''
         parser.add_argument(*self.flags, **self.kwargs)
+
     def copy(self):
+        '''Copy this argument so you might modify any of its kwargs.'''
         return copy.deepcopy(self)
 
 
 class _StickyInt:
     '''
     A class that is used to cheat the verbosity count incrementer by
-    pretending to be an int. This likely has very limited utility outside of
-    this use case.
+    pretending to be an int. This makes the int stay on the heap and eat other
+    real numbers when they are added to it.
+
+    We use this so we can allow the verbose flag to be provided before or after
+    the subcommand. This likely has no utility outside of this use case.
     '''
     def __init__(self, val=0):
         self.val = val

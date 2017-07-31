@@ -1,3 +1,7 @@
+'''
+Exposes the :class:`Loader` which is responsible for discovering and loading
+tests.
+'''
 import os
 import re
 import sys
@@ -16,12 +20,13 @@ from test import TestCase
 default_filepath_regex = re.compile(r'(([^\.]+[-_]tests?)|(tests?[-_].+))\.py$')
 
 def default_filepath_filter(filepath):
+    '''The default filter applied to filepaths to marks as test sources.'''
     filepath = os.path.basename(filepath)
     return True if default_filepath_regex.match(filepath) else False
 
 def path_as_modulename(filepath):
     '''Return the given filepath as a module name.'''
-    # Remove the file extention .py
+    # Remove the file extention (.py)
     return os.path.splitext(os.path.basename(filepath))[0]
 
 def path_as_testsuite(filepath, *args, **kwargs):
@@ -41,8 +46,19 @@ if __debug__:
                 assert os.path.dirname(f) == directory
 
 class _MethodWrapper(object):
+    '''
+    Class used to wrap and unwrap a method of a class with an additional
+    callback function.
+    '''
     _sentinal = object()
     def __init__(self, cls, method_name, callback):
+        '''
+        :param cls: Class to wrap.
+        :param method_name: Name of method to wrap
+
+        :param callback: Function to call in addition to the original cls
+        method.
+        '''
         self._callback = callback
         self._cls = cls
         self._method_name = method_name
@@ -51,6 +67,10 @@ class _MethodWrapper(object):
             self._replaced_method = None
 
     def wrap(self):
+        '''
+        Wrap the cls method_name with a method that will call both the class'
+        original method if there was one and our callback.
+        '''
         old_method = getattr(self._cls, self._method_name, self._sentinal)
         sentinal = self._sentinal
         callback = self._callback
@@ -63,9 +83,16 @@ class _MethodWrapper(object):
         replacement = combined_method
         self._old_method = old_method
         setattr(self._cls, self._method_name, replacement)
-        self._replaced_method = getattr(self._cls, self._method_name)
+        if __debug__:
+            # NOTE: We do this after we have set since in python2 functions and
+            # methods are different types.
+            self._replaced_method = getattr(self._cls, self._method_name)
 
     def unwrap(self):
+        '''
+        Return the wrapped class method to the state it was in when we `wrap`ped
+        it.
+        '''
         if self._old_method != self._sentinal:
             assert getattr(self._cls, self._method_name) == self._replaced_method, \
                     "%s's %s has changed, we can not restore it." \
@@ -79,10 +106,10 @@ class TestLoader(object):
     '''
     Base class for discovering tests.
 
-    If tests are not tagged, automatically places them into their own test
-    suite.
+    .. note:: If tests are not manually placed in a TestSuite, they will
+    automatically be placed into one for the module.
     '''
-    def __init__(self, filepath_filter=default_filepath_filter, tags=None):
+    def __init__(self, filepath_filter=default_filepath_filter):
 
         self._suites = SuiteList()
         self.filepath_filter = filepath_filter
@@ -91,12 +118,6 @@ class TestLoader(object):
             # Used to check if we have ran load_file to make sure we have
             # actually tried to load a file into our suite.
             self._loaded_a_file = False
-
-        if tags is None:
-            tags = set()
-        if isinstance(tags, str):
-            tags = (tags,)
-        self.tags = tags
 
         # List of all the fixtures we have collected.
         self._fixtures = []
@@ -114,8 +135,6 @@ class TestLoader(object):
 
         # Holds a mapping of tag->testitem
         self._cached_tag_index = None
-        # Holds a test suite which contains tests which have our self.tags
-        self._cached_suitecall = None
 
         # Member variables used to keep track of instances of suites, cases,
         # and fixtures when execfile'ing.
@@ -124,16 +143,6 @@ class TestLoader(object):
         self._collected_test_items = OrderedSet()
         self._collected_fixtures = OrderedSet()
 
-
-    @property
-    def tags(self):
-        return tuple(self._tags)
-
-    @tags.setter
-    def tags(self, val):
-        # Remove our cached called if tags is changed.
-        self._cached_suitecall = None
-        self._tags = set(val)
 
     @property
     def suites(self):
@@ -159,29 +168,28 @@ class TestLoader(object):
         Return a list of test items with the given tag.
         '''
         if self._cached_tag_index is None:
-            self._build_tags(self._suites, uniq_tags)
+            self._build_tags(self._suites)
 
         return self._cached_tag_index.get(tag, [])
 
-    def _build_tags(self, suites, uniq_tags):
+    def _build_tags(self, suites):
         '''
-        Build an dictionary index of all TestSuite and TestCases stored in the
-        given suite mapped to their tags.
-
-        NOTE: Currently unused, likely will be used by some querying tools.
+        Build a dictionary mapping a tag to a list of TestSuites and TestCases
+        with that tag.
         '''
         item_tags = {}
         uniq_tags = set()
+        # Build index of testitem->[tags]
         for test_suite in suites:
             item_tags[test_suite] = test_suite.tags
             uniq_tags.update(test_suite.tags)
             for test in test_suite:
-                item_tags[test] = test.tags
+                item_tags[test] = test.tags | test_suite.tags
                 uniq_tags.update(test.tags)
 
-        # Build Reverse the index of single tag to list of items
+        # Build Reverse index (tag->[testitems])
         self._cached_tag_index = {}
-        for item, itemtags in item_to_tags.iteritems():
+        for item, itemtags in item_tags.items():
             for _tag in uniq_tags:
                 if _tag in itemtags:
                     testlist = self._cached_tag_index.setdefault(_tag, [])
@@ -189,10 +197,15 @@ class TestLoader(object):
 
 
     def drop_caches(self):
-        self._cached_suitecall = None
+        '''Drop our internal tag cache.'''
         self._cached_tag_index = None
 
     def discover_files(self, root):
+        '''
+        Recurse down from the given root directory returning a list of
+        directories which contain a list of files matching
+        `self.filepath_filter`.
+        '''
         files = []
 
         # Will probably want to order this traversal.
@@ -208,18 +221,16 @@ class TestLoader(object):
 
     def load_root(self, root):
         '''
-        Start from the given root loading files. Files in the same directory
-        will be contained in the same TestSuite.
+        Load files from the given root directory which match
+        `self.filepath_filter`.
         '''
         if __debug__:
             self._loaded_a_file = True
 
         for directory in self.discover_files(root):
             if directory:
-
                 if __debug__:
                     _assert_files_in_same_dir(directory)
-
                 for f in directory:
                     self.load_file(f)
 
@@ -227,12 +238,14 @@ class TestLoader(object):
         '''
         Loads the given path for tests collecting suites and tests and placing
         them into the top_level_suite.
+
+        .. note:: Automatically drop_caches
+        .. warning:: There isn't a way to prevent reloading of test modules
+        that are imported by other test modules. It's up to users to never
+        import a test module from a test module, otherwise those tests will be
+        enumerated twice.
         '''
         path = os.path.abspath(path)
-        # NOTE: There isn't a way to prevent reloading of test modules that are
-        # imported by other test modules. It's up to users to never import
-        # a test module from a test module, otherwise those tests will be
-        # enumerated twice.
         if __debug__:
             self._loaded_a_file = True
 

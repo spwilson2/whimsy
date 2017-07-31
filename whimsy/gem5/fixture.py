@@ -105,7 +105,7 @@ class Gem5Fixture(SConsTarget):
 class MakeFixture(Fixture):
     def __init__(self, directory, *args, **kwargs):
         name = 'make -C %s' % directory
-        super(MakeFixture, self).__init__(cached=True, lazy_init=False,
+        super(MakeFixture, self).__init__(build_once=True, lazy_init=False,
                                           name=name,
                                           *args, **kwargs)
         self.targets = []
@@ -131,7 +131,11 @@ class MakeTarget(Fixture):
         self.target = self.name
 
         if make_fixture is None:
-            make_fixture = MakeFixture(absdirpath(target), lazy_init=True, cached=False)
+            make_fixture = MakeFixture(
+                    absdirpath(target),
+                    lazy_init=True,
+                    build_once=False)
+
         self.make_fixture = make_fixture
 
         # Add our self to the required targets of the main MakeFixture

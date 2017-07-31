@@ -50,7 +50,7 @@ def gem5_verify_config(name,
         for isa in valid_isas:
 
             # Create a tempdir fixture to be shared throughout the test.
-            tempdir = TempdirFixture(cached=True, lazy_init=True)
+            tempdir = TempdirFixture(build_once=True, lazy_init=True)
             gem5_returncode = VariableFixture(
                     name=constants.gem5_returncode_fixture_name)
 
