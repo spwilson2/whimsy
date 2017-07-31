@@ -136,9 +136,18 @@ class MakeTarget(Fixture):
         return self
 
 class TestProgram(MakeTarget):
-    def __init__(self, program, isa, os):
+    def __init__(self, program, isa, os, recompile=False):
         make_dir = joinpath('test-progs', program)
         make_fixture = MakeFixture(make_dir)
         target = joinpath('bin', isa, os, program)
         super(TestProgram, self).__init__(target, make_fixture)
         self.path = joinpath(make_dir, target)
+        self.recompile = recompile
+
+    def setup(self):
+        # Check if the program exists if it does then only compile if
+        # recompile was given.
+        if self.recompile:
+            super(MakeTarget, self).setup()
+        elif not os.path.exists(self.path):
+            super(MakeTarget, self).setup()
