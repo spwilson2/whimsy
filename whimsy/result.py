@@ -369,7 +369,8 @@ class JUnitLogger(InternalLogger):
 
     :param junit_fstream: File stream to write junit formatted results to.
 
-    :param internal_fstream: File stream to write internal formatted results to.
+    :param internal_fstream: File stream to write internal formatted results
+    to.
     .. seealso:: :class:`InternalLogger`
     '''
     # We use an internal logger to stream the output into a format we can

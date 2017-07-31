@@ -22,7 +22,8 @@ class MatchGoldStandard(Verifier):
     def __init__(self, standard_filename, name=None, ignore_regex=None,
                  test_filename='simout'):
         '''
-        :param standard_filename: The path of the standard file to compare output to.
+        :param standard_filename: The path of the standard file to compare
+        output to.
 
         :param ignore_regex: A string, compiled regex, or iterable containing
         either which will be ignored in 'standard' and test output files when
