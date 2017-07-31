@@ -71,7 +71,9 @@ def iter_recursively(self, inorder=True, yield_container=False):
                 yield item
 
             # Recurse into that node.
-            for item_of_item in iter_recursively(item, inorder, yield_container):
+            for item_of_item in iter_recursively(
+                    item, inorder,
+                    yield_container):
                 yield item_of_item
         else:
             # Otherwise just yield the leaf
@@ -147,8 +149,8 @@ def diff_out_file(ref_file, out_file, ignore_regexes=tuple()):
         try:
             helper.log_call(['diff', out_file, ref_file], stdout=tempfile_)
         except OSError:
-            # Likely signals that diff does not exist on this system. fallback to
-            # difflib
+            # Likely signals that diff does not exist on this system. fallback
+            # to difflib
             with open(out_file, 'r') as outf, open(ref_file, 'r') as reff:
                 diff = difflib.unified_diff(iter(reff.readline, ''),
                                             iter(outf.readline, ''),

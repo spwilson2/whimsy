@@ -46,12 +46,15 @@ add_logging_level('trace', 1)
 def set_logging_verbosity(verbosity):
     log.setLevel(max(always_display_level - verbosity * 10, TRACE))
 
-# https://www.electricmonk.nl/log/2011/08/14/redirect-stdout-and-stderr-to-a-logger-in-python/
+#
 class StreamToLogger(object):
     '''
     Fake file-like stream object that redirects writes to a logger instance.
 
     Use to capture stdout and stderr from python.
+
+    https://www.electricmonk.nl/log/2011/08/14/\
+redirect-stdout-and-stderr-to-a-logger-in-python/
     '''
     def __init__(self, logger, log_level=INFO):
         self.logger = logger

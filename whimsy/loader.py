@@ -17,7 +17,8 @@ from test import TestCase
 # Ignores filenames that begin with '.'
 # Will match filenames that either begin or end with 'test' or tests and use
 # - or _ to separate additional name components.
-default_filepath_regex = re.compile(r'(([^\.]+[-_]tests?)|(tests?[-_].+))\.py$')
+default_filepath_regex = \
+        re.compile(r'(([^\.]+[-_]tests?)|(tests?[-_].+))\.py$')
 
 def default_filepath_filter(filepath):
     '''The default filter applied to filepaths to marks as test sources.'''
@@ -90,13 +91,15 @@ class _MethodWrapper(object):
 
     def unwrap(self):
         '''
-        Return the wrapped class method to the state it was in when we `wrap`ped
-        it.
+        Return the wrapped class method to the state it was in when we
+        `wrap`ped it.
         '''
         if self._old_method != self._sentinal:
-            assert getattr(self._cls, self._method_name) == self._replaced_method, \
+            assert getattr(self._cls, self._method_name) \
+                    == self._replaced_method, \
                     "%s's %s has changed, we can not restore it." \
                     % (self._cls, self._method_name)
+
             setattr(self._cls, self._method_name, self._old_method)
         else:
             delattr(self._cls, self._method_name)
@@ -213,7 +216,8 @@ class TestLoader(object):
             dirnames.sort()
             if filenames:
                 filenames.sort()
-                filepaths = [os.path.join(root, filename) for filename in filenames]
+                filepaths = [os.path.join(root, filename) \
+                             for filename in filenames]
                 filepaths = filter(self.filepath_filter, filepaths)
                 if filepaths:
                     files.append(filepaths)

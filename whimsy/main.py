@@ -38,7 +38,7 @@ def dorun():
         mkdir_p(config.result_path)
 
         with open(joinpath(config.result_path, 'pickle'), 'w') as result_file,\
-                open(joinpath(config.result_path, 'junit.xml'), 'w') as junit_f:
+             open(joinpath(config.result_path, 'junit.xml'), 'w') as junit_f:
 
             junit_logger = result.JUnitLogger(junit_f, result_file)
             console_logger = result.ConsoleLogger()

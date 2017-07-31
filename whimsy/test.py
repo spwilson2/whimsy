@@ -129,4 +129,5 @@ if __name__ == '__main__':
     except:
         pass
     else:
-        assert False, 'Did not raise an exception for an undefined test method.'
+        assert False, ('Did not raise an exception'
+                       ' for an undefined test method.')

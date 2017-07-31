@@ -75,7 +75,8 @@ class _Config(object):
             return getattr(super(_Config, self), attr)
         else:
             if self._cli_args == self._unconfigured:
-                # Since parse_args is cached, we don't need to cache it's call here.
+                # Since parse_args is cached, we don't need to cache it's call
+                # here.
                 self._parse_commandline_args()
             elif self._config_file_args == self._unconfigured:
                 self._parse_config_file()
@@ -254,8 +255,8 @@ common_args = [
 # saved.
 #
 # e.g. if you have a -v argument which increments verbosity level and
-# a separate --verbose flag which 'store's verbosity level. the final one in the
-# list will be saved.
+# a separate --verbose flag which 'store's verbosity level. the final one in
+# the list will be saved.
 common_args = AttrDict({arg.name:arg for arg in common_args})
 
 

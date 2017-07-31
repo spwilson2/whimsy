@@ -119,7 +119,8 @@ def separator(char=default_separator, color=None):
     else:
         return char*w
 
-def insert_separator(inside, char=default_separator, min_barrier=3, color=None):
+def insert_separator(inside, char=default_separator,
+                     min_barrier=3, color=None):
     '''
     Place the given string inside of the separator. If it does not fit inside,
     expand the separator to fit it with at least min_barrier.

@@ -61,7 +61,8 @@ class MatchGoldStandard(Verifier):
         '''
         if 'test_filename' in kwargs:
             raise ValueError('If you are setting test_filename use the more'
-                             ' generic %s instead' % MatchGoldStandard.__name__)
+                             ' generic %s'
+                             ' instead' % MatchGoldStandard.__name__)
 
 class MatchStdout(MatchGoldStandard):
     __file = constants.gem5_simulation_stdout

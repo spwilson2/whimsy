@@ -57,7 +57,9 @@ class ResultLogger(object):
 
     @abc.abstractmethod
     def skip(self, item, **kwargs):
-        '''Signal we are forcefully skipping the item due to some circumstance.'''
+        '''
+        Signal we are forcefully skipping the item due to some circumstance.
+        '''
 
     @abc.abstractmethod
     def set_current_outcome(self, outcome, **kwargs):
@@ -197,7 +199,8 @@ class ConsoleLogger(ResultLogger):
         for outcome in Outcome.enums:
             count  = self.outcome_count[outcome]
             if count:
-                strings.append(outcome_fmt.format(count=count, outcome=outcome.name))
+                strings.append(outcome_fmt.format(count=count,
+                                                  outcome=outcome.name))
                 most_severe_outcome = outcome
         string = ','.join(strings)
         if most_severe_outcome is None:
@@ -262,11 +265,14 @@ class InternalLogger(ResultLogger):
     def skip(self, item, **kwargs):
         if isinstance(self._current_item, TestSuite):
             result = TestSuiteResult(self._current_item, Outcome.SKIP, 0,
-                    self._current_suite_testcases, **kwargs)
+                                     self._current_suite_testcases, **kwargs)
             self._current_suite_testcases = []
+
         elif isinstance(self._current_item, TestCase):
-            result = TestCaseResult(self._current_item, Outcome.SKIP, 0, **kwargs)
+            result = TestCaseResult(self._current_item, Outcome.SKIP, 0,
+                                    **kwargs)
             self._current_suite_testcases.append(result)
+
         elif __debug__:
             raise AssertionError(self.bad_item)
         self._write(result)
@@ -275,14 +281,15 @@ class InternalLogger(ResultLogger):
     def set_current_outcome(self, outcome, runtime, **kwargs):
         '''Set the outcome of the current item.'''
         if isinstance(self._current_item, TestSuite):
-            result = TestSuiteResult(
-                    self._current_item, outcome, runtime,
-                    self._current_suite_testcases)
+            result = TestSuiteResult(self._current_item, outcome, runtime,
+                                     self._current_suite_testcases)
             self._current_suite_testcases = []
 
         elif isinstance(self._current_item, TestCase):
-            result = TestCaseResult(self._current_item, outcome, runtime, **kwargs)
+            result = TestCaseResult(self._current_item, outcome,
+                                    runtime, **kwargs)
             self._current_suite_testcases.append(result)
+
         elif __debug__:
             raise AssertionError(self.bad_item)
 

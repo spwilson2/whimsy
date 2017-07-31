@@ -36,7 +36,7 @@ class SConsFixture(Fixture):
     '''
     def __init__(self, name='SCons Fixture', directory=None, *args, **kwargs):
         super(SConsFixture, self).__init__(name, *args, lazy_init=True)
-        self.directory = config.base_dir if directory is None else directory
+        self.directory = directory if directory else config.base_dir
         self.targets = []
 
     @cacheresult
@@ -54,7 +54,8 @@ class SConsFixture(Fixture):
 scons = SConsFixture(lazy_init=False)
 
 class SConsTarget(Fixture):
-    def __init__(self, target, build_dir=None, invocation=scons, *args, **kwargs):
+    def __init__(self, target, build_dir=None, invocation=scons,
+                 *args, **kwargs):
         '''
         Represents a target to be built by an 'invocation' of scons.
 

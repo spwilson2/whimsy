@@ -36,9 +36,9 @@ class Fixture(object):
         :var required_by: List of fixtures this Fixture requires.
         :var built: Indicates that this fixture has been built.
 
-        .. note:: In order for Fixtures to be enumerated by the test system this
-        __init__ method must be called. The loader class will monkey patch this
-        method in order to enmerate tests.
+        .. note:: In order for Fixtures to be enumerated by the test system
+        this __init__ method must be called. The loader class will monkey patch
+        this method in order to enmerate tests.
 
         '''
         self.requires = []

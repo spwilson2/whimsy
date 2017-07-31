@@ -141,7 +141,8 @@ class Runner(object):
         # Capture the output into a file.
         with tee(fstderr_name, stderr=True, stdout=False),\
                 tee(fstdout_name, stderr=False, stdout=True):
-            return self._run_test(testobj, fstdout_name, fstderr_name, fixtures)
+            return self._run_test(testobj, fstdout_name,
+                                  fstderr_name, fixtures)
 
     def _run_test(self, testobj, fstdout_name, fstderr_name, fixtures):
         if fixtures is None:
