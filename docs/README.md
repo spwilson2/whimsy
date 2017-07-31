@@ -220,4 +220,52 @@ the tags that was automatically added by `gem5_verify_config`:
 
 ## Writing Your Own Test
 
-### Adding Fixtures
+The `gem5_verify_config` method covers all the use cases of the old testing
+framework as far as I know, however the major reason for creating a new
+framework is so we have test cases that **actually test something**. (It's of
+my opinion that the old tests are all but useless and should be scrapped save
+for a couple for top level functional testing.) As such, advanced users should
+be able to create their own tests easily.
+
+As a 'simple' example we'll duplicate some functionality of `gem5_verify_config`
+and create a test that manually spawns gem5 and checks it's return code.
+
+```python
+from testlib import *
+
+# Create a X86/gem5.opt target fixture.
+gem5 = Gem5Fixture(constants.x86_tag, constants.opt_tag)
+
+# Use the helper function wrapper which creates a TestCase out of this
+# function. The test will automatically get the name of this function.
+@testfunction(fixtures=(gem5,), 
+              tags=[constants.x86_tag, contatnts.opt_tag])
+def test_gem5_returncode(fixtures):
+
+    # Collect our gem5 fixture using the standard name and get the path of it.
+    gem5 = fixtures[constants.gem5_binary_fixture_name].path
+
+    command = [
+        gem5,
+        config=joinpath(config.base_dir, 'configs', 'example','se.py'),
+    ]
+
+    try: 
+        # Run the given command sending it's output to our log at a low
+        # priorirty verbosity level.
+        log_call(command)
+    except CalledProcessError as e:
+        if e.returncode == 1:
+            # We can fail by raising an exception
+            raise e 
+
+        elif e.returncode != 2:
+            # We can also fail manually with the fail method.
+            test.fail("Return code wasn't 2")
+
+    # Returncode was 0
+    # When we return this test will be marked as passed.
+
+```
+
+### Writing Your Own Fixtures

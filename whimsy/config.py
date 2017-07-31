@@ -110,13 +110,20 @@ constants.alpha_tag = 'ALPHA'
 constants.riscv_tag = 'RISCV'
 constants.arm_tag = 'ARM'
 constants.supported_isas = (
-    constants.x86_tag,
-    constants.sparc_tag,
-    constants.alpha_tag,
-    constants.riscv_tag,
-    constants.arm_tag
+        constants.x86_tag,
+        constants.sparc_tag,
+        constants.alpha_tag,
+        constants.riscv_tag,
+        constants.arm_tag
 )
-constants.supported_optimizations = ('opt', 'debug', 'fast')
+constants.opt_tag = 'opt'
+constants.debug_tag = 'debug'
+constants.fast_tag = 'fast'
+constants.supported_optimizations = (
+        constants.opt_tag,
+        constants.debug_tag,
+        constants.fast_tag
+)
 
 constants.tempdir_fixture_name = 'tempdir'
 constants.gem5_simulation_stderr = 'simerr'
