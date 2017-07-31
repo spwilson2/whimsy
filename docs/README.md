@@ -237,9 +237,11 @@ from testlib import *
 gem5 = Gem5Fixture(constants.x86_tag, constants.opt_tag)
 
 # Use the helper function wrapper which creates a TestCase out of this
-# function. The test will automatically get the name of this function.
+# function. The test will automatically get the name of this function. The
+# fixtures provided will automatically be given to us by the test runner as
+# a dictionary of the format fixture.name -> fixture
 @testfunction(fixtures=(gem5,), 
-              tags=[constants.x86_tag, contatnts.opt_tag])
+              tags=[constants.x86_tag, constants.opt_tag])
 def test_gem5_returncode(fixtures):
 
     # Collect our gem5 fixture using the standard name and get the path of it.
@@ -268,4 +270,48 @@ def test_gem5_returncode(fixtures):
 
 ```
 
+Since the test function was not placed into a test suite by us, when it is
+collected by the `TestLoader` it will automatically be placed into
+a `TestSuite` with the name of the module.
+
 ### Writing Your Own Fixtures
+
+`Fixture` objects are a major component in writing modular and composable tests
+while reducing code reuse. There are quite a few `Fixture` classes built in,
+but they might not be sufficient.
+
+We'll pretend we have a test that requires we create a very large empty blob
+file so gem5 can use it as a disk. _(Is that even possible?)_.
+
+```python
+from testlib import *
+import os
+
+class DiskGeneratorFixture(Fixture):
+    def __init__(self, path, size, name):
+        super(DiskGeneratorFixture, self).__init__(
+                name, 
+                # Don't build this at startup, wait until a test that uses this runs.
+                lazy_init=True, 
+                # If multiple test suites use this, don't rebuild this fixture each time.
+                build_once=True)
+
+        self.path = path
+        self.size = size
+
+    def setup(self):
+        # This method is called from the Runner when a TestCase that uses this
+        # fixture is about to run.
+
+        super(DisckGeneratorFixture, self).setup()
+
+        # Create the file using the dd program.
+        log_call(['dd', 'if=/dev/zero', 'of=%s' % self.path, 'count=%d' % self.size])
+
+    def teardown(self):
+        # This method is called after the test or suite that uses this fixture
+        # is done running.
+
+        # Remove the file.
+        os.remove(self.path)
+```
