@@ -82,6 +82,9 @@ class TestCase(object):
     @abc.abstractmethod
     def __call__(self, fixtures):
         pass
+    # This is a method that will be created by the test loader in order to
+    # manually remove a test.
+    unregister = NotImplemented
 
 class TestFunction(TestCase):
     __metaclass__ = abc.ABCMeta

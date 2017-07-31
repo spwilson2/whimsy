@@ -43,6 +43,10 @@ class Fixture(object):
     def teardown(self):
         '''Empty method, meant to be overriden if fixture requires teardown.'''
 
+    # This is a method that will be created by the test loader in order to
+    # manually remove a fixture.
+    deregister = NotImplemented
+
 class TempdirFixture(Fixture):
     default_name = 'tempdir'
     def __init__(self, name=None, **kwargs):

@@ -56,7 +56,7 @@ class _MethodWrapper(object):
         callback = self._callback
 
         def combined_method(*args, **kwargs):
-            if old_method != sentinal:
+            if old_method not in (sentinal, NotImplemented):
                 old_method(*args, **kwargs)
             callback(*args, **kwargs)
 

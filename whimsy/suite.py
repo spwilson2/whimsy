@@ -54,6 +54,10 @@ class TestSuite(object):
     def extend(self, items):
         self.testlist.extend(items)
 
+    # This is a method that will be created by the test loader in order to
+    # manually remove a suite.
+    unregister = NotImplemented
+
 
 class SuiteList(object):
     '''
