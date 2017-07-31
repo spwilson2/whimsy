@@ -1,11 +1,11 @@
 import os
 import copy
 
-from .. import fixture
 from ..test import TestFunction
 from ..suite import TestList, TestSuite
 from ..helper import log_call, CalledProcessError
 from ..config import constants, config
+from fixture import TempdirFixture, Gem5Fixture
 import verifier
 
 def gem5_verify_config(name,
@@ -48,7 +48,7 @@ def gem5_verify_config(name,
         for isa in valid_isas:
 
             # Create a tempdir fixture to be shared throughout the test.
-            tempdir = fixture.TempdirFixture(cached=True, lazy_init=True)
+            tempdir = TempdirFixture(cached=True, lazy_init=True)
 
             # Common name of this generated testcase.
             _name = '{given_name} [{isa} - {opt}]'.format(
@@ -73,7 +73,7 @@ def gem5_verify_config(name,
             # Create the gem5 target for the specific architecture and
             # optimization level.
             fixtures = copy.copy(given_fixtures)
-            fixtures.append(fixture.Gem5Fixture(isa, opt))
+            fixtures.append(Gem5Fixture(isa, opt))
             fixtures.append(tempdir)
             # Add the isa and optimization to tags list.
             tags = copy.copy(tags)
