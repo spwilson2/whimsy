@@ -4,18 +4,29 @@ variables
     1. config
     2. constants (Also attached to the config variable as an attribute)
 
+The main motivation for this module is to have a centralized location for
+defaults and configuration by command line and files for the test framework.
+
+A secondary goal is to reduce programming errors by providing common constant
+strings and values as python attributes to simplify detection of typos.
+A simple typo in a string can take a lot of debugging to uncover the issue,
+attribute errors are easier to notice and most autocompletion systems detect
+them.
 
 The config variable automatically parses the program arguments when attributes
 from it are requested. Program arguments/flag arguments are available from the
-config as attributes.
+config as attributes. If a attribute was not set by the command line or the
+optional config file, then it will fallback to the :code:`_defaults` value, if
+still the value is not found an AttributeError will be raised.
 
+:var defaults: are provided by the config if the attribute is not found in the
+config or commandline. For instance, if we are using the list command fixtures
+might not be able to count on the build_dir being provided since we aren't
+going to build anything.
 
-There is also a third variable internal to this file. It's likely that at some
-point you might need to add a default value for a flag that isn't parsed for
-a certain command. This can be done by setting an attribute on the `_defaults`
-variable. For example, SCons fixtures need to know a build directory, however
-when a user gives the list command we don't want to provide them the
---build-dir flag, so we need to set a `_defaults` value
+:var constants: are values not directly exposed by the config, but are
+attached to the object for centralized access. These should be used for
+setting common string names used across the test framework.
 :code:`_defaults.build_dir = None`
 '''
 import abc
@@ -24,38 +35,60 @@ import copy
 import os
 from pickle import HIGHEST_PROTOCOL as highest_pickle_protocol
 
-from helper import cacheresult, absdirpath
+from helper import absdirpath
 from _util import AttrDict
 
 class _Config(object):
     '''
     Config object that automatically parses args when one attempts to get
     a config attr.
+
+    :var _configured: Bool indicating if all parsing and setup has ran
+    :var __shared_dict: Dictionary making this object perform as a singleton.
+
+    :var _config: The base dictionary to perform lookup for attributes from,
+    if attrs are not there, fallback to _defaults.
+
+    :var _defaults: An :class:`AttrDict` containing default fallback values if
+    they cannot be found in the :var:`_config`.
+
+    :var _config_file_args: Dicitonary containing arguments parse from the
+    config file (if one exists).
+
+    :var _cli_args: Dictionary containing the arguments parsed from the
+    command line.
+
+    :var _post_processors: Dictionary mapping attribute name to list of
+    callback functions called in a chain to perform additional setup for
+    a config argument.
+    .. seealso:: :func:`add_post_processor`
     '''
-    # sentinal object to signal an unconfigured argument format.
-    _unconfigured = object()
-    _cli_args = _unconfigured
-    _config_file_args = _unconfigured
+    _configured = False
+
+    __shared_dict = {}
+
     _config = {}
     _defaults = AttrDict()
-    __shared_dict = {}
+
+    _config_file_args = {}
+    _cli_args = {}
+
     constants = AttrDict()
+    _post_processors = {}
 
     def __init__(self):
+        # This object will act as if it were a singleton.
         self.__dict__ = self.__shared_dict
 
-    @cacheresult
     def _parse_config_file(self):
         # TODO: Add support for config files.
-        self._config_file_args = None
+        pass
 
-    @cacheresult
     def _parse_commandline_args(self):
         args = baseparser.parse_args()
         # Finish up our verbose args incrementing hack.
         args.verbose = args.verbose.val
         self._config_file_args = {}
-        self._cli_args = {}
 
         for attr in dir(args):
             # Ignore non-argument attributes.
@@ -63,10 +96,39 @@ class _Config(object):
                 self._config_file_args[attr] = getattr(args, attr)
         self._config.update(self._config_file_args)
 
-        self._defaults.build_dir = os.path.join(self.base_dir, 'build')
+    def _run_post_processors(self):
+        for attr, callbacks in self._post_processors.items():
+            newval = self.lookup_attr(attr)
+            for callback in callbacks:
+                newval = callback(newval)
+        self.set(attr, newval)
 
     def set(self, name, value):
         self._config[name] = value
+
+    def add_post_processor(self, attr, post_processor):
+        '''
+        :param attr: Attribute to pass to and recieve from the
+        :code:`post_processor`.
+
+        :param post_processor: A callback functions called in a chain to
+        perform additional setup for a config argument. Should return a tuple
+        containing the new value for the config attr.
+        '''
+        if attr not in self._post_processors:
+            self._post_processors[attr] = []
+        self._post_processors[attr].append(post_processor)
+
+    def lookup_attr(self, attr):
+        '''
+        :returns: A tuple with the attribute if it can be found in _config or
+        _defaults otherwise None.
+        '''
+        # We return using a tuple so we can also return None values.
+        if attr in self._config:
+            return (self._config[attr],)
+        elif hasattr(self._defaults, attr):
+            return (getattr(self._defaults, attr),)
 
     def __getattr__(self, attr):
         # We use getattr because I perfer using attributes rather than strings
@@ -74,18 +136,16 @@ class _Config(object):
         if attr in dir(super(_Config, self)):
             return getattr(super(_Config, self), attr)
         else:
-            if self._cli_args == self._unconfigured:
-                # Since parse_args is cached, we don't need to cache it's call
-                # here.
+            if not self._configured:
                 self._parse_commandline_args()
-            elif self._config_file_args == self._unconfigured:
                 self._parse_config_file()
-            if attr in self._config:
-                return self._config[attr]
-            elif hasattr(self._defaults, attr):
-                return getattr(self._defaults, attr)
-            else:
-                raise AttributeError('Could not find %s config value' % attr)
+                self._run_post_processors()
+                self._configured = True
+        val = self.lookup_attr(attr)
+        if val is not None:
+            return val[0]
+        else:
+            raise AttributeError('Could not find %s config value' % attr)
 
 
 config = _Config()
@@ -101,7 +161,25 @@ _defaults.base_dir = os.path.abspath(os.path.join(absdirpath(__file__),
 _defaults.result_path = os.path.join(os.getcwd(), '.testing-results')
 _defaults.list_only_failed = False
 
+def set_default_build_dir(build_dir):
+    '''
+    Post-processor to set the default build_dir based on the base_dir.
 
+    .. seealso :func:`add_post_processor` for a description on this callback
+    format.
+    '''
+    if not build_dir:
+        base_dir = config.lookup_attr('base_dir')[0]
+        build_dir = (os.path.join(base_dir, 'build'),)
+    return build_dir
+
+config.add_post_processor('build_dir', set_default_build_dir)
+
+# 'constants' are values not directly exposed by the config, but are attached
+# to the object for centralized access. These should be used for setting
+# common string names used across the test framework. A simple typo in
+# a string can take a lot of debugging to uncover the issue, attribute errors
+# are easier to notice and most autocompletion systems detect them.
 constants.system_out_name = 'system-out'
 constants.system_err_name = 'system-err'
 constants.x86_tag = 'X86'
