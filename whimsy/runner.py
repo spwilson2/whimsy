@@ -16,13 +16,57 @@ class Runner(object):
     '''
     The default runner class used for running test suites and cases.
     '''
-    def __init__(self, suites, result_loggers=tuple()):
+    def __init__(self, suites=tuple(), result_loggers=tuple()):
+        '''
+        :param suites: An iterable containing suites which are run when
+        :func:`run` is called.
+
+        :param result_loggers: Iterable containing items supporting the
+        `ResultLogger` interface .
+        '''
         if not isinstance(suites, SuiteList):
             suites = SuiteList(suites)
         self.suites = suites
         if not result_loggers:
             result_loggers = (ConsoleLogger(),)
         self.result_loggers = tuple(result_loggers)
+
+    @staticmethod
+    def run_items(*items, **kwargs):
+        '''
+        Run the given items. 
+
+        :param items: Items to be ran.
+        :param result_loggers: See :func:`__init__`
+
+        .. warning:: It's generally not a good idea to run a :class:`TestCase`
+        on its own since most test cases are not self-contained. (They rely on
+        suite fixtures and previous tests.)
+        '''
+        self = None
+        if 'result_loggers' in kwargs and len(kwargs) == 1 :
+            self = Runner(**kwargs)
+            print self
+        elif len(kwargs) != 0:
+            raise ValueError('Only accepts result_loggers as an optional'
+                             ' kwarg')
+        else:
+            self = Runner()
+
+        for logger in self.result_loggers:
+            logger.begin_testing()
+
+        for item in items:
+            if isinstance(item, TestCase):
+                log.warn("Running '%s' as a TestCase it is likely not self"
+                         "-contained!" % item.name)
+                log.warn('Recommend running its containing suite instead.')
+                self.run_test(item)
+            elif isinstance(item, TestSuite):
+                self.run_suite(item)
+
+        for logger in self.result_loggers:
+            logger.end_testing()
 
     def run(self):
         '''

@@ -51,14 +51,15 @@ def dorun():
             junit_logger = result.JUnitLogger(junit_f, result_file)
             console_logger = result.ConsoleLogger()
             loggers = (junit_logger, console_logger)
-            testrunner = Runner(suites, loggers)
 
             log.display(separator())
             log.bold('Running Tests')
             log.display('')
             if config.uid:
-                results = testrunner.run_uid(config.uid)
+                test_item = loader.get_uid(config.uid)
+                results = Runner.run_items(test_item)
             else:
+                testrunner = Runner(suites, loggers)
                 results = testrunner.run()
 
 def dorerun():
