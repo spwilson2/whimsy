@@ -1,25 +1,5 @@
 # Overview of Files
 
-* [Overview of Files](#overview-of-files)
-  * [Main Function Modules](#main-function-modules)
-     * [<a href="main.py">main.py</a>](#mainpy)
-     * [<a href="loader.py">loader.py</a>](#loaderpy)
-     * [<a href="runner.py">runner.py</a>](#runnerpy)
-  * [Testing Items](#testing-items)
-     * [<a href="suite.py">suite.py</a>](#suitepy)
-     * [<a href="test.py">test.py</a>](#testpy)
-     * [<a href="fixture.py">fixture.py</a>](#fixturepy)
-  * [Support Files](#support-files)
-     * [<a href="result.py">result.py</a>](#resultpy)
-     * [<a href="config.py">config.py</a>](#configpy)
-     * [<a href="logger.py">logger.py</a>](#loggerpy)
-     * [<a href="helper.py">helper.py</a>](#helperpy)
-     * [<a href="terminal.py">terminal.py</a>](#terminalpy)
-     * [<a href="query.py">query.py</a>](#querypy)
-     * [<a href="tee.py">tee.py</a>](#teepy)
-     * [<a href="_util.py">_util.py</a>](#_utilpy)
-
-
 ## Main Function Modules
 
 Files are listed in order of relative importance and are slightly categorized.
