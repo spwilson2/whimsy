@@ -141,7 +141,8 @@ class Runner(object):
                 elif test_suite.fail_fast:
                     log.bold('Test failed in a fail_fast TestSuite. Skipping'
                              ' remaining tests.')
-                    rem_iter = (testcase for _, (_, testcase) in suite_iterator)
+                    rem_iter = (testcase for _, (_, testcase) \
+                                in suite_iterator)
                     self._generate_skips(testcase.name, rem_iter)
                 elif testlist.fail_fast:
                     log.bold('Test failed in a fail_fast TestList. Skipping'
@@ -278,11 +279,18 @@ class Runner(object):
 
         return outcome
 
-    def _remaining_testlist_tests(self, current_item, testlist, suite_iterator):
+    def _remaining_testlist_tests(self, current_item, testlist,
+                                  suite_iterator):
         '''
         Return an iterator which will advance the suite_iterator while
         returning just the remaining tests (after the current_item) in the
         testlist.
+
+        :param current_item: The current test being iterated over.
+        :param testlist: The current :class:`TestList` being iterated over.
+
+        :param suite_iterator: The current iterator being used to iterate
+        through :class:`TestCase` and :class:`TestList` objects.
         '''
         testlist_iter = testlist.iter_testlists()
         next_item = next(testlist_iter)
@@ -332,4 +340,3 @@ class Runner(object):
                         failures.append((fixture.name,
                                          traceback.format_exc()))
         return failures
-

@@ -91,7 +91,8 @@ class _MethodWrapper(object):
 
         def combined_method(*args, **kwargs):
             if old_method not in (sentinal, NotImplemented):
-                return callback(__retval__=old_method(*args, **kwargs), *args, **kwargs)
+                return callback(__retval__=old_method(*args, **kwargs),
+                                *args, **kwargs)
             else:
                 return callback(__retval__=None, *args, **kwargs)
 
@@ -295,8 +296,8 @@ class TestLoader(object):
         objects before calling :code:`execfile`.  If a user wishes to prevent
         an instantiated object from being collected (possibly to create a copy
         with a modified attribute) they should use :func:`no_collect` to do
-        so. (Internally a :code:`__no_collect__` method is added to objects we plan
-        to collect. This method will then remove the object from those
+        so. (Internally a :code:`__no_collect__` method is added to objects we
+        plan to collect. This method will then remove the object from those
         collected from the file.)
 
         .. note:: Automatically drop_caches
@@ -407,9 +408,9 @@ class TestLoader(object):
     def _wrap_collection(self, cls, collector):
         '''
         Wrap the given cls' __new__ method with a wrapper that will keep an
-        OrderedSet of the instances. Also attach a __no_collect__ method which can be
-        used to remove the object from our collected objects with the exposed
-        :func:`no_collect`
+        OrderedSet of the instances. Also attach a __no_collect__ method which
+        can be used to remove the object from our collected objects with the
+        exposed :func:`no_collect`.
 
         :param cls: Class to wrap methods of for collection.
 
@@ -431,8 +432,10 @@ class TestLoader(object):
             return retval
 
         # Python2 MethodTypes are different than functions.
-        del_wrapper = _MethodWrapper(cls, '__no_collect__', instance_decollector)
-        new_wrapper = _MethodWrapper(cls, '__new__', instance_new, clsmethod=True)
+        del_wrapper = _MethodWrapper(cls, '__no_collect__',
+                                     instance_decollector)
+        new_wrapper = _MethodWrapper(cls, '__new__', instance_new,
+                                     clsmethod=True)
         del_wrapper.wrap()
         new_wrapper.wrap()
         self._wrapped_classes[cls] = (new_wrapper, del_wrapper)
