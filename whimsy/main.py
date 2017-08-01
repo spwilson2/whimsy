@@ -1,9 +1,17 @@
 #!/usr/bin/env python2
 '''
-The main source for whimsy. Ties together the default test runners and
-loaders.
+The main source for whimsy. Discovers and loads sources using the
+:class:`TestLoader` objects and runs tests using the :class:`Runner` object
+passing the runner :class:`ResultLogger` instances which will stream output
+data to the terminal and into various result files.
 
-Discovers and runs all tests from a given root directory.
+There are three commands which this program handles:
+* run   - By default will search for and run all tests in the current
+          and children directories reporting the results through the terminal,
+          saving them to a pickle file, and saving them to a junit file.
+* rerun - Load all tests and then rerun the tests which failed in the previous
+          run.
+* list  - List tests with various querying options.
 '''
 import logger
 import query
@@ -32,6 +40,9 @@ def load_tests():
     return testloader
 
 def dorun():
+    '''
+    Handle the `run` command.
+    '''
         loader = load_tests()
 
         if config.tags:
@@ -62,6 +73,9 @@ def dorun():
                 results = testrunner.run()
 
 def dorerun():
+    '''
+    Handle the `rerun` command.
+    '''
     # Load previous results
     # TODO Catch bad file path error or load error.
     with open(joinpath(config.result_path, 'pickle'), 'r') as old_fstream:
@@ -82,6 +96,9 @@ def dorerun():
     testrunner.run()
 
 def dolist():
+    '''
+    Handle the `list` command.
+    '''
     loader = load_tests()
     if config.tags:
         query.list_tests_with_tags(loader, config.tags)

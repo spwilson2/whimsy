@@ -11,19 +11,19 @@ class Fixture(object):
     a TestCase or a TestSuite has ran.
 
     Fixtures are the prefered method of carrying incremental results or
-    variables between TestCases in TestSuites. (Rather than using globals.) The
-    test system assumes that TestSuites are self contained so paralellization
-    is possible. However using global variables will likely cause things to
-    break unexpectedly.
+    variables between TestCases in TestSuites. (Rather than using globals.)
+    The test system assumes that TestSuites are self contained so
+    paralellization is possible in the future.. Using global variables will
+    likely cause things to break unexpectedly.
 
-    .. note:: The deregister method is created by the loader to remove
-    a fixture that should not be enmerated by the loader.
+    .. note:: no_collect function is provided by the :module:`loader` to
+    remove a fixture that should not be collected.
     .. seealso:: :module:`loader` for more on how fixtures reach tests and are
     set up.
 
     .. note:: In order for Fixtures to be enumerated by the test system this
     class' :code:`__new__` method must be called. The loader class will monkey
-    patch this method in order to enmerate tests.
+    patch (modify at runtime) this method in order to enmerate tests.
     '''
     def __init__(self, name, build_once=False, lazy_init=True):
         '''
@@ -36,7 +36,9 @@ class Fixture(object):
         :param build_once: This fixture will only be built once. This is
         particularly useful for gem5 targets or build systems.
 
-        :var requires: List of fixtures which require this Fixture.
+        :var requires: List of fixtures which require this Fixture. Before
+        they can be built.
+
         :var required_by: List of fixtures this Fixture requires.
         :var built: Indicates that this fixture has been built.
         '''
