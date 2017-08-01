@@ -1,5 +1,19 @@
 '''
 Helper classes for writing tests with this test library.
+
+* :func:`log_call`    - A wrappper around Popen which behaves like
+                        `subprocess.check_call()` but will pipe output to the
+                        log at a low verbosity level.
+
+* :func:`cacheresult` - A function decorator which will cache results for
+                        a function given the same arguments. (A poor man's
+                        python3 `lru_cache`.)
+
+* :class:`OrderedSet` - A set which maintains object insertion order.
+
+* :func:`absdirpath`  - :code:`dirname(abspath())`
+* :func:`joinpath`    - :code:`os.path.join()`
+* :func:`mkdir_p`     - Same thing as mkdir -p
 '''
 import errno
 import subprocess
