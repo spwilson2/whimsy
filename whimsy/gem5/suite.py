@@ -70,7 +70,7 @@ def gem5_verify_config(name,
             # optimization.
             verifier_tests = []
             for verifier in original_verifiers:
-                verifier = copy.deepcopy(verifier)
+                verifier = copy.copy(verifier)
                 verifier._name = '{name} ({vname} verifier)'.format(
                         name=_name,
                         vname=verifier.name)
