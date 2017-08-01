@@ -51,7 +51,7 @@ class TestSuite(object):
         return self._path
     @property
     def uid(self):
-        return uid(self)
+        return uid(self, TestSuite.__name__)
 
     @property
     def testcases(self):

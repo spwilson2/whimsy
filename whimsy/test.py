@@ -86,7 +86,7 @@ class TestCase(object):
 
     @property
     def uid(self):
-        return uid(self)
+        return uid(self, TestCase.__name__)
     @property
     def path(self):
         return self._path

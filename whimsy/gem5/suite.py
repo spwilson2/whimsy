@@ -66,6 +66,13 @@ def gem5_verify_config(name,
                     isa=isa,
                     opt=opt)
 
+            # Create the running of gem5 subtest.
+            # NOTE: We specifically create this test before our verifiers so
+            # this is listed first.
+            gem5_subtest = TestFunction(
+                    _create_test_run_gem5(config, config_args, gem5_args),
+                    name=_name)
+
             # Create copies of the verifier subtests for this isa and
             # optimization.
             verifier_tests = []
@@ -89,11 +96,6 @@ def gem5_verify_config(name,
             # Add the isa and optimization to tags list.
             tags = copy.copy(tags)
             tags.extend((opt, isa))
-
-            # Create the running of gem5 subtest.
-            gem5_subtest = TestFunction(
-                    _create_test_run_gem5(config, config_args, gem5_args),
-                    name=_name)
 
             # Place our gem5 run and verifiers into a failfast test
             # collection. We failfast because if a gem5 run fails, there's no

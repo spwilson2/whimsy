@@ -157,9 +157,9 @@ class TestLoader(object):
         self._test_index  = OrderedDict()
         self._suite_index = OrderedDict()
 
-        # Reverse index: uid->testitem NOTE: Currently unused.
-        self._test_rindex = {}
-        self._suite_rindex = {}
+        # Reverse index: uid->testitem
+        self._test_rindex = OrderedDict()
+        self._suite_rindex = OrderedDict()
 
         # Holds a mapping of tag->testitem
         self._cached_tag_index = None

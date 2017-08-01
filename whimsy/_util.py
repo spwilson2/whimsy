@@ -167,11 +167,12 @@ def diff_out_file(ref_file, out_file, ignore_regexes=tuple()):
             return None
 
 
-def uid(testitem):
+def uid(testitem, class_name=None):
     '''
     The generic function used to produce uid of test objects.
     '''
     fmt = '{file}:{class_}:{name}'
-    clsname = testitem.__class__.__name__
+    if class_name is None:
+        class_name = testitem.__class__.__name__
     return fmt.format(file=testitem.path, name=testitem.name,
-                      class_=clsname)
+                      class_=class_name)
