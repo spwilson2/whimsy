@@ -48,7 +48,7 @@ class TestCase(object):
     from gem5 standard out matched a gold standard diff file. (See
     :module:`gem5.verifier` for some concrete examples.)
 
-    .. warning:: Although this class is abstract its :func:`__init__` method
+    .. warning:: Although this class is abstract its :func:`__new__` method
     must be called by subclasses in order for them to be discovered by the
     :class:`TestLoader`.
     '''
@@ -107,7 +107,7 @@ class TestCase(object):
     if __debug__:
         # This is a method that will be created by the test loader in order to
         # manually remove a test.
-        __rem__ = NotImplemented
+        __no_collect__ = NotImplemented
 
 class TestFunction(TestCase):
     '''

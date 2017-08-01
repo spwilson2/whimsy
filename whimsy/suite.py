@@ -7,6 +7,10 @@ class TestSuite(object):
     An object containing a collection of tests, represents a completely
     self-contained testing unit. That is, if it should be able to be ran
     without relying on any other suites running.
+
+    .. note:: In order for TestSuite objects to be enumerated by the test
+    system this class' :code:`__new__` method must be called. The loader class
+    will monkey patch this method in order to enumerate suites.
     '''
     def __init__(self, name, tests=tuple(), tags=None, fixtures=None,
             fail_fast=True):
@@ -84,7 +88,7 @@ class TestSuite(object):
         # This is a method that will be created by the test loader in order to
         # manually remove a suite. See the TestLoader load_file description for
         # more details.
-        __rem__ = NotImplemented
+        __no_collect__ = NotImplemented
 
 
 class SuiteList(object):

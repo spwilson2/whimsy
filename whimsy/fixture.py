@@ -20,6 +20,10 @@ class Fixture(object):
     a fixture that should not be enmerated by the loader.
     .. seealso:: :module:`loader` for more on how fixtures reach tests and are
     set up.
+
+    .. note:: In order for Fixtures to be enumerated by the test system this
+    class' :code:`__new__` method must be called. The loader class will monkey
+    patch this method in order to enmerate tests.
     '''
     def __init__(self, name, build_once=False, lazy_init=True):
         '''
@@ -35,11 +39,6 @@ class Fixture(object):
         :var requires: List of fixtures which require this Fixture.
         :var required_by: List of fixtures this Fixture requires.
         :var built: Indicates that this fixture has been built.
-
-        .. note:: In order for Fixtures to be enumerated by the test system
-        this __init__ method must be called. The loader class will monkey patch
-        this method in order to enmerate tests.
-
         '''
         self.requires = []
         self.required_by = []
@@ -77,4 +76,4 @@ class Fixture(object):
     if __debug__:
         # This is a method that will be created by the test loader in order to
         # manually remove a fixture.
-        __rem__ = NotImplemented
+        __no_collect__ = NotImplemented

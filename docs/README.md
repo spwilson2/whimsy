@@ -64,8 +64,8 @@ a `TestSuite` created for the module.
 
 Actual collection of tests is done by modifying the `__new__` methods of
 objects that the loader is attempting to collect (`Fixture`, `TestCase` and
-`TestSuite` instances). It also attaches a `__rem__` function to these classes
-as well. `__rem__` can be used to uncollect collected items. (Users should
+`TestSuite` instances). It also attaches a `__no_collect__` function to these classes
+as well. `__no_collect__` can be used to uncollect collected items. (Users should
 instead use the `loader.no_collect` function to do this instead of the member
 member function.)
 
