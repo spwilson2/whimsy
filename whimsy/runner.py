@@ -1,4 +1,5 @@
 import traceback
+import itertools
 
 from terminal import separator
 import test
@@ -34,7 +35,7 @@ class Runner(object):
     @staticmethod
     def run_items(*items, **kwargs):
         '''
-        Run the given items. 
+        Run the given items.
 
         :param items: Items to be ran.
         :param result_loggers: See :func:`__init__`
@@ -46,7 +47,6 @@ class Runner(object):
         self = None
         if 'result_loggers' in kwargs and len(kwargs) == 1 :
             self = Runner(**kwargs)
-            print self
         elif len(kwargs) != 0:
             raise ValueError('Only accepts result_loggers as an optional'
                              ' kwarg')
@@ -122,15 +122,24 @@ class Runner(object):
             # If there was a chance we might need to skip the remaining
             # tests...
             if outcome in Outcome.failfast \
-                    and idx < len(test_suite) - 1:
+                    and idx < len(test_suite):
                 if config.fail_fast:
                     log.bold('Test failed with the --fail-fast flag provided.')
                     log.bold('Ignoring remaining tests.')
                     break
-                if testlist.fail_fast or test_suite.fail_fast:
-                    log.bold('Test failed in a fail_fast collection. Skipping'
-                            ' remaining tests.')
-                    self._generate_skips(testcase.name, suite_iterator)
+                elif test_suite.fail_fast:
+                    log.bold('Test failed in a fail_fast TestSuite. Skipping'
+                             ' remaining tests.')
+                    rem_iter = (testcase for _, (_, testcase) in suite_iterator)
+                    self._generate_skips(testcase.name, rem_iter)
+                elif testlist.fail_fast:
+                    log.bold('Test failed in a fail_fast TestList. Skipping'
+                             ' its remaining items.')
+                    rem_iter = self._remaining_testlist_tests(testcase,
+                                                              testlist,
+                                                              suite_iterator)
+                    # Iterate through the current testlist skipping its tests.
+                    self._generate_skips(testcase.name, rem_iter)
 
         for fixture in test_suite.fixtures.values():
             fixture.teardown()
@@ -258,12 +267,37 @@ class Runner(object):
 
         return outcome
 
+    def _remaining_testlist_tests(self, current_item, testlist, suite_iterator):
+        '''
+        Return an iterator which will advance the suite_iterator while
+        returning just the remaining tests (after the current_item) in the
+        testlist.
+        '''
+        testlist_iter = testlist.iter_testlists()
+        next_item = next(testlist_iter)
+
+        try:
+            while next_item != current_item:
+                next_item = next(testlist)
+        except StopIteration:
+            next_item = None
+
+        if next_item is not None:
+            # place the next_item back into the iterator.
+            testlist_remaining = itertools.chain((next_item,), testlist_iter)
+
+        # Create an iterator that will iterator throut testlist and
+        # suite_iterator in lock-step.
+        combined_iterator = itertools.izip(testlist, suite_iterator)
+        return (testcase for testcase, _ in combined_iterator)
+
+
     def _generate_skips(self, failed_test, remaining_iterator):
         '''
         Generate SKIP for all remaining tests (for use with the failfast
         suite option)
         '''
-        for (idx, (testlist, testcase)) in remaining_iterator:
+        for testcase in remaining_iterator:
             if isinstance(testcase, TestCase):
                 reason = ("Previous test '%s' failed in a failfast"
                         " TestSuite." % failed_test)

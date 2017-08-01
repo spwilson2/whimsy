@@ -37,7 +37,6 @@ def dorun():
         if config.tags:
             suites = []
             for tag in config.tags:
-                print tag
                 suites.extend(loader.suites_with_tag(tag))
         else:
             suites = loader.suites
