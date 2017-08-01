@@ -61,9 +61,14 @@ class Runner(object):
                 log.warn("Running '%s' as a TestCase it is likely not self"
                          "-contained!" % item.name)
                 log.warn('Recommend running its containing suite instead.')
-                self.run_test(item)
+                outcome = self.run_test(item)
             elif isinstance(item, TestSuite):
-                self.run_suite(item)
+                outcome = self.run_suite(item)
+            else:
+                raise AssertionError(_util.unexpected_item_msg)
+
+            if outcome in Outcome.failfast and config.fail_fast:
+                break
 
         for logger in self.result_loggers:
             logger.end_testing()
@@ -90,7 +95,13 @@ class Runner(object):
             log.warn('Error(s) while building non lazy_init fixtures.')
             log.warn(error_str)
 
-        outcomes = {self.run_suite(suite) for suite in self.suites}
+        outcomes = set()
+        for suite in self.suites:
+            outcome = self.run_suite(suite)
+            outcomes.add(outcome)
+            if outcome in Outcome.failfast and config.fail_fast:
+                break
+
         for logger in self.result_loggers:
             logger.end_testing()
         return self._suite_outcome(outcomes)
