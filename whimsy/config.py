@@ -194,6 +194,8 @@ class _StickyInt:
 common_args = [
     Argument(
         'directory',
+        nargs='?',
+        default=os.getcwd(),
         help='Directory to start searching for tests in'),
     Argument(
         '--fail-fast',
