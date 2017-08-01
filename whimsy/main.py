@@ -43,34 +43,34 @@ def dorun():
     '''
     Handle the `run` command.
     '''
-        loader = load_tests()
+    loader = load_tests()
 
-        if config.tags:
-            suites = []
-            for tag in config.tags:
-                suites.extend(loader.suites_with_tag(tag))
+    if config.tags:
+        suites = []
+        for tag in config.tags:
+            suites.extend(loader.suites_with_tag(tag))
+    else:
+        suites = loader.suites
+
+    # Create directory to save junit and internal results in.
+    mkdir_p(config.result_path)
+
+    with open(joinpath(config.result_path, 'pickle'), 'w') as result_file,\
+         open(joinpath(config.result_path, 'junit.xml'), 'w') as junit_f:
+
+        junit_logger = result.JUnitLogger(junit_f, result_file)
+        console_logger = result.ConsoleLogger()
+        loggers = (junit_logger, console_logger)
+
+        log.display(separator())
+        log.bold('Running Tests')
+        log.display('')
+        if config.uid:
+            test_item = loader.get_uid(config.uid)
+            results = Runner.run_items(test_item)
         else:
-            suites = loader.suites
-
-        # Create directory to save junit and internal results in.
-        mkdir_p(config.result_path)
-
-        with open(joinpath(config.result_path, 'pickle'), 'w') as result_file,\
-             open(joinpath(config.result_path, 'junit.xml'), 'w') as junit_f:
-
-            junit_logger = result.JUnitLogger(junit_f, result_file)
-            console_logger = result.ConsoleLogger()
-            loggers = (junit_logger, console_logger)
-
-            log.display(separator())
-            log.bold('Running Tests')
-            log.display('')
-            if config.uid:
-                test_item = loader.get_uid(config.uid)
-                results = Runner.run_items(test_item)
-            else:
-                testrunner = Runner(suites, loggers)
-                results = testrunner.run()
+            testrunner = Runner(suites, loggers)
+            results = testrunner.run()
 
 def dorerun():
     '''

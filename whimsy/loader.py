@@ -1,6 +1,61 @@
 '''
-Exposes the :class:`Loader` which is responsible for discovering and loading
+Contains the :class:`Loader` which is responsible for discovering and loading
 tests.
+
+Loading typically follows the following stages.
+
+1. Recurse down a given directory looking for tests which match a given regex.
+
+The default regex used will match any python file (ending in .py) that has
+a name starting or ending in test(s). If there are any additional components
+of the name they must be connected with '-' or '_'. Lastly, file names that
+begin with '.' will be ignored.
+
+The following names would match:
+tests.py
+test.py
+test-this.py
+tests-that.py
+these-test.py
+
+These would not match:
+.test.py    - 'hidden' files are ignored.
+test        - Must end in '.py'
+test-.py    - Needs a character after the hypen.
+testthis.py - Needs a hypen or underscore to separate 'test' and 'this'
+
+2. With all files discovered execute each file gathering its test items we
+   care about collecting. (`TestCase`, `TestSuite` and `Fixture` objects.)
+
+In order to collect these objects the :class:`TestLoader` must find a way to
+capture objects as they are instantiated. To do this, before calling
+:func:`execfile` on the file about to be loaded, :class:`TestLoader` will
+monkey patch the :func:`__new__` method of test item classes. The monkey
+patched `__new__` will insert the new instance of the test method as it is
+created into an :class:`OrderedSet` saved in the :class:`TestLoader`.
+
+In addition to adding a callback to the :func:`__new__` function of these test
+objects the loader adds a :func:`__no_collect__` method. This method can be
+used by test writers to prevent a test item from being collected. This
+functionallity is exposed to test writers with the :func:`no_collect` function
+in this module. Users might create an item that fits almost all their needs
+butbut wish to make copy of it and modify a single attribute without the
+original version being collected.
+
+>>> from __future__ import print_function
+>>> from testlib import *
+>>> from copy import copy
+>>> hello_func = lambda : print('Hello')
+>>> test = TestFunction(hello_func)
+>>> # Create a copy, don't collect the original.
+>>> test_copy = copy(no_collect(test))
+>>> test_copy.name = 'hello-test'
+
+As a final note, :class:`TestCase` instances which are not put into
+a :class:`TestSuite` by the test writer will be placed into
+a :class:`TestSuite` named after the module.
+
+.. seealso:: :func:`load_file`
 '''
 import os
 import re
@@ -16,16 +71,18 @@ from logger import log
 from suite import TestSuite, SuiteList, TestList
 from test import TestCase
 
-# Ignores filenames that begin with '.'
 # Will match filenames that either begin or end with 'test' or tests and use
 # - or _ to separate additional name components.
 default_filepath_regex = \
-        re.compile(r'(([^\.]+[-_]tests?)|(tests?[-_].+))\.py$')
+        re.compile(r'(((.+[-_])?tests?)|(tests?([-_].+)?))\.py$')
 
 def default_filepath_filter(filepath):
     '''The default filter applied to filepaths to marks as test sources.'''
     filepath = os.path.basename(filepath)
-    return True if default_filepath_regex.match(filepath) else False
+    if default_filepath_regex.match(filepath):
+        # Make sure doesn't start with .
+        return not filepath.startswith('.')
+    return False
 
 def path_as_modulename(filepath):
     '''Return the given filepath as a module name.'''
@@ -351,7 +408,7 @@ class TestLoader(object):
             execfile(path, newdict, newdict)
         except Exception as e:
             log.warn('Tried to load tests from %s but failed with an'
-                    ' exception.' % path)
+                     ' exception.' % path)
             log.debug(traceback.format_exc())
             cleanup()
             return
@@ -407,19 +464,19 @@ class TestLoader(object):
 
     def _wrap_collection(self, cls, collector):
         '''
-        Wrap the given cls' __new__ method with a wrapper that will keep an
-        OrderedSet of the instances. Also attach a __no_collect__ method which
-        can be used to remove the object from our collected objects with the
-        exposed :func:`no_collect`.
+        Wrap the given cls' `__new__` method with a wrapper that will keep an
+        OrderedSet of the instances. Also attach a `__no_collect__` method
+        which can be used to remove the object from our collected objects with
+        the exposed :func:`no_collect`.
 
         :param cls: Class to wrap methods of for collection.
 
         :param collector: The :code:`set` to add/remove collected instances
         to.
 
-        .. warning:: If any other class monkey patches the __new__ method as
-        well, this will lead to issues. Keep __debug__ mode enabled to enable
-        checks that this never happens.
+        .. warning:: If any other class monkey patches the `__new__` method as
+        well, this will lead to issues. Keep `__debug__` mode enabled to
+        enable checks that this never happens.
         '''
         assert cls not in self._wrapped_classes
         def instance_decollector(self, *args, **kwargs):
@@ -442,9 +499,9 @@ class TestLoader(object):
 
     def _unwrap_collection(self, cls):
         '''
-        .. warning:: If any other class monkey patches the __new__  method as
-        well, this will lead to issues. Keep __debug__ mode enabled to enable
-        checks that this never happens.
+        .. warning:: If any other class monkey patches the `__new__`  method
+        as well, this will lead to issues. Keep `__debug__` mode enabled to
+        enable checks that this never happens.
         '''
         (new_wrapper, del_wrapper) = self._wrapped_classes[cls]
         new_wrapper.unwrap()
