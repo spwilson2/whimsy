@@ -35,23 +35,22 @@ We could then use the list command to look at the tests we have created.
 .. code:: bash
 
     $ ./main.py list . --tests
-    ==============================================================================================================
+    ==========================================================================================
     Loading Tests
 
     Discovered 30 tests and 15 testsuites in /home/swilson/Projects/whimsy/docs/examples/simple_returncode_test.py
-    ==============================================================================================================
+    ==========================================================================================
     Listing all TestCases.
-    ==============================================================================================================
-    /home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [X86 - fast] (VerifyReturncode verifier)
-    /home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [RISCV - opt]
-    /home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [RISCV - fast] (VerifyReturncode verifier)
-    /home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [ALPHA - debug] (VerifyReturncode verifier)
-    /home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [X86 - opt] (VerifyReturncode verifier)
-    /home/swilson/Projects/whimsy/docs/examples:VerifyReturncode:simple_gem5_returncode_test [ARM - fast] (VerifyReturncode verifier)
-    /home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [RISCV - debug]
-    /home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [X86 - opt]
-    /home/swilson/Projects/whimsy/docs/examples:TestFunction:simple_gem5_returncode_test [SPARC - fast]
-    ... 21 More tests elided...
+    ==========================================================================================
+    docs/examples:TestCase:simple_gem5_returncode_test [X86 - opt]
+    docs/examples:TestCase:simple_gem5_returncode_test [X86 - opt] (VerifyReturncode verifier)
+    docs/examples:TestCase:simple_gem5_returncode_test [SPARC - opt]
+    docs/examples:TestCase:simple_gem5_returncode_test [SPARC - opt] (VerifyReturncode verifier)
+    docs/examples:TestCase:simple_gem5_returncode_test [ALPHA - opt]
+    docs/examples:TestCase:simple_gem5_returncode_test [ALPHA - opt] (VerifyReturncode verifier)
+    docs/examples:TestCase:simple_gem5_returncode_test [RISCV - opt]
+    docs/examples:TestCase:simple_gem5_returncode_test [RISCV - opt] (VerifyReturncode verifier)
+	... 22 More tests elided...
 
 A less contrived example is to run gem5 using a config and a test
 program. Here's an example of how to do this as well:
