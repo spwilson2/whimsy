@@ -12,17 +12,20 @@ of the name they must be connected with '-' or '_'. Lastly, file names that
 begin with '.' will be ignored.
 
 The following names would match:
-tests.py
-test.py
-test-this.py
-tests-that.py
-these-test.py
+
+- `tests.py`
+- `test.py`
+- `test-this.py`
+- `tests-that.py`
+- `these-test.py`
 
 These would not match:
-.test.py    - 'hidden' files are ignored.
-test        - Must end in '.py'
-test-.py    - Needs a character after the hypen.
-testthis.py - Needs a hypen or underscore to separate 'test' and 'this'
+
+- `.test.py`    - 'hidden' files are ignored.
+- `test`        - Must end in '.py'
+- `test-.py`    - Needs a character after the hypen.
+- `testthis.py` - Needs a hypen or underscore to separate 'test' and 'this'
+
 
 2. With all files discovered execute each file gathering its test items we\
    care about collecting. (`TestCase`, `TestSuite` and `Fixture` objects.)
