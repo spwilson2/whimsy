@@ -3,7 +3,7 @@ Whimsy
 
 Test Framework proposal for `gem5 <http://gem5.org>`__.
 
-This framework is by no means final. I am open to suggests, constructive
+This framework is by no means final. I am open to suggestions, constructive
 criticism and change requests to this. This is meant to be a strong starting
 point for the rewrite of the testing system for gem5.
 
