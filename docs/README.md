@@ -82,7 +82,7 @@ stop doing something.
 
 The three different semantics are as follows:
 
-##### The --fail-fast 
+##### The --fail-fast flag
 
 Given the `--fail-fast` flag while executing tests with the run command, if
 a test case fails then all remaing test cases will not be run. The testing
