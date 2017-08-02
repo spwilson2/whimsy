@@ -14,6 +14,7 @@ import time
 # For now expose this here, we might need to make an implementation if not
 # everyone has python 2.7
 from collections import OrderedDict
+from helper import absdirpath
 
 class Enum(object):
     '''
@@ -171,8 +172,15 @@ def uid(testitem, class_name=None):
     '''
     The generic function used to produce uid of test objects.
     '''
+    # Trim the file path to be the path relative to the parent of this
+    # directory.
+    filepath = testitem.path
+    filepath = os.path.relpath(filepath,
+                               os.path.commonprefix(
+                                       (absdirpath(__file__),
+                                       filepath)))
     fmt = '{file}:{class_}:{name}'
     if class_name is None:
         class_name = testitem.__class__.__name__
-    return fmt.format(file=testitem.path, name=testitem.name,
+    return fmt.format(file=filepath, name=testitem.name,
                       class_=class_name)
