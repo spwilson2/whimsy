@@ -1,53 +1,105 @@
 Whimsy
 ======
 
-Test Framework for `gem5 <http://gem5.org>`__.
+Test Framework proposal for `gem5 <http://gem5.org>`__.
 
-Running Tests
--------------
+This framework is by no means final. I am open to suggests, constructive
+criticism and change requests to this. This is meant to be a strong starting
+point for the rewrite of the testing system for gem5.
 
-To run all tests use the ``run`` subcommand:
-
-.. code:: bash
-
-    ./main.py run . # The '.' is optional.
-
-The ``run`` subcommand has some optional flags: 
-
-- ``--skip-build`` skip the building of scons targets (like gem5) 
-- ``-v`` increase verbosity level once per flag. 
-- ``--uid`` run the test item with the given uid.
-- ``-h`` Show help and list more available flags.
+Please feel free to comment on the gem5-dev-list or create issues on the pull
+request for this patch.
 
 Motivation
 ----------
 
 **Note:** This section is non-normative.
 
+Current Framework Issues
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 A testing infrastructure already exists for Gem5. Why create a new one? There
-are quite a few issues which exist in the current infrastructure. Just to list
-the worst and most prevalent issues.
+are quite a few issues which exist in the current infrastructure, just to list
+a couple:
 
 1. The system is scattered across multiple systems.
 
    - No center location for documentation/information
      
-   - Mulitiple entrypoints to the testing system.
+   - Multiple entrypoints to the testing system.
  
    - Massive amounts of indirection between scons, config files, and the
      current framework
 
 2. There is not a simple way to add requirements for tests. If they need
-   something set up, one has to muck around the gem5 build system.
+   something set up, one would need to muck around the gem5 build system.
 
-3. 
+3. Tests do not have a clear reason for failure.
+
+   - Test names give no idication of what they are intended to test
+
+4. There are many legacy and closed source tests which should be removed.
+
+
+On top of this issue, since we use SCons to run them current tests are
+incredibly static and must be formatted in a very specific format. Adding
+additional 'novel' tests such as testing gdb functionality, or unit tests
+requires a rewrite of the framework.
+
+Other Frameworks Available
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We obviously need a new framework, but why write our own again? Before starting
+this project I explored quite a few other frameworks. Each had their own issues
+that made them feel imperfect for our needs.
+
+`Pytest <https://github.com/pytest-dev/pytest>`__ seemed like the best option
+since it is written in python and has deep support for objects called
+*Fixtures*, essentially an item that can be set up and torn down. Fixtures
+should almost cover our need to specify build targets. Unfortunately, these
+fixtures are not enumerated until test specifc test that runs them is started.
+So there is no natural way in pytest to specify all scons targets and only
+execute a single scons build.
+
+Even worse than this issue is the `bug that exists in their *marks*
+<https://github.com/pytest-dev/pytest/issues/568>`__ 
+which they use to indicate tests require a fixture. Any test that is derived
+from one another and adds a mark will backpropogate that mark to their child.
+This effectively ruins code reuse, something that is very import for our
+testing since every tests we currently has does the same thing with different
+*fixtures* or configs. 
+
+There is a posted workaround for this issue, but it is both esoteric and
+requires users to know about the bug or spend hours debugging the strange issue
+to come to discover the workaround.
+
+.. seealso:: See `here <https://github.com/pytest-dev/pytest/issues/568>`__ for a simple example of the issue.
+
+`Avacado/Autotest <https://avocado-framework.github.io/>`__ was another option
+briefly explored. This framework also has the same issue as Pytest in that it
+has no natural way to enumerate all build targets and build them right away
+each test is loaded and ran one at a time so there is no way to gather up all
+*fixture* elements and build those we want to right away.
+
+Options that were not hevily explored were those in the 'acceptance test'
+world. I have personal experience working with the `RobotFramework
+<http://robotframework.org/>`__ and found that working in 'human' language is
+more difficult and error prone than modern programming languages.
+
+One final consideration is Gtest or another compiled testing framework. Besides
+the fact that these systems would either require being plugged into gem5, being
+so low level means writing more code and greater attention to detail when
+writing tests. The hope for a testing system is that it should be (relatively)
+easy to add additional tests.
 
 Definition of Terms
 -------------------
 
+**NOTE:** The remaining sections may contain limited non-normative comments.
+
 There are a few terms used in this documentation that readers may not be
-familiar with. The purpose of this section is to briefly introduce new users to
-these.
+familiar with. The purpose of this section is to briefly introduce users to
+these terms.
 
 Test Suite
 ~~~~~~~~~~
@@ -139,6 +191,22 @@ This last case visually:
 
 File Organization
 -----------------
+
+Running Tests
+-------------
+
+To run all tests use the ``run`` subcommand:
+
+.. code:: bash
+
+    ./main.py run . # The '.' is optional.
+
+The ``run`` subcommand has some optional flags: 
+
+- ``--skip-build`` skip the building of scons targets (like gem5) 
+- ``-v`` increase verbosity level once per flag. 
+- ``--uid`` run the test item with the given uid.
+- ``-h`` Show help and list more available flags.
 
 Typical Runloop
 ---------------
