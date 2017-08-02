@@ -1,0 +1,6 @@
+To generate html documentation checkout the docs branch and from docs/ run 'make html'
+(We use a separate branch since we have to disable automatic argument parsing.)
+
+git checkout docs
+. develop.sh
+make -C docs html
