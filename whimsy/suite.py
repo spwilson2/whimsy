@@ -9,8 +9,8 @@ class TestSuite(object):
     without relying on any other suites running.
 
     .. note:: In order for TestSuite objects to be enumerated by the test
-    system this class' :code:`__new__` method must be called. The loader class
-    will monkey patch this method in order to enumerate suites.
+        system this class' :code:`__new__` method must be called. The loader class
+        will monkey patch this method in order to enumerate suites.
     '''
     def __init__(self, name, tests=tuple(), tags=None, fixtures=None,
             fail_fast=True):
@@ -18,13 +18,13 @@ class TestSuite(object):
         :param name: Name of the TestSuite
 
         :param tags: Iterable of tags to mark this suite and all containted
-        tests with.
+            tests with.
 
         :param tests: An interable of test cases. If is a TestList the
-        heirarchy will be maintained.
+            heirarchy will be maintained.
 
         :param fail_fast: If True indicates the first test to fail in the test
-        suite will cause the execution of the test suite to halt.
+            suite will cause the execution of the test suite to halt.
         '''
         self.testlist = TestList(tests)
         self.fail_fast = fail_fast
@@ -114,7 +114,7 @@ class SuiteList(object):
         contained TestCases in this collection.
 
         .. note:: Will return duplicates if fixtures are duplicated across
-        test cases.
+            test cases.
         '''
         for suite in self:
             for fixture in suite.fixtures.values():
@@ -129,10 +129,10 @@ class SuiteList(object):
 
 class TestList(object):
     '''
-    Container class for :class:`TestCase` objects which provides some utility
-    functions for iteration as well as the fail_fast variable.
-    A :class:`TestList` can be heirarchical, in which case iteration yields
-    tests in in-order traversal.
+    Container class for :class:`whimsy.test.TestCase` objects which provides
+    some utility functions for iteration as well as the fail_fast variable.
+    A TestList can be heirarchical, in which case iteration yields tests in
+    in-order traversal.
     '''
     def __init__(self, items=[], fail_fast=False):
         '''

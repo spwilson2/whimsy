@@ -1,5 +1,5 @@
 '''
-Exposes the :class:`Fixture` class.
+Exposes the :class:`~Fixture` class.
 '''
 from helper import cacheresult
 
@@ -16,28 +16,27 @@ class Fixture(object):
     paralellization is possible in the future. Using global variables will
     likely cause things to break unexpectedly.
 
-    .. note:: no_collect function is provided by the :module:`loader` to
-    remove a fixture that should not be collected.
-    .. seealso:: :module:`loader` for more on how fixtures reach tests and are
-    set up.
+    .. note:: no_collect function is provided by the :mod:`~whimsy.loader` to
+        remove a fixture that should not be collected.
 
     .. note:: In order for Fixtures to be enumerated by the test system this
-    class' :code:`__new__` method must be called. The loader class will monkey
-    patch (modify at runtime) this method in order to enmerate tests.
+        class' :code:`__new__` method must be called. The loader class will
+        monkey patch (modify at runtime) this method in order to enmerate
+        tests.
     '''
     def __init__(self, name, build_once=False, lazy_init=True):
         '''
         :param name: Name of the fixture.
 
         :param lazy_init: If True, wait until test cases that use this fixture
-        are ran to setup this fixture. Otherwise init the fixture before the
-        first test case is ran.
+            are ran to setup this fixture. Otherwise init the fixture before
+            the first test case is ran.
 
         :param build_once: This fixture will only be built once. This is
-        particularly useful for gem5 targets or build systems.
+            particularly useful for gem5 targets or build systems.
 
         :var requires: List of fixtures which require this Fixture. Before
-        they can be built.
+            they can be built.
 
         :var required_by: List of fixtures this Fixture requires.
         :var built: Indicates that this fixture has been built.
@@ -60,7 +59,7 @@ class Fixture(object):
         Require that the other_fixture be built before us.
         This is particularly useful for build targets.
 
-        .. seealso:: :class: SConsTarget
+        .. seealso:: :class:`~whimsy.gem5.fixture.SConsTarget`
         '''
         self.requires.append(other_fixture)
         other_fixture.required_by.append(self)

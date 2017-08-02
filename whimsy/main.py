@@ -6,11 +6,14 @@ passing the runner :class:`ResultLogger` instances which will stream output
 data to the terminal and into various result files.
 
 There are three commands which this program handles:
-* run   - By default will search for and run all tests in the current
-          and children directories reporting the results through the terminal,
-          saving them to a pickle file, and saving them to a junit file.
+
+* run - By default will search for and run all tests in the current
+    and children directories reporting the results through the terminal,
+    saving them to a pickle file, and saving them to a junit file.
+
 * rerun - Load all tests and then rerun the tests which failed in the previous
-          run.
+    run.
+
 * list  - List tests with various querying options.
 '''
 import logger

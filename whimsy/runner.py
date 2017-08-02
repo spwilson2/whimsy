@@ -1,26 +1,29 @@
 '''
 This module contains the implementation of the :class:`Runner` object. The
-purpose of the runner is to run :class:`TestSuite` instances and the
-collection of :class:`TestCase` objects they contain.
+purpose of the runner is to run :class:`whimsy.suite.TestSuite` instances and
+the collection of :class:`whimsy.test.TestCase` objects they contain.
 
 The runner supports two outside methods of running items.
 
-The first - :func:`run` - will run all :class:`TestSuite` instances in the
-runner's `suites` attribute.
+The first - :func:`Runner.run` - will run all TestSuite instances in the runner's
+`suites` attribute.
 
-The second - :func:`run_items` - takes in any number of items and will attempt
-to run each of them in succession.
+The second - :func:`Runner.run_items` - takes in any number of items and will
+attempt to run each of them in succession.
 
-.. note:: When using this :func:`run_items` to run :class:`TestCase` items not
-contained in a :class:`TestSuite` a warning will be displayed since test cases
-are not garunteed/expected to be self-contained entities. It is expected that
-they may fail due to not recieving fixtures from their containing TestSuite.
+.. note:: When using this :func:`Runner.run_items` to run TestCase items not
+    contained in a TestSuite a warning will be displayed since test cases are
+    not garunteed/expected to be self-contained entities.  It is expected that
+    they may fail due to not recieving fixtures from their containing
+    TestSuite.
 
 The :class:`Runner` also provides a callback interface through the
-:class:`ResultLogger` interface in :module:`result`. The purpose of this
-interface is to allow loggers of different formats to recieve test results in
-a streaming format without storing large pools of strings and results.
-.. seealso:: :module:`result` for more details on this interface.
+:class:`whimsy.result.ResultLogger` interface in :mod:`whimsy.result`. The
+purpose of this interface is to allow loggers of different formats to recieve
+test results in a streaming format without storing large pools of strings and
+results.
+
+.. seealso:: :mod:`result`
 
 When either run function is used the :class:`Runner` object first calls
 :func:`setup` on all :class:`Fixture` objects that are not marked `lazy_init`
@@ -30,38 +33,39 @@ have been set up the Runner begins to iterate through its test items.
 
 The run of a suite takes the following steps:
 
-1. Iterate through each :class:`TestCase` passing suite level fixtures to them.
+1. Iterate through each TestCase passing suite level fixtures to them.
 
-2. Before the run of the :class:`TestCase` takes place, start capturing stdout
-    and stderr to a directory named after the test case's uid.
+2. Before the run of the TestCase takes place, start capturing stdout and\
+    stderr to a directory named after the test case's uid.
 
-3. Build any fixtures that the the test relies on, if a :func:`setup` call
-    fails the test outcome will be marked as an ERROR and the test case will
-    return.
+3. Build any fixtures that the the test relies on, if\
+    a :func:`whimsy.fixture.Fixture.setup` call fails the test outcome will\
+    be marked as an ERROR and the test case will return.
 
-4. The actual test execution takes place. If during the test an exeption is
-    raised (other than the :class:`TestSkipException`) then the test will be
-    marked as a failure. Test writers can pass a test case early in their
-    function by simply calling `return` from the function. Test writers can
-    skip their test while inside of it if they raise the TestSkipException by
-    calling the :func:`skip` function in :module:`test`.
+4. The actual test execution takes place. If during the test an exeption is\
+    raised (other than the :class:`whimsy.test.TestSkipException`) then the\
+    test will be marked as a failure. Test writers can pass a test case early\
+    in their function by simply returning from the function. Test writers can\
+    skip their test while inside of it if they raise the TestSkipException by\
+    calling the :func:`whimsy.test.skip` function in :mod:`whimsy.test`.
 
-Now returned from the test case with an outcome we will continue the same
-process for the remaining tests in the test suite. However there are a couple
+Now returned from the test case with an outcome, we continue the same process
+for the remaining tests in the test suite, however, there are a couple
 remaining edge cases:
 
 If the --fail-fast flag was given to us and a test fails. No more testing will
 take place. All results will be written and fixtures torn down. But remaining
 tests will be ignored.
 
-If a test fails in a `fail_fast` :class:`TestList` then all the remaining
-items in that :class:`TestList` will be skipped.
-.. seealso:: See the :class:`TestList` for details on the utility of this
-`fail_fast` feature or :func:`gem5_verify_config` for an example use case.
+If a test fails in a `fail_fast` TestList then all the remaining items in that
+:class:`whimsy.suite.TestList` will be skipped.
 
-If a :class:`TestSite` is marked `fail_fast` and a test fails, then the
-remaining :class:`TestCase` instances in that :class:`TestSuite` will be
-skipped.
+.. note:: See the :class:`whimsy.suite.TestList` for details on the utility of
+    this `fail_fast` feature or :func:`whimsy.gem5.suite.gem5_verify_config`
+    for an example use case.
+
+If a TestSuite is marked `fail_fast` and a test fails, then the remaining
+TestCase instances in that TestSuite will be skipped.
 '''
 import traceback
 import itertools
@@ -105,10 +109,10 @@ class Runner(object):
         :param items: Items to be ran.
         :param result_loggers: See :func:`__init__`
 
-        .. warning:: It's generally not a good idea to run a :class:`TestCase`
-        on its own since most test cases are not self-contained. (They rely on
-        suite fixtures and previous tests.)
-        '''
+        .. warning:: It's generally not a good idea to run a `TestCase` on its
+            own since most test cases are not self-contained. (They rely on
+            suite fixtures and previous tests.)
+            '''
         self = None
         if 'result_loggers' in kwargs and len(kwargs) == 1 :
             self = Runner(**kwargs)
@@ -258,10 +262,13 @@ class Runner(object):
         Run the given test.
 
         This performs the bulkwork of the testing framework.
+
         1. Handle setup for all fixtures required for the specific test.
+
         2. Run the test.
-        3. Teardown the fixtures for the test which are tied locally to the
-           test.
+
+        3. Teardown the fixtures for the test which are tied locally to the\
+            test.
         '''
         outdir = test_results_output_path(testobj)
         mkdir_p(outdir)

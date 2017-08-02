@@ -41,16 +41,16 @@ def skip(message):
 class TestCase(object):
     '''
     Abstract Base Class for test cases. All that's missing is
-    a :func:`__call__` implementation.
+    a :meth:`__call__` implementation.
 
     Represents a single major item of assertion. (Yes that's vague.) Some
     examples are: Asserting that gem5 actually started, asserting that output
     from gem5 standard out matched a gold standard diff file. (See
-    :module:`gem5.verifier` for some concrete examples.)
+    :mod:`whimsy.gem5.verifier` for some concrete examples.)
 
-    .. warning:: Although this class is abstract its :func:`__new__` method
-    must be called by subclasses in order for them to be discovered by the
-    :class:`TestLoader`.
+    .. warning:: Although this class is abstract its ``__new__`` method must be
+        called by subclasses in order for them to be discovered by the
+        :class:`whimsy.loader.TestLoader`.
     '''
     def __init__(self, name, tags=None, fixtures=None, path=None):
         '''

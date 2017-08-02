@@ -24,7 +24,7 @@ test        - Must end in '.py'
 test-.py    - Needs a character after the hypen.
 testthis.py - Needs a hypen or underscore to separate 'test' and 'this'
 
-2. With all files discovered execute each file gathering its test items we
+2. With all files discovered execute each file gathering its test items we\
    care about collecting. (`TestCase`, `TestSuite` and `Fixture` objects.)
 
 In order to collect these objects the :class:`TestLoader` must find a way to
@@ -167,7 +167,7 @@ class _MethodWrapper(object):
     def unwrap(self):
         '''
         Return the wrapped class method to the state it was in when we
-        `wrap`ped it.
+        called :func:`wrap` on it.
         '''
         if self._old_method != self._sentinal:
             assert getattr(self._cls, self._method_name) \
@@ -192,7 +192,7 @@ class TestLoader(object):
     >>> tl.load_root(os.getcwd())
 
     .. note:: If tests are not manually placed in a TestSuite, they will
-    automatically be placed into one for the module.
+        automatically be placed into one for the module.
     '''
     def __init__(self, filepath_filter=default_filepath_filter):
 
@@ -360,9 +360,9 @@ class TestLoader(object):
         .. note:: Automatically drop_caches
 
         .. warning:: There isn't a way to prevent reloading of test modules
-        that are imported by other test modules. It's up to users to never
-        import a test module from a test module, otherwise those tests
-        enumerated during the importer module's load.
+            that are imported by other test modules. It's up to users to never
+            import a test module from a test module, otherwise those tests
+            enumerated during the importer module's load.
         '''
         path = os.path.abspath(path)
         if __debug__:
@@ -472,11 +472,11 @@ class TestLoader(object):
         :param cls: Class to wrap methods of for collection.
 
         :param collector: The :code:`set` to add/remove collected instances
-        to.
+            to.
 
         .. warning:: If any other class monkey patches the `__new__` method as
-        well, this will lead to issues. Keep `__debug__` mode enabled to
-        enable checks that this never happens.
+            well, this will lead to issues. Keep `__debug__` mode enabled to
+            enable checks that this never happens.
         '''
         assert cls not in self._wrapped_classes
         def instance_decollector(self, *args, **kwargs):
@@ -500,8 +500,8 @@ class TestLoader(object):
     def _unwrap_collection(self, cls):
         '''
         .. warning:: If any other class monkey patches the `__new__`  method
-        as well, this will lead to issues. Keep `__debug__` mode enabled to
-        enable checks that this never happens.
+            as well, this will lead to issues. Keep `__debug__` mode enabled to
+            enable checks that this never happens.
         '''
         (new_wrapper, del_wrapper) = self._wrapped_classes[cls]
         new_wrapper.unwrap()

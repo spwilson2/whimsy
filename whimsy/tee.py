@@ -162,6 +162,7 @@ def tee(*args, **kwargs):
     use a pure python implementaion.
 
     An example of usage:
+
     >>> with tee('stdout', stdout=True, stderr=False):
     >>>     print ('This is going to both the file and stdout')
 

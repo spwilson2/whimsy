@@ -1,19 +1,26 @@
 '''
 Helper classes for writing tests with this test library.
 
-* :func:`log_call`    - A wrappper around Popen which behaves like
-                        `subprocess.check_call()` but will pipe output to the
-                        log at a low verbosity level.
+* :func:`log_call`
+    A wrappper around Popen which behaves like
+    `subprocess.check_call()` but will pipe output to the
+    log at a low verbosity level.
 
-* :func:`cacheresult` - A function decorator which will cache results for
-                        a function given the same arguments. (A poor man's
-                        python3 `lru_cache`.)
+* :func:`cacheresult`
+    A function decorator which will cache results for a function given the
+    same arguments. (A poor man's python3 `lru_cache`.)
 
-* :class:`OrderedSet` - A set which maintains object insertion order.
+* :class:`OrderedSet`
+    A set which maintains object insertion order.
 
-* :func:`absdirpath`  - :code:`dirname(abspath())`
-* :func:`joinpath`    - :code:`os.path.join()`
-* :func:`mkdir_p`     - Same thing as mkdir -p
+* :func:`absdirpath`
+    :code:`dirname(abspath())`
+
+* :func:`joinpath`
+    :code:`os.path.join()`
+
+* :func:`mkdir_p`
+    Same thing as mkdir -p
 '''
 import errno
 import subprocess
@@ -50,9 +57,10 @@ def log_call(command, *popenargs, **kwargs):
     streams as well.
 
     :params stdout: Iterable of items to write to as we read from the
-    subprocess.
+        subprocess.
+
     :params stderr: Iterable of items to write to as we read from the
-    subprocess.
+        subprocess.
     '''
     if isinstance(command, str):
         cmdstr = command
@@ -107,7 +115,7 @@ class _HashedSeq(list):
     element. This is important because the cacheresult() will hash the key
     multiple times on a cache miss.
 
-    From cpython 3.7
+    .. note:: From cpython 3.7
     '''
 
     __slots__ = 'hashvalue'
@@ -131,7 +139,7 @@ def _make_key(args, kwds, typed,
     argument is returned without a wrapper. This saves space and improves
     lookup speed.
 
-    From cpython 3.7
+    .. note:: From cpython 3.7
     '''
     key = args
     if kwds:
@@ -149,11 +157,11 @@ def _make_key(args, kwds, typed,
 
 def cacheresult(function, typed=False):
     '''
-    :param typed: If typed is True, arguments of different types will be cached
-    separately. I.e. f(3.0) and f(3) will be treated as distinct calls
-    with distinct results.
+    :param typed: If typed is True, arguments of different types will be
+        cached separately. I.e. f(3.0) and f(3) will be treated as distinct
+        calls with distinct results.
 
-    From cpython 3.7
+    .. note:: From cpython 3.7
     '''
     sentinel = object()          # unique object used to signal cache misses
     make_key = _make_key         # build a key from the function arguments

@@ -1,8 +1,9 @@
 '''
 Global configuration module which exposes two types of configuration
-variables
-    1. config
-    2. constants (Also attached to the config variable as an attribute)
+variables:
+
+1. config
+2. constants (Also attached to the config variable as an attribute)
 
 The main motivation for this module is to have a centralized location for
 defaults and configuration by command line and files for the test framework.
@@ -16,18 +17,20 @@ them.
 The config variable automatically parses the program arguments when attributes
 from it are requested. Program arguments/flag arguments are available from the
 config as attributes. If a attribute was not set by the command line or the
-optional config file, then it will fallback to the :code:`_defaults` value, if
+optional config file, then it will fallback to the `_defaults` value, if
 still the value is not found an AttributeError will be raised.
 
-:var defaults: are provided by the config if the attribute is not found in the
-config or commandline. For instance, if we are using the list command fixtures
-might not be able to count on the build_dir being provided since we aren't
-going to build anything.
+:var defaults:
+    Provided by the config if the attribute is not found in the config or
+    commandline. For instance, if we are using the list command fixtures might
+    not be able to count on the build_dir being provided since we aren't going
+    to build anything.
 
-:var constants: are values not directly exposed by the config, but are
-attached to the object for centralized access. These should be used for
-setting common string names used across the test framework.
-:code:`_defaults.build_dir = None`
+
+:var constants:
+    Values not directly exposed by the config, but are attached to the object
+    for centralized access. These should be used for setting common string
+    names used across the test framework. :code:`_defaults.build_dir = None`
 '''
 import abc
 import argparse
@@ -43,24 +46,26 @@ class _Config(object):
     Config object that automatically parses args when one attempts to get
     a config attr.
 
-    :var _configured: Bool indicating if all parsing and setup has ran
+    :ivar _configured: Bool indicating if all parsing and setup has ran
+
     :var __shared_dict: Dictionary making this object perform as a singleton.
 
     :var _config: The base dictionary to perform lookup for attributes from,
-    if attrs are not there, fallback to _defaults.
+        if attrs are not there, fallback to :attr:`_defaults`.
 
     :var _defaults: An :class:`AttrDict` containing default fallback values if
-    they cannot be found in the :var:`_config`.
+        they cannot be found in the :attr:`_config`.
 
     :var _config_file_args: Dicitonary containing arguments parse from the
-    config file (if one exists).
+        config file (if one exists).
 
     :var _cli_args: Dictionary containing the arguments parsed from the
-    command line.
+        command line.
 
     :var _post_processors: Dictionary mapping attribute name to list of
-    callback functions called in a chain to perform additional setup for
-    a config argument.
+        callback functions called in a chain to perform additional setup for
+        a config argument.
+
     .. seealso:: :func:`add_post_processor`
     '''
     _configured = False
@@ -109,11 +114,11 @@ class _Config(object):
     def add_post_processor(self, attr, post_processor):
         '''
         :param attr: Attribute to pass to and recieve from the
-        :code:`post_processor`.
+        :func:`post_processor`.
 
         :param post_processor: A callback functions called in a chain to
-        perform additional setup for a config argument. Should return a tuple
-        containing the new value for the config attr.
+            perform additional setup for a config argument. Should return a tuple
+            containing the new value for the config attr.
         '''
         if attr not in self._post_processors:
             self._post_processors[attr] = []
@@ -122,7 +127,7 @@ class _Config(object):
     def lookup_attr(self, attr):
         '''
         :returns: A tuple with the attribute if it can be found in _config or
-        _defaults otherwise None.
+            _defaults otherwise None.
         '''
         # We return using a tuple so we can also return None values.
         if attr in self._config:
@@ -134,7 +139,7 @@ class _Config(object):
         # We use getattr because I perfer using attributes rather than strings
         # for getting items out of a large config. It leads to fewer bugs imo.
         if attr in dir(super(_Config, self)):
-            return getattr(super(_Config, self), attr)
+           return getattr(super(_Config, self), attr)
         else:
             if not self._configured:
                 self._parse_commandline_args()
@@ -165,8 +170,8 @@ def set_default_build_dir(build_dir):
     '''
     Post-processor to set the default build_dir based on the base_dir.
 
-    .. seealso :func:`add_post_processor` for a description on this callback
-    format.
+    .. seealso :func:`~_Config.add_post_processor` for a description on this
+        callback format.
     '''
     if not build_dir:
         base_dir = config.lookup_attr('base_dir')[0]
@@ -217,8 +222,8 @@ class Argument(object):
     '''
     Class represents a cli argument/flag for a argparse parser.
 
-    :var name: The long name of this object that will be stored in the arg
-    output by the final parser.
+    :attr name: The long name of this object that will be stored in the arg
+        output by the final parser.
     '''
     def __init__(self, *flags, **kwargs):
         self.flags = flags
