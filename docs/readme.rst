@@ -192,6 +192,26 @@ This last case visually:
 File Organization
 -----------------
 
+The new layout for tests doesn't change much from the old one. The only major
+change is that test cases will be located in a test.py file, and the old
+test.py files will be changed to config.py.
+
+So
+
+.. code:: bash
+    
+    quick/se/00.hello/test.py
+
+changes to
+
+.. code:: bash
+    
+    quick/se/00.hello/config.py
+    quick/se/00.hello/test.py
+
+Where test.py will more than likely contain a gem5_verify_config function call.
+Reference files will be placed in the same directory they already are in.
+
 Running Tests
 -------------
 

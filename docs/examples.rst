@@ -222,3 +222,6 @@ blob file so gem5 can use it as a disk. *(This might be a bit contrived.)*
 
             # Remove the file.
             os.remove(self.path)
+
+
+.. include:: migrating.rst
