@@ -8,12 +8,12 @@ class Fixture(object):
     Base Class for a test Fixture.
 
     Fixtures are items which possibly require setup and/or tearing down after
-    a TestCase or a TestSuite has ran.
+    a TestCase or a TestSuite has run.
 
     Fixtures are the prefered method of carrying incremental results or
     variables between TestCases in TestSuites. (Rather than using globals.)
     The test system assumes that TestSuites are self contained so
-    paralellization is possible in the future.. Using global variables will
+    paralellization is possible in the future. Using global variables will
     likely cause things to break unexpectedly.
 
     .. note:: no_collect function is provided by the :module:`loader` to
