@@ -81,7 +81,7 @@ has no natural way to enumerate all build targets and build them right away
 each test is loaded and ran one at a time so there is no way to gather up all
 *fixture* elements and build those we want to right away.
 
-Options that were not hevily explored were those in the 'acceptance test'
+Options that were not deeply explored were those in the 'acceptance test'
 world. I have personal experience working with the `RobotFramework
 <http://robotframework.org/>`__ and found that working in 'human' language is
 more difficult and error prone than modern programming languages.
