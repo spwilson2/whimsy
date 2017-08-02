@@ -1,5 +1,5 @@
-whimsy package
-==============
+The Whimsy Library
+==================
 
 Subpackages
 -----------
@@ -9,10 +9,13 @@ Subpackages
     whimsy.gem5
 
 Main Modules
-============
+------------
+
+Modules which complete most of the hard work and the majority of execution time
+is spent in.
 
 whimsy\.main module
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.main
     :members:
@@ -20,7 +23,7 @@ whimsy\.main module
     :show-inheritance:
 
 whimsy\.loader module
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.loader
     :members:
@@ -28,7 +31,7 @@ whimsy\.loader module
     :show-inheritance:
 
 whimsy\.runner module
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.runner
     :members:
@@ -36,10 +39,12 @@ whimsy\.runner module
     :show-inheritance:
 
 Test Items
-==========
+----------
+
+Modules which implement the abstraction of different testing concepts.
 
 whimsy\.suite module
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.suite
     :members:
@@ -47,7 +52,7 @@ whimsy\.suite module
     :show-inheritance:
 
 whimsy\.test module
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.test
     :members:
@@ -55,7 +60,7 @@ whimsy\.test module
     :show-inheritance:
 
 whimsy\.fixture module
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.fixture
     :members:
@@ -63,10 +68,12 @@ whimsy\.fixture module
     :show-inheritance:
 
 Support Modules
-===============
+---------------
+
+Modules which act has helpers or support items throughout the framwework.
 
 whimsy\.result module
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.result
     :members:
@@ -74,7 +81,7 @@ whimsy\.result module
     :show-inheritance:
 
 whimsy\.logger module
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.logger
     :members:
@@ -83,7 +90,7 @@ whimsy\.logger module
 
 
 whimsy\.config module
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.config
     :members:
@@ -91,7 +98,7 @@ whimsy\.config module
     :show-inheritance:
 
 whimsy\.helper module
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.helper
     :members:
@@ -99,7 +106,7 @@ whimsy\.helper module
     :show-inheritance:
 
 whimsy\.query module
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.query
     :members:
@@ -108,7 +115,7 @@ whimsy\.query module
 
 
 whimsy\.tee module
-------------------
+^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.tee
     :members:
@@ -116,17 +123,9 @@ whimsy\.tee module
     :show-inheritance:
 
 whimsy\.terminal module
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: whimsy.terminal
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: whimsy
     :members:
     :undoc-members:
     :show-inheritance:
