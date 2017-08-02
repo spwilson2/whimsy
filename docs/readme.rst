@@ -210,7 +210,20 @@ changes to
     quick/se/00.hello/test.py
 
 Where test.py will more than likely contain a gem5_verify_config function call.
-Reference files will be placed in the same directory they already are in.
+Reference files will be placed in the same directory they already are in. The
+only other difference will be that all ISA names should be capitalized. 
+
+Test programs will remain in the same directory. Only the ISA name will now be
+capitalized. I would like to keep it consistent throughout the codebase and
+since we are going to be building gem5 using a capitalized name, everywhere
+else can take that standard.
+
+Finally, I would suggest that this framework be placed in the ``/ext``
+directory with the gem5 helpers (under ``whimsy/gem5`` in this repo) being
+placed directly in the tests dir. I would expect there to not be too many
+changes made to this framework however, I would hope that more gem5 specific
+``Fixture`` and ``TestCase`` types are created, so the tests dir might fit that
+more lively update pattern.
 
 Running Tests
 -------------
