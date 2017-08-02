@@ -35,19 +35,19 @@ The run of a suite takes the following steps:
 
 1. Iterate through each TestCase passing suite level fixtures to them.
 
-2. Before the run of the TestCase takes place, start capturing stdout and\
-    stderr to a directory named after the test case's uid.
+2. Before the run of the TestCase takes place, start capturing stdout and
+   stderr to a directory named after the test case's uid.
 
-3. Build any fixtures that the the test relies on, if\
-    a :func:`whimsy.fixture.Fixture.setup` call fails the test outcome will\
-    be marked as an ERROR and the test case will return.
+3. Build any fixtures that the the test relies on, if
+   a :func:`whimsy.fixture.Fixture.setup` call fails the test outcome will
+   be marked as an ERROR and the test case will return.
 
-4. The actual test execution takes place. If during the test an exeption is\
-    raised (other than the :class:`whimsy.test.TestSkipException`) then the\
-    test will be marked as a failure. Test writers can pass a test case early\
-    in their function by simply returning from the function. Test writers can\
-    skip their test while inside of it if they raise the TestSkipException by\
-    calling the :func:`whimsy.test.skip` function in :mod:`whimsy.test`.
+4. The actual test execution takes place. If during the test an exeption is
+   raised (other than the :class:`whimsy.test.TestSkipException`) then the
+   test will be marked as a failure. Test writers can pass a test case early
+   in their function by simply returning from the function. Test writers can
+   skip their test while inside of it if they raise the TestSkipException by
+   calling the :func:`whimsy.test.skip` function in :mod:`whimsy.test`.
 
 Now returned from the test case with an outcome, we continue the same process
 for the remaining tests in the test suite, however, there are a couple
