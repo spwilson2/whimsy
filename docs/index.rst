@@ -17,4 +17,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 
-.. include:: README.rst
+.. include:: readme.rst
