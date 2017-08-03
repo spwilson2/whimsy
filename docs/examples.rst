@@ -27,7 +27,7 @@ was 0.
         verifiers=(verifier,),
 
         # Use the pretend config file in the same directory as this test.
-        config=joinpath(__directory__, 'simple-config.py'),
+        config=joinpath(getcwd(), 'simple-config.py'),
     )
 
 We could then use the list command to look at the tests we have created.

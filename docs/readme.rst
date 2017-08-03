@@ -236,19 +236,22 @@ will be placed in the same directory they already are in. The only other
 difference will be that all ISA names should be capitalized. 
 
 Test programs will remain in the same directory. Only the ISA name will now be
-capitalized. I would like to keep it consistent throughout the codebase and
-since we are going to be building gem5 using a capitalized name, everywhere
-else can take that standard.
+capitalized. I would like to keep it consistent throughout the codebase.  Since
+we are going to be building gem5 using a uppercase name, everywhere else can
+take that standard.
 
 Finally, I would suggest that this framework be placed in the ``/ext``
-directory with the gem5 helpers (under ``whimsy/gem5`` in this repo) being
-placed directly in the tests dir. I would expect there to not be too many
-changes made to this framework however, I would hope that more gem5 specific
-``Fixture`` and ``TestCase`` types are created, so the tests dir might fit that
-more lively update pattern.
+directory. The gem5 helpers (under ``whimsy/gem5`` in this repo) could be
+placed directly in the ``/tests`` dir. I would expect there should not be too
+many changes made to this framework once it is solidified. However, I would
+hope that more gem5 specific ``Fixture`` and ``TestCase`` types are created, so
+the tests dir might fit that more lively update pattern.
 
 Running Tests
 -------------
+
+The external interface for whimsy is not too different than the one exposed by
+``test.py`` right now.
 
 To run all tests use the ``run`` subcommand:
 
@@ -300,17 +303,17 @@ Test Running Step
 Once the tests have been discovered and collected by the ``TestLoader``,
 :mod:`whimsy.main` will create the requested
 :class:`whimsy.result.ResultLogger` logger objects used to display results
-and/or stream them into a file in a specified format. (Currently an
-``ConsoleLogger``, ``InternalLogger``, ``JUnitLogger`` exist). All loggers are
-designed to minimize the amount of memory used by writing out test information
-as soon as possible rather than storing large strings.
+and/or stream them into a file in a specified format. (Currently
+a ``ConsoleLogger``, ``InternalLogger``, ``JUnitLogger`` exist). All loggers
+are designed to minimize the amount of memory used by writing out test
+information as soon as possible rather than storing large strings.
 
-With these formatters and the ``SuiteList`` of ``TestSuite`` objects
-find by the loader, the ``Runner`` object is instantiated.
 
-The ``Runner`` first sets up any ``Fixture`` objects that are not
-``lazy_init``. Once all these ``lazy_init`` fixtures have been set up
-the ``Runner`` begins to iterate through its suites.
+The :class:`whimsy.runner.Runner` is instantiated using suites collected by the
+the ``TestLoader`` in addition to any of the previously mentioned result
+loggers. Once the runner begins, it first sets up any ``Fixture`` objects that
+are not marked ``lazy_init``. Once all these ``lazy_init`` fixtures have been
+set up the ``Runner`` begins to iterate through its suites.
 
 The run of a suite takes the following steps:
 
@@ -329,8 +332,8 @@ The run of a suite takes the following steps:
 The run of a ``TestCase`` follows these steps:
 
 1. Start capturing stdout and stderr logging it into separate files.
-2. Copy the suites fixtures and overwrite them with any versions we have
-   in this test case.
+2. Copy the suites fixtures and override them with any versions we have in this
+   test case.
 3. Build all the fixtures that are required for this test.
 
    -  If any fixture build fails by throwing an exception, mark the test
@@ -344,4 +347,8 @@ The run of a ``TestCase`` follows these steps:
 
    -  The test passes if no exceptions are thrown and the ``__call__`` returns.
 
-Reporting of test results is done as tests are ran.
+
+While all of these above steps are executed, calls are made to the result
+loggers to notify them of results.
+
+.. seealso:: :mod:`whimsy.runner`

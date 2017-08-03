@@ -8,6 +8,6 @@ gem5_verify_config(
     # Pass our returncode verifier here.
     verifiers=(verifier,),
     # Use the pretend config file in the same directory as this test.
-    config=joinpath(__directory__, 'simple-config.py'),
+    config=joinpath(getcwd(), 'simple-config.py'),
     config_args=None
 )

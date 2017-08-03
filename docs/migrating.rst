@@ -17,21 +17,22 @@ directory would be ``/tests``.
 Here are the steps:
 
 1. Look in the directory the old test expects a ``test.py`` file to be located in.
-2. Move that file and copy it into our new test location
-   ``/tests/quick/se/00.hello`` and name the file ``config.py``. (Note that
-   this is the same directory it was in originally.)
-3. Move the reference files will not change location
-   (``/tests/quick/se/00.hello/ref/arm/linux/simple-atomic-dummychecker``)
-4. Assuming that the additional config files which set up the old test are not
+2. Move that file and copy it into the same test location, but change the name
+   to ``config.py``.
+
+   - The reference files will stay in the same location as well.
+
+3. Assuming that the additional config files which set up the old test are not
    ported, we need to do so.
 
-    - To do this copy over the old config to
-      ``/tests/legacy-configs/simple-atomic-dummychecker.py`` (We know this is
-      the legacy config name because it is the final name of the old test
-      path.)
+   - To do this copy over the old config
+     ``/tests/configs/simple-atomic-dummychecker.py`` to
+     ``/tests/legacy-configs/simple-atomic-dummychecker.py`` (We know this is
+     the legacy config name because it is the final name of the old test path.)
 
-5. Create a ``test-hello.py`` file in this directory now, and use the
-   gem5_verify_config and verifiers to match the golden standards.
+4. Create a ``test-hello.py`` file in ``quick/se/00.hello/`` and use
+   ``gem5_verify_config`` and verifiers to create a suite that will compare
+   gem5 execution to golden standards.
 
 .. code:: python
 
@@ -39,9 +40,9 @@ Here are the steps:
 
 
     verifiers = (
-            verifier.MatchStdout(joinpath(__directory__, 'simout')),
-            verifier.MatchStderr(joinpath(__directory__, 'simerr')),
-            verifier.MatchStats(joinpath(__directory__, 'stat.txt')),
+            verifier.MatchStdout(joinpath(getcwd(), 'simout')),
+            verifier.MatchStderr(joinpath(getcwd(), 'simerr')),
+            verifier.MatchStats(joinpath(getcwd(), 'stat.txt')),
             verifier.VerifyReturncode(1),
             )
 
