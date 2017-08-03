@@ -32,7 +32,7 @@ class SConsFixture(Fixture):
     targets.
 
     :param directory: The directory which scons will -C (cd) into before
-    executing. If None is provided, will choose the config base_dir.
+        executing. If None is provided, will choose the config base_dir.
     '''
     def __init__(self, name='SCons Fixture', directory=None, *args, **kwargs):
         super(SConsFixture, self).__init__(name, *args, lazy_init=True)
@@ -50,11 +50,11 @@ class SConsFixture(Fixture):
     def teardown(self):
         pass
 
-# The singleton scons fixture we'll use for all targets.
-scons = SConsFixture(lazy_init=False)
-
 class SConsTarget(Fixture):
-    def __init__(self, target, build_dir=None, invocation=scons,
+    # The singleton scons fixture we'll use for all targets.
+    default_scons_invocation = None
+
+    def __init__(self, target, build_dir=None, invocation=None,
                  *args, **kwargs):
         '''
         Represents a target to be built by an 'invocation' of scons.
@@ -62,11 +62,11 @@ class SConsTarget(Fixture):
         :param target: The target known to scons.
 
         :param build_dir: The 'build' directory path which will be prepended
-        to the target name.
+            to the target name.
 
         :param invocation: Represents an invocation of scons which we will
-        automatically attach this target to. If None provided, uses the main
-        'scons' invocation.
+            automatically attach this target to. If None provided, uses the
+            main 'scons' invocation.
         '''
 
         if build_dir is None:
@@ -74,6 +74,11 @@ class SConsTarget(Fixture):
 
         self.target = os.path.join(build_dir, target)
         super(SConsTarget, self).__init__(self.target, *args, **kwargs)
+
+        if invocation is None:
+            if default_scons_invocation is None:
+                SConsTarget._default_scons_invocation = \
+                    SConsFixture(lazy_init=True)
 
         # Add our self to the required targets of the SConsFixture
         self.require(invocation)

@@ -25,23 +25,23 @@ def gem5_verify_config(name,
     config_args. After that it will run any provided verifiers to verify
     details about the gem5 run.
 
-    .. seealso:: See :module:`gem5.verifier` for the verifiers.
+    .. seealso::  For the verifiers see :mod:`whimsy.gem5.verifier`
 
     :param name: Name of the test.
     :param config: The config to give gem5.
     :param config_args: A list of arguments to pass to the given config.
 
     :param verifiers: An iterable with Verifier instances which will be placed
-    into a suite that will be ran after a gem5 run.
+        into a suite that will be ran after a gem5 run.
 
     :param gem5_args: An iterable with arguments to give to gem5. (Arguments
-    that would normally go before the config path.)
+        that would normally go before the config path.)
 
     :param valid_isas: An interable with the isas that this test can be ran
-    for. If None given, will run for all supported_isas.
+        for. If None given, will run for all supported_isas.
 
     :param valid_optimizations: An interable with the optimization levels that
-    this test can be ran for. (E.g. opt, debug)
+        this test can be ran for. (E.g. opt, debug)
     '''
     for verifier in verifiers:
         no_collect(verifier)

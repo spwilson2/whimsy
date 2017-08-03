@@ -90,10 +90,14 @@ def iter_recursively(self, inorder=True, yield_container=False):
 unexpected_item_msg = \
         'Only TestSuites and TestCases should be contained in a TestSuite'
 
+class FrozenSetException(Exception):
+    '''Signals one tried to set a value in a 'frozen' object.'''
+    pass
+
 class AttrDict(object):
     '''Object which exposes its own internal dictionary through attributes.'''
     def __init__(self, dict_={}):
-            self.__dict__.update(dict_)
+        self.update(dict_)
 
     def __getattr__(self, attr):
         dict_ = self.__dict__
@@ -103,6 +107,34 @@ class AttrDict(object):
 
     def __setattr__(self, attr, val):
         self.__dict__[attr] = val
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __getitem__(self, item):
+        return self.__dict__[item]
+
+    def update(self, items):
+        self.__dict__.update(items)
+
+class FrozenAttrDict(AttrDict):
+    '''An AttrDict whose attributes cannot be modified directly.'''
+    __initialized = False
+    def __init__(self, dict_={}):
+        super(FrozenAttrDict, self).__init__(dict_)
+        self.__initialized = True
+
+    def __setattr__(self, attr, val):
+        if self.__initialized:
+            raise FrozenSetException('Cannot modify an attribute in a FozenAttrDict')
+        else:
+            super(FrozenAttrDict, self).__setattr__(attr, val)
+
+    def update(self, items):
+        if self.__initialized:
+            raise FrozenSetException('Cannot modify an attribute in a FozenAttrDict')
+        else:
+            super(FrozenAttrDict, self).update(items)
 
 
 def _filter_file(fname, filters):

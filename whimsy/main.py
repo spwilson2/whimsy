@@ -20,8 +20,8 @@ import logger
 import query
 import result
 
+import config
 from helper import joinpath, mkdir_p
-from config import config
 from loader import TestLoader
 from logger import log
 from runner import Runner
@@ -39,7 +39,7 @@ def load_tests():
     log.display(separator())
     log.bold('Loading Tests')
     log.display('')
-    testloader.load_root(config.directory)
+    testloader.load_root(config.config.directory)
     return testloader
 
 def dorun():
@@ -48,18 +48,18 @@ def dorun():
     '''
     loader = load_tests()
 
-    if config.tags:
+    if config.config.tags:
         suites = []
-        for tag in config.tags:
+        for tag in config.config.tags:
             suites.extend(loader.suites_with_tag(tag))
     else:
         suites = loader.suites
 
     # Create directory to save junit and internal results in.
-    mkdir_p(config.result_path)
+    mkdir_p(config.config.result_path)
 
-    with open(joinpath(config.result_path, 'pickle'), 'w') as result_file,\
-         open(joinpath(config.result_path, 'junit.xml'), 'w') as junit_f:
+    with open(joinpath(config.config.result_path, 'pickle'), 'w') as result_file,\
+         open(joinpath(config.config.result_path, 'junit.xml'), 'w') as junit_f:
 
         junit_logger = result.JUnitLogger(junit_f, result_file)
         console_logger = result.ConsoleLogger()
@@ -68,8 +68,8 @@ def dorun():
         log.display(separator())
         log.bold('Running Tests')
         log.display('')
-        if config.uid:
-            test_item = loader.get_uid(config.uid)
+        if config.config.uid:
+            test_item = loader.get_uid(config.config.uid)
             results = Runner.run_items(test_item)
         else:
             testrunner = Runner(suites, loggers)
@@ -81,7 +81,7 @@ def dorerun():
     '''
     # Load previous results
     # TODO Catch bad file path error or load error.
-    with open(joinpath(config.result_path, 'pickle'), 'r') as old_fstream:
+    with open(joinpath(config.config.result_path, 'pickle'), 'r') as old_fstream:
         old_formatter = result.InternalLogger.load(old_fstream)
 
     # Load tests
@@ -103,25 +103,29 @@ def dolist():
     Handle the `list` command.
     '''
     loader = load_tests()
-    if config.tags:
-        query.list_tests_with_tags(loader, config.tags)
-    if config.suites:
+    if config.config.tags:
+        query.list_tests_with_tags(loader, config.config.tags)
+    if config.config.suites:
         query.list_suites(loader)
-    if config.tests:
+    if config.config.tests:
         query.list_tests(loader)
-    if config.fixtures:
+    if config.config.fixtures:
         query.list_fixtures(loader)
-    if config.all_tags:
+    if config.config.all_tags:
         query.list_tags(loader)
 
 def main():
     # Start logging verbosity at its minimum
     logger.set_logging_verbosity(0)
+
+    # Initialize the config
+    config.initialize_config()
+
     # Then do parsing of the arguments to init config.
-    logger.set_logging_verbosity(config.verbose)
+    logger.set_logging_verbosity(config.config.verbose)
 
     # 'do' the given command.
-    globals()['do'+config.command]()
+    globals()['do'+config.config.command]()
 
 if __name__ == '__main__':
     main()
