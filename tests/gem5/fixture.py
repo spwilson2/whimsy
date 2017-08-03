@@ -1,10 +1,10 @@
 import os
 import tempfile
 
-from ..fixture import Fixture
-from ..config import config, constants
-from ..helper import log_call, cacheresult, joinpath, absdirpath
-from ..logger import log
+from testlib.fixture import Fixture
+from testlib.config import config, constants
+from testlib.helper import log_call, cacheresult, joinpath, absdirpath
+from testlib.logger import log
 
 
 class VariableFixture(Fixture):

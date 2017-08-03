@@ -2,13 +2,13 @@ import os
 import subprocess
 #import sys
 
-import whimsy.test as test
-import whimsy.fixture as fixture
-import whimsy.runner as runner
-import whimsy.loader as loader
-import whimsy.logger as logger
-import whimsy.helper as helper
-import whimsy.suite as suite
+import testlib.test as test
+import testlib.fixture as fixture
+import testlib.runner as runner
+import testlib.loader as loader
+import testlib.logger as logger
+import testlib.helper as helper
+import testlib.suite as suite
 
 class MakeFixture(fixture.Fixture):
     '''

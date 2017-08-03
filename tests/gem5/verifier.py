@@ -3,10 +3,10 @@ Built in test cases that verify particular details about a gem5 run.
 '''
 import re
 
-from .. import test
-from ..config import constants
-from .._util import diff_out_file
-from ..helper import joinpath
+from testlib import test
+from testlib.config import constants
+from testlib._util import diff_out_file
+from testlib.helper import joinpath
 
 class Verifier(test.TestFunction):
     def __init__(self, name=None, **kwargs):

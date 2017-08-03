@@ -1,11 +1,11 @@
 import os
 import copy
 
-from ..test import TestFunction
-from ..suite import TestList, TestSuite
-from ..helper import log_call, CalledProcessError
-from ..config import constants, config
-from ..loader import no_collect
+from testlib.test import TestFunction
+from testlib.suite import TestList, TestSuite
+from testlib.helper import log_call, CalledProcessError
+from testlib.config import constants, config
+from testlib.loader import no_collect
 from fixture import TempdirFixture, Gem5Fixture, VariableFixture
 import verifier
 
