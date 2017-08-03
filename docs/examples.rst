@@ -211,7 +211,7 @@ blob file so gem5 can use it as a disk. *(This might be a bit contrived.)*
             # This method is called from the Runner when a TestCase that uses this
             # fixture is about to run.
 
-            super(DisckGeneratorFixture, self).setup()
+            super(DiskGeneratorFixture, self).setup()
 
             # Create the file using the dd program.
             log_call(['dd', 'if=/dev/zero', 'of=%s' % self.path, 'count=%d' % self.size])
