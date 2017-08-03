@@ -106,6 +106,8 @@ class _Config(object):
             newval = self.lookup_attr(attr)
             for callback in callbacks:
                 newval = callback(newval)
+        if newval is not None:
+            newval = newval[0]
         self.set(attr, newval)
 
     def set(self, name, value):
@@ -173,7 +175,8 @@ def set_default_build_dir(build_dir):
     .. seealso :func:`~_Config.add_post_processor` for a description on this
         callback format.
     '''
-    if not build_dir:
+    if not build_dir\
+        or build_dir[0] is None:
         base_dir = config.lookup_attr('base_dir')[0]
         build_dir = (os.path.join(base_dir, 'build'),)
     return build_dir

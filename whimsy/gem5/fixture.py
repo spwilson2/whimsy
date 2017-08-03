@@ -70,10 +70,7 @@ class SConsTarget(Fixture):
         '''
 
         if build_dir is None:
-            build_dir = config.build_dir \
-                    if hasattr(config, str(config.build_dir)) \
-                    else os.path.abspath(os.path.join(config.base_dir,
-                                                      os.pardir, 'build'))
+            build_dir = config.build_dir
 
         self.target = os.path.join(build_dir, target)
         super(SConsTarget, self).__init__(self.target, *args, **kwargs)
