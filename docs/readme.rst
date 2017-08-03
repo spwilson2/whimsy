@@ -3,12 +3,15 @@ Whimsy
 
 Test Framework proposal for `gem5 <http://gem5.org>`__.
 
-This framework is by no means final. I am open to suggestions, constructive
-criticism and change requests to this. This is meant to be a strong starting
-point for the rewrite of the testing system for gem5.
+This framework is by no means final. I am open to suggestions, criticism, and
+change requests to this framework. This is meant to be a strong starting point
+for the rewrite of the testing system for gem5.
 
 Please feel free to comment on the gem5-dev-list or create issues on the pull
 request for this patch.
+
+The development branch for this framework can be found `here
+<https://github.com/spwilson2/whimsy>`__.
 
 Motivation
 ----------
@@ -19,7 +22,7 @@ Current Framework Issues
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 A testing infrastructure already exists for Gem5. Why create a new one? There
-are quite a few issues which exist in the current infrastructure, just to list
+are quite a few issues which exist in the current infrastructure. Just to list
 a couple:
 
 1. The system is scattered across multiple systems.
@@ -38,28 +41,36 @@ a couple:
 
    - Test names give no idication of what they are intended to test
 
-4. There are many legacy and closed source tests which should be removed.
+   - Large amounts of output spew take time to pour over
+    
+   - Tests are not written with an explicit goal for test coverage in mind.
+
+4. There are lots of legacy components.
+
+   - SPARC tests which are not open source
+
+   - Broken tests which everyone has to know have been failing forever
 
 
 On top of this issue, since we use SCons to run them current tests are
 incredibly static and must be formatted in a very specific format. Adding
-additional 'novel' tests such as testing gdb functionality, or unit tests
+additional novel tests such as testing gdb functionality, or unit tests
 requires a rewrite of the framework.
 
 Other Frameworks Available
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We obviously need a new framework, but why write our own again? Before starting
-this project I explored quite a few other frameworks. Each had their own issues
-that made them feel imperfect for our needs.
+this project I explored a few other frameworks. Each had their own issues that
+made them feel imperfect for our needs.
 
 `Pytest <https://github.com/pytest-dev/pytest>`__ seemed like the best option
-since it is written in python and has deep support for objects called
-*Fixtures*, essentially an item that can be set up and torn down. Fixtures
-should almost cover our need to specify build targets. Unfortunately, these
-fixtures are not enumerated until test specifc test that runs them is started.
-So there is no natural way in pytest to specify all scons targets and only
-execute a single scons build.
+since it is written in python, is relatively popular, and it has deep support
+for objects called *Fixtures*, essentially an item that can be set up and torn
+down. Fixtures should almost cover our need to specify build targets.
+Unfortunately, these fixtures are not enumerated until the specifc test that
+runs them is started.  So there is no natural way in pytest to specify all
+scons targets and only execute a single scons build.
 
 Even worse than this issue is the `bug that exists in their *marks*
 <https://github.com/pytest-dev/pytest/issues/568>`__ 
@@ -92,36 +103,38 @@ so low level means writing more code and greater attention to detail when
 writing tests. The hope for a testing system is that it should be (relatively)
 easy to add additional tests.
 
+
 Definition of Terms
 -------------------
 
 **NOTE:** The remaining sections may contain limited non-normative comments.
 
-There are a few terms used in this documentation that readers may not be
-familiar with. The purpose of this section is to briefly introduce users to
-these terms.
+Before introducing the framework with a brief overiew of the run loop, there
+are a few terms used in this documentation that readers may not be familiar
+with. The purpose of this section is to briefly introduce users to these terms.
 
 Test Suite
 ~~~~~~~~~~
 
 A :class:`whimsy.suite.TestSuite` is a completely self-contained unit of
 testing which must contain one or more `TestCase <#test-case>`__ instances.
-Test suites can rely on `Fixtures <#fixture>`__, have `tags
-<#tags>`__ (which contained test cases will be tagged with), and be marked
-`fail\_fast <#fail-fast>`__.
+Test suites can rely on `Fixtures <#fixture>`__, have `tags <#tags>`__ (which
+contained test cases will be tagged with), and be marked `fail\_fast
+<#fail-fast>`__. When tests are run, test suites will automatically pass the
+fixtures they require to the their test cases. Additionally, when querying
+based on tags, test cases will be marked with the same tags as their containing
+``TestSuite``.
 
 Test Case
 ~~~~~~~~~
 
 A :class:`whimsy.test.TestCase` is a unit of test that is not necessarily
-self-contained. An example of a test which is not self contained would be
+self-contained. An example of a test which is not self-contained would be
 a test which parses the output of a gem5 run against a gold standard. Since
 this test case relies on gem5 running first, it would no longer pass if ran on
-its own and therfore the test is not self-contained.
-
-.. note:: Test cases can also have all the metadata that a test suite has (Tags
-    and Fixtures). (However they cannot be individually marked `fail\_fast
-    <#fail-fast>`__)
+its own and therfore the test is not self-contained. Test cases have all the
+metadata that a test suite has (Tags and Fixtures). However, they cannot be
+individually marked `fail\_fast <#fail-fast>`__.
 
 Fixture
 ~~~~~~~
@@ -130,7 +143,8 @@ A :class:`whimsy.fixture.Fixture` is an object that may require setup or
 tearing down before or after a `TestCase <#test-case>`__ or `TestSuite
 <#test-suite>`__ has run. When tests are run, they will be handed fixtures from
 their containing TestSuite, and will set up any fixtures that are not already
-built. This allows test cases to incrementally test results of gem5 runs.
+built. This allows test cases to incrementally test results from a single gem5
+execution.
 
 Most importantly Fixtures remove the requirement on SCons to keep track of test
 requirements. TestCases and TestSuites now maintain that information on their
@@ -152,42 +166,49 @@ Fail Fast (written ``fail_fast`` throughout this document) has slightly
 different semantics depending on the use case. In general it means that given
 a `TestCase` failure, refrain from testing some future number of tests.
 
-The three different semantics are as follows:
+The three different semantics of ``fail_fast`` given a test failure are as follows:
 
-1. The ``--fail-fast`` flag during the run of tests will cause all remaining
-   tests to be ignored. 
+1. The ``--fail-fast`` flag will cause all remaining tests to be ignored.  The
+   use case for this could be a script that just checks on commit if all tests
+   pass or not. If they don't pass we avoid wasting time running the remaining
+   tests. 
 
-   The use case for this could be a script that just checks on commit if all
-   tests pass or not. If they don't pass we avoid wasting time running the
-   remaining tests. 
-
-2. While executing a ``TestSuite`` that is marked ``fail_fast``, if a
-   ``TestCase`` in that suite fails then the remaining tests in that
-   TestSuite will be skipped. If there are any remaining TestSuites to run,
-   they will continue to run.
+2. If a ``TestCase`` in that suite fails while executing a ``TestSuite`` that
+   is marked ``fail_fast`` then the remaining tests in that TestSuite will be
+   skipped. If there are any remaining test suites to run, they will continue
+   to run one at a time.
 
 3. Inside of a ``TestSuite``, test cases are stored in hierarchical
    :class:`whimsy.suite.TestList` objects. In addition to utility functions
    ``TestList`` instances have a ``fail_fast`` attribute. When a test fails in
-   a ``TestList`` the remaining test cases in that TestList will be skipped.
-   However, if there are any remaining test lists or cases outside of the
-   failed one, inside of the currently executing TestSuite, they will still be
-   executed.
+   a ``TestList`` the remaining test cases in that ``TestList`` will be
+   skipped.  However, if there are any remaining test lists or cases outside of
+   the failed one, but inside of the currently executing TestSuite, they will
+   still be executed.
 
 This last case visually:
 
--  TestList
--  Gem5 Run `(FAILS)`
--  TestList `(Will all be skipped)`
+-  TestList `(Marked fail_fast)`
+    -  Gem5 Run `(FAILS)`
+    -  TestList `(Will all be skipped)`
 
-   -  TestStdout `(skipped)`
-   -  TestStderr `(skipped)`
+       -  TestStdout `(skipped)`
+       -  TestStderr `(skipped)`
+
+Again with a failure in one of the output checkers:
+
+-  TestList `(Marked fail_fast)`
+    -  Gem5 Run `(PASS)`
+    -  TestList `(Not marked fail_fast)`
+       -  TestStdout `(FAILS)`
+       -  TestStderr `(Still will be run.)`
 
 
 .. note:: The use case for the ``TestSuite`` ``fail_fast`` option is more one
     of convinience. Its semantics differ slightly from the ``TestList`` use,
     but in the general case it just allows users to create a TestSuite and
-    TestCases without an intermediate ``TestList``.
+    TestCases without an intermediate ``TestList``. It might be worth removing,
+    as I haven't found a use case for it.
 
 File Organization
 -----------------
@@ -209,9 +230,10 @@ changes to
     quick/se/00.hello/config.py
     quick/se/00.hello/test.py
 
-Where test.py will more than likely contain a gem5_verify_config function call.
-Reference files will be placed in the same directory they already are in. The
-only other difference will be that all ISA names should be capitalized. 
+Where test.py will more than likely contain
+a :func:`whimsy.gem5.suite.gem5_verify_config` function call.  Reference files
+will be placed in the same directory they already are in. The only other
+difference will be that all ISA names should be capitalized. 
 
 Test programs will remain in the same directory. Only the ISA name will now be
 capitalized. I would like to keep it consistent throughout the codebase and
