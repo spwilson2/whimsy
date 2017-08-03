@@ -76,9 +76,11 @@ class SConsTarget(Fixture):
         super(SConsTarget, self).__init__(self.target, *args, **kwargs)
 
         if invocation is None:
-            if default_scons_invocation is None:
-                SConsTarget._default_scons_invocation = \
+            if self.default_scons_invocation is None:
+                SConsTarget.default_scons_invocation = \
                     SConsFixture(lazy_init=True)
+
+            invocation = self.default_scons_invocation
 
         # Add our self to the required targets of the SConsFixture
         self.require(invocation)

@@ -112,9 +112,9 @@ class _Config(object):
             newval = self._lookup_val(attr)
             for callback in callbacks:
                 newval = callback(newval)
-        if newval is not None:
-            newval = newval[0]
-        self._set(attr, newval)
+            if newval is not None:
+                newval = newval[0]
+            self._set(attr, newval)
 
 
     def _lookup_val(self, attr):
