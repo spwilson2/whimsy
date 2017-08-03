@@ -213,32 +213,48 @@ Again with a failure in one of the output checkers:
 File Organization
 -----------------
 
-The new layout for tests doesn't change much from the old one. The only major
+The new layout for tests doesn't change much from the old one. The first minor
 change is that test cases will be located in a test.py file, and the old
-test.py files will be changed to config.py.
+test.py files will be changed to config.py. This is part of an effor to make
+test cases more explicit and discoverable by users. Rather than have a single
+file that generates all tests, each file can generate their own variants on
+tests.
 
 So
 
 .. code:: bash
     
-    quick/se/00.hello/test.py
+    /tests/speed/system-mode/test-name/test.py
 
 changes to
 
 .. code:: bash
     
-    quick/se/00.hello/config.py
-    quick/se/00.hello/test.py
+    /tests/gem5/test-name/config.py
+    /tests/gem5/test-name/test.py
 
 Where test.py will more than likely contain
 a :func:`whimsy.gem5.suite.gem5_verify_config` function call.  Reference files
 will be placed in the same directory they already are in. The only other
 difference will be that all ISA names should be capitalized. 
 
-Test programs will remain in the same directory. Only the ISA name will now be
+Also as you might have noticed above, the root of all tests is now
+``/tests/gem5`` with no specification being given on the speed of the tests by
+path name. This can now be done with tags. Reference files path names have also
+been trimmed a tiny bit.
+
+.. seealso:: `Migrating Tests <examples.html#migrating-an-existing-test>`__
+
+
+**Test Programs**
+
+Test-programs will remain in the same directory. Only the ISA name will now be
 capitalized. I would like to keep it consistent throughout the codebase.  Since
 we are going to be building gem5 using a uppercase name, everywhere else can
-take that standard.
+take that standard. With this framework it is possible to build or download
+these test-programs each time rather than storing binaries in the repo.
+
+**Location of the Framework**
 
 Finally, I would suggest that this framework be placed in the ``/ext``
 directory. The gem5 helpers (under ``whimsy/gem5`` in this repo) could be
