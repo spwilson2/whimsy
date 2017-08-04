@@ -101,26 +101,26 @@ Running Your Test
 There are now a few ways to run this last suite we've just created.
 
 First we could run every test in the directory it's stored in. Assuming you
-file is stored in ``/tests/gem5/example/test-hello.py``. we would run it
+file is stored in ``tests/gem5/example/test-hello.py``. we would run it
 by executing the command:
 
 .. code:: bash
 
-    ./main.py run /tests/gem5
+    tests/main.py run tests/gem5
 
 If we only want to run this specific suite we need to run by giving the
 uid:
 
 .. code:: bash
 
-    ./main.py run /tests/gem5 --uid 'gem5/example/test-hello:TestSuite:simple_gem5_returncode_test [X86 - opt]'
+    tests/main.py run tests/gem5 --uid 'gem5/example/test-hello:TestSuite:simple_gem5_returncode_test [X86 - opt]'
 
 If we want to run all the tests with the X86 tag we could run it with
 one of the tags that was automatically added by ``gem5_verify_config``:
 
 .. code:: bash
 
-    ./main.py run /tests/gem5 --tags X86
+    tests/main.py run tests/gem5 --tags X86
 
 A Test From Scratch
 -------------------
@@ -169,9 +169,9 @@ checks it's return code.
                 # We can fail by raising an exception
                 raise e 
 
-            elif e.returncode != 2:
+            elif e.returncode == 2:
                 # We can also fail manually with the fail method.
-                test.fail("Return code wasn't 2")
+                test.fail("Return code was 2?!")
 
         # Returncode was 0
         # When we return this test will be marked as passed.
