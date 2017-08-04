@@ -259,10 +259,15 @@ these test-programs each time rather than storing binaries in the repo.
 
 Finally, I would suggest that this framework be placed in the ``ext``
 directory. The gem5 helpers (under ``whimsy/gem5`` in this repo) could be
-placed directly in the ``tests`` dir. I would expect there should not be too
-many changes made to this framework once it is solidified. However, I would
-hope that more gem5 specific ``Fixture`` and ``TestCase`` types are created, so
-the tests dir might fit that more lively update pattern.
+placed directly in the ``tests`` dir. The single entrypoint to run tests would
+then be located in ``tests/main.py``.  This script would set up paths and
+import all the necessary support libraries for testing.
+
+I would expect there should not be too many changes made to this framework once
+it is solidified. However, I would hope that more gem5 specific ``Fixture`` and
+``TestCase`` types are created, so the tests dir might fit that more lively
+update pattern.
+
 
 Running Tests
 -------------
