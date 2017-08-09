@@ -464,15 +464,25 @@ def _run_parallel(uid):
     # We import here since this will be in a separate process (and is only
     # needed in that process).
     from loader import TestLoader
+    from result import InternalLogger, ConsoleLogger
+    import tempfile
 
     # Reload the test in the new child process. (We can't pickle this easily.)
     test_item = TestLoader.load_uid(uid)
 
     # Run the test.
-    runner = Runner(threads=1)
-    if isinstance(test_item, TestCase):
-        return runner._run_test(test_item)
-    elif isinstance(test_item, TestSuite):
-        return runner._run_suite(test_item)
-    else:
-        raise AssertionError(_util.unexpected_item_msg)
+    (file_handle, file_name) = tempfile.mkstemp()
+    with open(file_name, 'w') as result_file:
+        logger = InternalLogger(result_file)
+
+        # TODO: Rather than having a console logger move this into the final
+        # result collector.
+        console = ConsoleLogger()
+
+        runner = Runner(threads=1, result_loggers=(logger,console))
+        if isinstance(test_item, TestCase):
+            return runner._run_test(test_item)
+        elif isinstance(test_item, TestSuite):
+            return runner._run_suite(test_item)
+        else:
+            raise AssertionError(_util.unexpected_item_msg)

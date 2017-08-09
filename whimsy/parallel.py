@@ -2,7 +2,7 @@ import multiprocessing
 
 from loader import TestLoader
 from config import config as global_config
-import runner 
+import runner
 from result import InternalLogger
 
 class Job(object):
@@ -29,10 +29,13 @@ class WorkerPool(object):
             self._process_pool = None
 
     def _schedule_parallel(self, jobs, map_function):
+        jobs = ((map_function, job) for job in jobs)
         try:
-            gen = self._process_pool.imap_unordered(map_function, 
-                                                    jobs,
-                                                    chunksize=1)
+            gen = self._process_pool.imap_unordered(
+                    subprocess_exception_wrapper,
+                    jobs,
+                    chunksize=1
+            )
 
             # We need to use polling since termination is broken in python2.
             # (Blocking waits do not internally poll for us.)
@@ -61,6 +64,22 @@ class WorkerPool(object):
         if self._process_pool:
             return self._schedule_parallel(jobs, map_function)
         return self._schedule_sequential(jobs, map_function)
+
+class SubprocessException(Exception):
+    pass
+
+def subprocess_exception_wrapper(args):
+    '''
+    Wraps a python child process with a function that will enable tracebacks
+    to be printed from child python processes.
+    '''
+    import traceback
+    import sys
+    (function, args) = args
+    try:
+        return function(args)
+    except:
+        raise SubprocessException("".join(traceback.format_exception(*sys.exc_info())))
 
 if __name__ == '__main__':
     q = Queue.Queue()
