@@ -300,14 +300,13 @@ class InternalLogger(ResultLogger):
         self._current_item = item
 
     def skip(self, item, **kwargs):
-        if isinstance(self._current_item, TestSuite):
-            result = TestSuiteResult(self._current_item, Outcome.SKIP, 0,
+        if isinstance(item, TestSuite):
+            result = TestSuiteResult(item, Outcome.SKIP, 0,
                                      self._current_suite_testcases, **kwargs)
             self._current_suite_testcases = []
 
-        elif isinstance(self._current_item, TestCase):
-            result = TestCaseResult(self._current_item, Outcome.SKIP, 0,
-                                    **kwargs)
+        elif isinstance(item, TestCase):
+            result = TestCaseResult(item, Outcome.SKIP, 0, None, None, **kwargs)
             self._current_suite_testcases.append(result)
 
         elif __debug__:
@@ -363,6 +362,11 @@ class InternalLogger(ResultLogger):
             if isinstance(result, TestSuiteResult):
                 yield result
 
+    @property
+    def testcases(self):
+        for result in self.results:
+            if isinstance(result, TestCaseResult):
+                yield result
 
 class JUnitLogger(InternalLogger):
     '''
@@ -464,17 +468,19 @@ class JUnitFormatter(object):
         fstream.write(tag)
 
         # Write out systemout and systemerr from their containing files.
-        fstream.write(self.system_out_opening)
-        with open(testcase.fstdout_name, 'r') as testout_stdout:
-            for line in testout_stdout:
-                fstream.write(xml_escape(line))
-        fstream.write(self.generic_closing.format(tag='system-out'))
+        if testcase.fstdout_name is not None:
+            fstream.write(self.system_out_opening)
+            with open(testcase.fstdout_name, 'r') as testout_stdout:
+                for line in testout_stdout:
+                    fstream.write(xml_escape(line))
+            fstream.write(self.generic_closing.format(tag='system-out'))
 
-        fstream.write(self.system_err_opening)
-        with open(testcase.fstderr_name, 'r') as testout_stderr:
-            for line in testout_stderr:
-                fstream.write(xml_escape(line))
-        fstream.write(self.generic_closing.format(tag='system-err'))
+        if testcase.fstderr_name is not None:
+            fstream.write(self.system_err_opening)
+            with open(testcase.fstderr_name, 'r') as testout_stderr:
+                for line in testout_stderr:
+                    fstream.write(xml_escape(line))
+            fstream.write(self.generic_closing.format(tag='system-err'))
 
         fstream.write(self.generic_closing.format(tag='testcase'))
 
