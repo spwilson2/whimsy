@@ -1,6 +1,6 @@
 from os import getcwd
 
-from _util import uid
+from uid import uid
 
 class TestSuite(object):
     '''

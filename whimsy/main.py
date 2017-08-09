@@ -21,6 +21,7 @@ import query
 import result
 
 import config
+from test import TestCase
 from helper import joinpath, mkdir_p
 from loader import TestLoader
 from logger import log
@@ -69,7 +70,13 @@ def dorun():
         log.bold('Running Tests')
         log.display('')
         if config.config.uid:
+
             test_item = loader.get_uid(config.config.uid)
+            if isinstance(test_item, TestCase):
+                log.warn("Running '%s' as a TestCase it is likely not self"
+                         "-contained!" % item.name)
+                log.warn('Recommend running its containing suite instead.')
+
             results = Runner.run_items(test_item)
         else:
             testrunner = Runner(suites, loggers)

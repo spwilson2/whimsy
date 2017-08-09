@@ -73,6 +73,7 @@ from helper import OrderedSet, absdirpath, OrderedDict
 from logger import log
 from suite import TestSuite, SuiteList, TestList
 from test import TestCase
+from uid import path_from_uid
 
 # Will match filenames that either begin or end with 'test' or tests and use
 # - or _ to separate additional name components.
@@ -308,8 +309,6 @@ class TestLoader(object):
         directories which contain a list of files matching
         `self.filepath_filter`.
         '''
-        files = []
-
         # Will probably want to order this traversal.
         for root, dirnames, filenames in os.walk(root):
             dirnames.sort()
@@ -319,8 +318,7 @@ class TestLoader(object):
                              for filename in filenames]
                 filepaths = filter(self.filepath_filter, filepaths)
                 if filepaths:
-                    files.append(filepaths)
-        return files
+                    yield filepaths
 
     def load_root(self, root):
         '''
@@ -336,6 +334,33 @@ class TestLoader(object):
                     _assert_files_in_same_dir(directory)
                 for f in directory:
                     self.load_file(f)
+
+    def load_dir(self, directory):
+        for dir_ in self.discover_files(directory):
+            if __debug__:
+                _assert_files_in_same_dir(dir_)
+            for f in dir_:
+                self.load_file(f)
+            break
+
+    @staticmethod
+    def load_uid(uid):
+        '''
+        Attempt to load the given UID.
+
+        :param uid: The uid to attempt to load a test item for.
+
+        :returns: A :class:`whimsy.suite.TestSuite` or
+            :class:`whimsy.test.TestCase` if the given UID can be found, else
+            None.
+        '''
+        # Create a dummy TestLoader instance.
+        loader = TestLoader()
+        # Parse the path back out of the uid.
+        path = path_from_uid(uid)
+        # Modify the path based on the directory we are actually in.
+        loader.load_dir(path)
+        return loader.get_uid(uid)
 
     def load_file(self, path, collection=None):
         '''
@@ -385,9 +410,9 @@ class TestLoader(object):
             '__directory__': os.path.dirname(path),
         }
 
-        self._wrap_collection(TestSuite, self._collected_test_items)
-        self._wrap_collection(TestCase, self._collected_test_items)
-        self._wrap_collection(Fixture, self._collected_fixtures)
+        self._wrap_collection(TestSuite, self._collected_test_items, path)
+        self._wrap_collection(TestCase, self._collected_test_items, path)
+        self._wrap_collection(Fixture, self._collected_fixtures, path)
 
         # Add the file's containing directory to the system path. So it can do
         # relative imports naturally.
@@ -465,7 +490,7 @@ class TestLoader(object):
         cleanup()
 
 
-    def _wrap_collection(self, cls, collector):
+    def _wrap_collection(self, cls, collector, path):
         '''
         Wrap the given cls' `__new__` method with a wrapper that will keep an
         OrderedSet of the instances. Also attach a `__no_collect__` method
@@ -491,14 +516,13 @@ class TestLoader(object):
             collector.add(retval)
             return retval
 
-        # Python2 MethodTypes are different than functions.
-        del_wrapper = _MethodWrapper(cls, '__no_collect__',
-                                     instance_decollector)
-        new_wrapper = _MethodWrapper(cls, '__new__', instance_new,
-                                     clsmethod=True)
-        del_wrapper.wrap()
-        new_wrapper.wrap()
-        self._wrapped_classes[cls] = (new_wrapper, del_wrapper)
+        wrappers = (
+                _MethodWrapper(cls, '__no_collect__', instance_decollector),
+                _MethodWrapper(cls, '__new__', instance_new, clsmethod=True),
+        )
+        for wrapper in wrappers:
+            wrapper.wrap()
+        self._wrapped_classes[cls] = wrappers
 
     def _unwrap_collection(self, cls):
         '''
@@ -506,9 +530,8 @@ class TestLoader(object):
             as well, this will lead to issues. Keep `__debug__` mode enabled to
             enable checks that this never happens.
         '''
-        (new_wrapper, del_wrapper) = self._wrapped_classes[cls]
-        new_wrapper.unwrap()
-        del_wrapper.unwrap()
+        for wrapper in self._wrapped_classes[cls]:
+            wrapper.unwrap()
         del self._wrapped_classes[cls]
 
     def _index(self, *testitems):
@@ -527,8 +550,6 @@ class TestLoader(object):
             elif isinstance(item, TestSuite):
                 add_to_index(item, self._suite_index, self._suite_rindex)
             elif __debug__:
-                print item
-                import pdb; pdb.set_trace()
                 raise AssertionError('Only can enumerate TestCase and'
                                      ' TestSuite objects')
 

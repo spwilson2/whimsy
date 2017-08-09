@@ -198,21 +198,3 @@ def diff_out_file(ref_file, out_file, ignore_regexes=tuple()):
             return ''.join(tempfile_.readlines())
         else:
             return None
-
-
-def uid(testitem, class_name=None):
-    '''
-    The generic function used to produce uid of test objects.
-    '''
-    # Trim the file path to be the path relative to the parent of this
-    # directory.
-    filepath = testitem.path
-    filepath = os.path.relpath(filepath,
-                               os.path.commonprefix(
-                                       (absdirpath(__file__),
-                                       filepath)))
-    fmt = '{file}:{class_}:{name}'
-    if class_name is None:
-        class_name = testitem.__class__.__name__
-    return fmt.format(file=filepath, name=testitem.name,
-                      class_=class_name)

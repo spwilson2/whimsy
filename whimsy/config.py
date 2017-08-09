@@ -199,6 +199,10 @@ def define_constants(constants):
     constants.gem5_binary_fixture_name = 'gem5'
     constants.pickle_protocol = highest_pickle_protocol
 
+    # The root directory which all test names will be based off of.
+    constants.testing_base = absdirpath(os.path.join(absdirpath(__file__),
+                                                     os.pardir))
+
 def define_post_processors(config):
     '''
     post_processors are used to do final configuration of variables. This is
@@ -223,11 +227,15 @@ def define_post_processors(config):
         return build_dir
 
     def fix_verbosity_hack(verbose):
-        verbose = (verbose[0].val,)
-        return verbose
+        return (verbose[0].val,)
+
+    def threads_as_int(threads):
+        if threads is not None:
+            return (int(threads[0]),)
 
     config._add_post_processor('build_dir', set_default_build_dir)
     config._add_post_processor('verbose', fix_verbosity_hack)
+    config._add_post_processor('threads', threads_as_int)
 
 class Argument(object):
     '''
