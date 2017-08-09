@@ -363,9 +363,6 @@ class InternalLogger(ResultLogger):
             if isinstance(result, TestSuiteResult):
                 yield result
 
-    def translate(self):
-        for result in self.results:
-            result.outcome = Outcome.translate(result.outcome)
 
 class JUnitLogger(InternalLogger):
     '''

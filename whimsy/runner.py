@@ -443,7 +443,6 @@ class RunnerPool(WorkerPool):
         # TODO: We need to do post processing on items generated here in
         # order to report them with our own reporters.
         def merge_result(result_logger):
-            result_logger.translate()
             for logger in self.runner.result_loggers:
                 if hasattr(logger, 'insert_results'):
                     logger.insert_results(result_logger.results)

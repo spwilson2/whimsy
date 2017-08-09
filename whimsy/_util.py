@@ -28,15 +28,6 @@ class Enum(object):
             self.enums.append(new_enum)
             setattr(self, enum, new_enum)
 
-    def translate(self, other_enum):
-        '''
-        Translate the given enum into one of our types. (Use if enums were
-        created in a separate process.)
-        '''
-        for enum in self.enums:
-            if enum == other_enum:
-                return enum
-
 class _EnumVal(object):
     def __init__(self, name, val, enums):
         self.val = val
@@ -48,6 +39,9 @@ class _EnumVal(object):
 
     def __cmp__(self, other):
         return self.val.__cmp__(other.val)
+
+    def __hash__(self):
+        return hash(_EnumVal) ^ hash(self.val)
 
 
 class Timer(object):
