@@ -125,7 +125,7 @@ class ConsoleLogger(ResultLogger):
     sep_fmtstr = '{%s}' % sep_fmtkey
 
     bad_item = ('Result formatter can only handle test cases'
-            ' and test suites')
+                ' and test suites')
 
     def __init__(self):
         self.outcome_count = {outcome: 0 for outcome in Outcome.enums}
@@ -237,6 +237,9 @@ class ConsoleLogger(ResultLogger):
                 string,
                 color=self.colormap[most_severe_outcome] + self.color.Bold)
 
+    def insert_results(self, internal_results):
+        for result in internal_results:
+            self.outcome_count[result.outcome] += 1
 
 class TestResult(object):
     def __init__(self, testitem, outcome, runtime, **kwargs):
@@ -360,6 +363,9 @@ class InternalLogger(ResultLogger):
             if isinstance(result, TestSuiteResult):
                 yield result
 
+    def translate(self):
+        for result in self.results:
+            result.outcome = Outcome.translate(result.outcome)
 
 class JUnitLogger(InternalLogger):
     '''

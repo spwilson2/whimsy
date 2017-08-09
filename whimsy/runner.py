@@ -439,7 +439,18 @@ class RunnerPool(WorkerPool):
         # Pass the TestItem UID to the parallelized run function. (Test Items
         # are not serializable.)
         test_items = (test_item.uid for test_item in test_items)
-        return self.schedule(test_items, _run_parallel)
+
+        # TODO: We need to do post processing on items generated here in
+        # order to report them with our own reporters.
+        def merge_result(result_logger):
+            result_logger.translate()
+            for logger in self.runner.result_loggers:
+                if hasattr(logger, 'insert_results'):
+                    logger.insert_results(result_logger.results)
+            return result_logger.results[0]
+
+        for result in self.schedule(test_items, _run_parallel):
+            yield merge_result(result)
 
     def _imap_serial(self, test_items):
         return self.schedule(test_items, self._run_serial)
@@ -481,8 +492,9 @@ def _run_parallel(uid):
 
         runner = Runner(threads=1, result_loggers=(logger,console))
         if isinstance(test_item, TestCase):
-            return runner._run_test(test_item)
+            runner._run_test(test_item)
         elif isinstance(test_item, TestSuite):
-            return runner._run_suite(test_item)
+            runner._run_suite(test_item)
         else:
             raise AssertionError(_util.unexpected_item_msg)
+        return logger
