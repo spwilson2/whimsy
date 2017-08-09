@@ -70,17 +70,19 @@ TestCase instances in that TestSuite will be skipped.
 import traceback
 import itertools
 
-from terminal import separator
-import test
-import _util
-from result import ConsoleLogger, Outcome, test_results_output_path
-from config import config
-from helper import mkdir_p, joinpath
-from logger import log
-from suite import TestSuite, SuiteList
-from tee import tee
-from test import TestCase
-from parallel import WorkerPool
+from parallel import MulticoreWorkerPool
+
+from .. import test
+from .. import _util
+
+from ..config import config
+from ..helper import mkdir_p, joinpath
+from ..logger import log
+from ..result import ConsoleLogger, Outcome, test_results_output_path
+from ..suite import TestSuite, SuiteList
+from ..tee import tee
+from ..terminal import separator
+from ..test import TestCase
 
 
 class Runner(object):
@@ -429,7 +431,7 @@ class Runner(object):
         return failures
 
 
-    class _RunnerPool(WorkerPool):
+    class _RunnerPool(MulticoreWorkerPool):
         '''
         Wrapper for WorkerPool which defines methods specific to the Runner class.
         '''
@@ -438,34 +440,29 @@ class Runner(object):
             self.runner = runner
 
         def run_test_items(self, test_items):
-            # Check the config for parallelization options.
-            if self.threads > 1:
-                return self._imap_parallel(test_items)
-            return self._imap_serial(test_items)
+            if self.parallel:
+                return self._run_parallel(test_items)
+            return self._run_serial(test_items)
 
-        def _imap_parallel(self, test_items):
+        def _run_parallel(self, test_items):
             # Pass the TestItem UID to the parallelized run function. (Test Items
             # are not serializable.)
             test_items = (test_item.uid for test_item in test_items)
 
-            # TODO: We need to do post processing on items generated here in
-            # order to report them with our own reporters.
+            # We need to do post processing on items generated here in order
+            # to report them with our own reporters.
             def merge_result(result_logger):
                 for logger in self.runner.result_loggers:
                     if hasattr(logger, 'insert_results'):
                         logger.insert_results(result_logger)
                 return result_logger.results[0]
 
-            for result in self.schedule(test_items, _run_parallel):
+            for result in self.imap_unordered(_run_parallel, test_items):
                 yield merge_result(result)
 
-        def _imap_serial(self, test_items):
-            return self.schedule(test_items, self._run_serial)
+        def _run_serial(self, test_items):
+            return self.imap_unordered(self.runner._run_item, test_items)
 
-        def _run_serial(self, test_item):
-            self.runner._run_item(test_item)
-
-# TODO: Create a logger to use as well.
 def _run_parallel(uid):
     '''
     Module level function used by the workers in the RunnerPool to run test
@@ -476,8 +473,8 @@ def _run_parallel(uid):
     '''
     # We import here since this will be in a separate process (and is only
     # needed in that process).
-    from loader import TestLoader
-    from result import InternalLogger, ConsoleLogger
+    from ..loader import TestLoader
+    from ..result import InternalLogger, ConsoleLogger
     import tempfile
 
     # Reload the test in the new child process. (We can't pickle this easily.)

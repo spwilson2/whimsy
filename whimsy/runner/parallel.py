@@ -1,19 +1,31 @@
+import abc
 import multiprocessing
-
-from loader import TestLoader
-from config import config as global_config
-import runner
-from result import InternalLogger
-
-class Job(object):
-    '''
-    Represents a task for a :class:`whimsy.parallel.Worker`.
-    '''
-    def __init__(self, uid):
-        ''':param uid: Uid of the task to run.'''
-        self.uid = uid
+from itertools import imap
 
 class WorkerPool(object):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, threads):
+        self.threads = threads
+        self.parallel = threads and threads > 1
+
+    @abc.abstractproperty
+    def pool(self):
+        pass
+
+    def imap_unordered(self, map_function, args):
+        print 'imap unordered'
+        if self.parallel:
+            return self._imap_parallel(map_function, args)
+        print 'imap unordered'
+        return self._imap_serial(map_function, args)
+
+    _imap_serial = imap
+
+    def _imap_parallel(self, map_function, args):
+        return self.pool.imap_unordered(map_function, args)
+
+class MulticoreWorkerPool(WorkerPool):
     '''
     A worker takes jobs of its queue used to initalize it and sends them to
     the process which it wraps to execute.
@@ -21,20 +33,23 @@ class WorkerPool(object):
     :param function: A module level function to supply jobs to. (Note: Must be
         exposed globaly by a module.
     '''
-    def __init__(self, threads):
-        self.threads = threads
-        if threads > 1:
-            self._process_pool = multiprocessing.Pool(threads)
-        else:
-            self._process_pool = None
+    def __init__(self, threads=None):
+        super(MulticoreWorkerPool, self).__init__(threads)
 
-    def _schedule_parallel(self, jobs, map_function):
-        jobs = ((map_function, job) for job in jobs)
+        self._process_pool = None
+        if self.parallel:
+            self._process_pool = multiprocessing.Pool(threads)
+
+    @property
+    def pool(self):
+        return getattr(self, '_process_pool', None)
+
+    def _imap_parallel(self, map_function, args):
+        jobs = ((map_function, arg) for arg in args)
         try:
-            gen = self._process_pool.imap_unordered(
+            gen = super(MulticoreWorkerPool, self)._imap_parallel(
                     subprocess_exception_wrapper,
-                    jobs,
-                    chunksize=1
+                    jobs
             )
 
             # We need to use polling since termination is broken in python2.
@@ -50,23 +65,11 @@ class WorkerPool(object):
             self._process_pool.join()
             raise
 
-    def _schedule_sequential(self, jobs, map_function):
-        for job in jobs:
-            yield map_function(job)
-
-    def schedule(self, jobs, map_function):
-        '''
-        Main runloop for the worker.
-
-        Sends Job objects to the underlying child process while there are any
-        remaining.
-        '''
-        if self._process_pool:
-            return self._schedule_parallel(jobs, map_function)
-        return self._schedule_sequential(jobs, map_function)
-
 class SubprocessException(Exception):
-    pass
+    '''
+    Exception represents an exception that occured in a child python
+    process.
+    '''
 
 def subprocess_exception_wrapper(args):
     '''
@@ -80,8 +83,3 @@ def subprocess_exception_wrapper(args):
         return function(args)
     except:
         raise SubprocessException("".join(traceback.format_exception(*sys.exc_info())))
-
-if __name__ == '__main__':
-    q = Queue.Queue()
-    worker = WorkerPool(range(10))
-    worker.main()
