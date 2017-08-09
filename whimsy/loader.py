@@ -198,10 +198,11 @@ class TestLoader(object):
     .. note:: If tests are not manually placed in a TestSuite, they will
         automatically be placed into one for the module.
     '''
-    def __init__(self, filepath_filter=default_filepath_filter):
+    def __init__(self, filepath_filter=default_filepath_filter, quiet=False):
 
         self._suites = SuiteList()
         self.filepath_filter = filepath_filter
+        self.quiet = quiet
 
         if __debug__:
             # Used to check if we have ran load_file to make sure we have
@@ -355,7 +356,7 @@ class TestLoader(object):
             None.
         '''
         # Create a dummy TestLoader instance.
-        loader = TestLoader()
+        loader = TestLoader(quiet=True)
         # Parse the path back out of the uid.
         path = path_from_uid(uid)
         # Modify the path based on the directory we are actually in.
@@ -435,9 +436,10 @@ class TestLoader(object):
         try:
             execfile(path, newdict, newdict)
         except Exception as e:
-            log.warn('Tried to load tests from %s but failed with an'
-                     ' exception.' % path)
-            log.debug(traceback.format_exc())
+            if not self.quiet:
+                log.warn('Tried to load tests from %s but failed with an'
+                         ' exception.' % path)
+                log.debug(traceback.format_exc())
             cleanup()
             return
 
@@ -457,8 +459,9 @@ class TestLoader(object):
         self._fixtures.extend(self._collected_fixtures)
 
         if testcases:
-            log.display('Discovered %d tests and %d testsuites in %s'
-                        '' % (len(testcases), len(testsuites), path))
+            if not self.quiet:
+                log.display('Discovered %d tests and %d testsuites in %s'
+                            '' % (len(testcases), len(testsuites), path))
 
             # Remove all tests already contained in a TestSuite.
             if testsuites:
@@ -481,11 +484,12 @@ class TestLoader(object):
 
             collection.extend(testsuites)
 
-        elif testsuites:
-            log.warn('No tests discovered in %s, but found %d '
-                     ' TestSuites' % (path, len(testsuites)))
-        else:
-            log.warn('No tests discovered in %s' % path)
+        elif not self.quiet:
+            if testsuites:
+                log.warn('No tests discovered in %s, but found %d '
+                         ' TestSuites' % (path, len(testsuites)))
+            else:
+                log.warn('No tests discovered in %s' % path)
 
         cleanup()
 

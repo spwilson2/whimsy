@@ -106,7 +106,7 @@ class Runner(object):
 
         if threads is None:
             threads = config.threads
-        self._runner_pool = RunnerPool(self, threads)
+        self._runner_pool = Runner._RunnerPool(self, threads)
 
 
     def run(self):
@@ -182,6 +182,14 @@ class Runner(object):
         pool.
         '''
         return self._runner_pool.run_test_items(items)
+
+    def _run_item(self, test_item):
+        if isinstance(test_item, TestCase):
+            return self._run_test(test_item)
+        elif isinstance(test_item, TestSuite):
+            return self._run_suite(test_item)
+        else:
+            raise AssertionError(_util.unexpected_item_msg)
 
     def _run_suite(self, test_suite):
         '''
@@ -398,7 +406,7 @@ class Runner(object):
         for testcase in remaining_iterator:
             if isinstance(testcase, TestCase):
                 reason = ("Previous test '%s' failed in a failfast"
-                        " TestSuite." % failed_test)
+                          " TestSuite." % failed_test)
                 for logger in self.result_loggers:
                     logger.skip(testcase, reason=reason)
             elif __debug__:
@@ -421,46 +429,41 @@ class Runner(object):
         return failures
 
 
-class RunnerPool(WorkerPool):
-    '''
-    Wrapper for WorkerPool which defines methods specific to the Runner class.
-    '''
-    def __init__(self, runner, threads):
-        super(RunnerPool, self).__init__(threads)
-        self.runner = runner
+    class _RunnerPool(WorkerPool):
+        '''
+        Wrapper for WorkerPool which defines methods specific to the Runner class.
+        '''
+        def __init__(self, runner, threads):
+            super(Runner._RunnerPool, self).__init__(threads)
+            self.runner = runner
 
-    def run_test_items(self, test_items):
-        # Check the config for parallelization options.
-        if self.threads > 1:
-            return self._imap_parallel(test_items)
-        return self._imap_serial(test_items)
+        def run_test_items(self, test_items):
+            # Check the config for parallelization options.
+            if self.threads > 1:
+                return self._imap_parallel(test_items)
+            return self._imap_serial(test_items)
 
-    def _imap_parallel(self, test_items):
-        # Pass the TestItem UID to the parallelized run function. (Test Items
-        # are not serializable.)
-        test_items = (test_item.uid for test_item in test_items)
+        def _imap_parallel(self, test_items):
+            # Pass the TestItem UID to the parallelized run function. (Test Items
+            # are not serializable.)
+            test_items = (test_item.uid for test_item in test_items)
 
-        # TODO: We need to do post processing on items generated here in
-        # order to report them with our own reporters.
-        def merge_result(result_logger):
-            for logger in self.runner.result_loggers:
-                if hasattr(logger, 'insert_results'):
-                    logger.insert_results(result_logger.results)
-            return result_logger.results[0]
+            # TODO: We need to do post processing on items generated here in
+            # order to report them with our own reporters.
+            def merge_result(result_logger):
+                for logger in self.runner.result_loggers:
+                    if hasattr(logger, 'insert_results'):
+                        logger.insert_results(result_logger)
+                return result_logger.results[0]
 
-        for result in self.schedule(test_items, _run_parallel):
-            yield merge_result(result)
+            for result in self.schedule(test_items, _run_parallel):
+                yield merge_result(result)
 
-    def _imap_serial(self, test_items):
-        return self.schedule(test_items, self._run_serial)
+        def _imap_serial(self, test_items):
+            return self.schedule(test_items, self._run_serial)
 
-    def _run_serial(self, test_item):
-        if isinstance(test_item, TestCase):
-            return self.runner._run_test(test_item)
-        elif isinstance(test_item, TestSuite):
-            return self.runner._run_suite(test_item)
-        else:
-            raise AssertionError(_util.unexpected_item_msg)
+        def _run_serial(self, test_item):
+            self.runner._run_item(test_item)
 
 # TODO: Create a logger to use as well.
 def _run_parallel(uid):
@@ -480,20 +483,10 @@ def _run_parallel(uid):
     # Reload the test in the new child process. (We can't pickle this easily.)
     test_item = TestLoader.load_uid(uid)
 
-    # Run the test.
+    # Run the test and log to a tempfile.
     (file_handle, file_name) = tempfile.mkstemp()
     with open(file_name, 'w') as result_file:
         logger = InternalLogger(result_file)
-
-        # TODO: Rather than having a console logger move this into the final
-        # result collector.
-        console = ConsoleLogger()
-
-        runner = Runner(threads=1, result_loggers=(logger,console))
-        if isinstance(test_item, TestCase):
-            runner._run_test(test_item)
-        elif isinstance(test_item, TestSuite):
-            runner._run_suite(test_item)
-        else:
-            raise AssertionError(_util.unexpected_item_msg)
+        runner = Runner(threads=1, result_loggers=(logger,))
+        runner._run_item(test_item)
         return logger

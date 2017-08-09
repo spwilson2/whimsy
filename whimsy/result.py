@@ -164,11 +164,13 @@ class ConsoleLogger(ResultLogger):
             raise AssertionError(self.bad_item)
 
     def _set_testcase_outcome(self, test_case, outcome, reason=None, **kwargs):
-        log.bold(
-                self.colormap[outcome]
-                + test_case.name
-                + self.reset)
         self.outcome_count[outcome] += 1
+        self._display_outcome(test_case.name, outcome, reason)
+
+    def _display_outcome(self, test_case_name, outcome, reason=None):
+        log.bold(self.colormap[outcome]
+                 + test_case_name
+                 + self.reset)
 
         if reason is not None:
             log.info('')
@@ -238,7 +240,8 @@ class ConsoleLogger(ResultLogger):
                 color=self.colormap[most_severe_outcome] + self.color.Bold)
 
     def insert_results(self, internal_results):
-        for result in internal_results:
+        for result in internal_results.testcases:
+            self._display_outcome(result.name, result.outcome, result.reason)
             self.outcome_count[result.outcome] += 1
 
 class TestResult(object):
@@ -367,6 +370,9 @@ class InternalLogger(ResultLogger):
         for result in self.results:
             if isinstance(result, TestCaseResult):
                 yield result
+
+    def insert_results(self, internal_results):
+        self.results.extend(internal_results.results)
 
 class JUnitLogger(InternalLogger):
     '''
