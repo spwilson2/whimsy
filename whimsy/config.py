@@ -490,6 +490,18 @@ class RerunParser(ArgParser):
         common_args.threads.add_to(parser)
         common_args.list_only_failed.add_to(parser)
 
+class ClientParser(ArgParser):
+    '''
+    Parser for the \'client\' command.
+    '''
+    def __init__(self, subparser):
+        parser = subparser.add_parser(
+            'client',
+            help='''Act as a client/helper for a test server instance.'''
+        )
+
+        super(ClientParser, self).__init__(parser)
+
 config = _Config()
 define_constants(config.constants)
 
@@ -518,6 +530,7 @@ def initialize_config():
     runparser = RunParser(baseparser.subparser)
     listparser = ListParser(baseparser.subparser)
     rerunparser = RerunParser(baseparser.subparser)
+    clientparser = ClientParser(baseparser.subparser)
 
     # Initialize the config by parsing args and running callbacks.
     config._init(baseparser)

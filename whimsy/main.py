@@ -25,7 +25,7 @@ from test import TestCase
 from helper import joinpath, mkdir_p
 from loader import TestLoader
 from logger import log
-from runner import Runner
+from runner import Runner, WorkClient
 from terminal import separator
 
 # TODO: Standardize separator usage.
@@ -120,6 +120,19 @@ def dolist():
         query.list_fixtures(loader)
     if config.config.all_tags:
         query.list_tags(loader)
+
+def doclient():
+    '''
+    Handle the `client` command.
+    '''
+    credentials = ('', 11112, 'hi') # TODO/FIXME, use the config.
+    wc = WorkClient(*credentials)
+    log.bold('Starting a client instance.')
+    wc.start()
+    wc.join()
+    # TODO: Parse the credentials.
+    # TODO: Act as a client for a server.
+    # TODO: Spawn other clents based on the number of threads given.
 
 def main():
     # Start logging verbosity at its minimum

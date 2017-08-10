@@ -71,7 +71,7 @@ import traceback
 import itertools
 import datetime
 
-from parallel import MulticoreWorkerPool
+from parallel import MulticoreWorkerPool, ComplexMulticorePool
 
 from .. import test
 from .. import _util
@@ -426,7 +426,8 @@ class Runner(object):
                     getattr(logger, attr)(**kwargs)
             return do_with_loggers
 
-    class _RunnerPool(MulticoreWorkerPool):
+    #class _RunnerPool(MulticoreWorkerPool):
+    class _RunnerPool(ComplexMulticorePool):
         '''
         Wrapper for WorkerPool which defines methods specific to the Runner class.
         '''
