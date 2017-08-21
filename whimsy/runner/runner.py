@@ -69,92 +69,61 @@ TestCase instances in that TestSuite will be skipped.
 '''
 import traceback
 import itertools
+import datetime
 
-from terminal import separator
-import test
-import _util
-from result import ConsoleLogger, Outcome, test_results_output_path
-from config import config
-from helper import mkdir_p, joinpath
-from logger import log
-from suite import TestSuite, SuiteList
-from tee import tee
-from test import TestCase
+from parallel import MulticoreWorkerPool, ComplexMulticorePool
+
+from .. import test
+from .. import _util
+
+from ..config import config
+from ..helper import mkdir_p, joinpath
+from ..logger import log
+from ..result import ConsoleLogger, Outcome, test_results_output_path
+from ..suite import TestSuite, SuiteList
+from ..tee import tee
+from ..terminal import separator
+from ..test import TestCase
 
 
 class Runner(object):
     '''
     The default runner class used for running test suites and cases.
     '''
-    def __init__(self, suites=tuple(), result_loggers=tuple()):
+    def __init__(self,
+                 suites=tuple(),
+                 loggers=None,
+                 threads=None):
         '''
         :param suites: An iterable containing suites which are run when
         :func:`run` is called.
-
-        :param result_loggers: Iterable containing items supporting the
-        `ResultLogger` interface .
         '''
         if not isinstance(suites, SuiteList):
             suites = SuiteList(suites)
         self.suites = suites
-        if not result_loggers:
-            result_loggers = (ConsoleLogger(),)
-        self.result_loggers = tuple(result_loggers)
 
-    @staticmethod
-    def run_items(*items, **kwargs):
-        '''
-        Run the given items.
+        if threads is None:
+            threads = config.threads
+        self._runner_pool = self._RunnerPool(self, threads)
 
-        :param items: Items to be ran.
-        :param result_loggers: See :func:`__init__`
-
-        .. warning:: It's generally not a good idea to run a `TestCase` on its
-            own since most test cases are not self-contained. (They rely on
-            suite fixtures and previous tests.)
-            '''
-        self = None
-        if 'result_loggers' in kwargs and len(kwargs) == 1 :
-            self = Runner(**kwargs)
-        elif len(kwargs) != 0:
-            raise ValueError('Only accepts result_loggers as an optional'
-                             ' kwarg')
-        else:
-            self = Runner()
-
-        for logger in self.result_loggers:
-            logger.begin_testing()
-
-        for item in items:
-            if isinstance(item, TestCase):
-                log.warn("Running '%s' as a TestCase it is likely not self"
-                         "-contained!" % item.name)
-                log.warn('Recommend running its containing suite instead.')
-                outcome = self.run_test(item)
-            elif isinstance(item, TestSuite):
-                outcome = self.run_suite(item)
-            else:
-                raise AssertionError(_util.unexpected_item_msg)
-
-            if outcome in Outcome.failfast and config.fail_fast:
-                break
-
-        for logger in self.result_loggers:
-            logger.end_testing()
+        if loggers is None:
+            loggers = RunnerCallbacks()
+        self.loggers = loggers
+        self.callbacks = self._CallbackWrapper(self)
 
     def run(self):
         '''
         Run our entire collection of suites.
         '''
-        for logger in self.result_loggers:
-            logger.begin_testing()
+        self.callbacks.begin_testing()
 
         log.info(separator())
         log.info("Building all non 'lazy_init' fixtures")
 
-        failed_builds = self.setup_unbuilt(
+        failed_builds = self._setup_unbuilt(
                 self.suites.iter_fixtures(),
-                setup_lazy_init=False)
+                setup_lazy_init=False
+        )
 
         if failed_builds:
             error_str = ''
@@ -164,19 +133,60 @@ class Runner(object):
             log.warn('Error(s) while building non lazy_init fixtures.')
             log.warn(error_str)
 
-        outcomes = set()
-        for suite in self.suites:
-            outcome = self.run_suite(suite)
-            outcomes.add(outcome)
+        outcomes = dict()
+        outcomes_set = set()
+        suite_runner = self._run_items(self.suites)
+
+        for outcome, suite in itertools.izip(suite_runner, self.suites):
+            outcomes_set.add(outcome)
+            outcomes[suite] = outcome
             if outcome in Outcome.failfast and config.fail_fast:
                 break
 
-        for logger in self.result_loggers:
-            logger.end_testing()
-        return self._suite_outcome(outcomes)
+        self.callbacks.end_testing()
+        return self._suite_outcome(outcomes_set)
 
+    @staticmethod
+    def run_items(*items, **kwargs):
+        '''
+        Run the given items.
 
-    def run_suite(self, test_suite):
+        :param items: Items to be ran.
+        :param loggers: See :func:`__init__`
+
+        .. warning:: It's generally not a good idea to run a `TestCase` on its
+            own since most test cases are not self-contained. (They rely on
+            suite fixtures and previous tests.)
+            '''
+        self = None
+        if 'loggers' in kwargs and len(kwargs) == 1:
+            self = Runner(**kwargs)
+        elif len(kwargs) != 0:
+            raise ValueError('Only accepts loggers as an optional'
+                             ' kwarg')
+        else:
+            self = Runner()
+
+        self.suites.extend(items)
+        self.run()
+
+    def _run_items(self, items):
+        '''
+        Create a generator which will run the given items using our worker
+        pool yielding results test items are run.
+        '''
+        return self._runner_pool.run_test_items(items)
+
+    def _run_item(self, test_item):
+        '''Calls the correct method for running the given test_item.'''
+        if isinstance(test_item, TestCase):
+            return self._run_test(test_item)
+        elif isinstance(test_item, TestSuite):
+            return self._run_suite(test_item)
+        else:
+            raise AssertionError(_util.unexpected_item_msg)
+
+    def _run_suite(self, test_suite):
         '''
         Run all tests/suites. From the given test_suite.
 
@@ -185,18 +195,15 @@ class Runner(object):
            - Collect results as tests are performed.
         2. Handle teardown for all fixtures in the test_suite.
         '''
-        for logger in self.result_loggers:
-            logger.begin(test_suite)
+        self.callbacks.begin(item=test_suite)
 
         suite_iterator = enumerate(test_suite.iter_testlists())
 
         outcomes = set()
 
-        suite_timer = _util.Timer()
-        suite_timer.start()
         for (idx, (testlist, testcase)) in suite_iterator:
             assert isinstance(testcase, TestCase)
-            outcome = self.run_test(testcase, fixtures=test_suite.fixtures)
+            outcome = self._run_test(testcase, fixtures=test_suite.fixtures)
             outcomes.add(outcome)
 
             # If there was a chance we might need to skip the remaining
@@ -224,12 +231,11 @@ class Runner(object):
 
         for fixture in test_suite.fixtures.values():
             fixture.teardown()
-        suite_timer.stop()
 
         outcome = self._suite_outcome(outcomes)
-        self._log_outcome(outcome, runtime=suite_timer.runtime())
-        for logger in self.result_loggers:
-            logger.end_current()
+
+        self.callbacks.set_outcome(item=test_suite, outcome=outcome)
+        self.callbacks.end(item=test_suite)
 
         return outcome
 
@@ -257,7 +263,7 @@ class Runner(object):
         else:
             return Outcome.PASS
 
-    def run_test(self, testobj, fixtures=None):
+    def _run_test(self, testobj, fixtures=None):
         '''
         Run the given test.
 
@@ -278,10 +284,10 @@ class Runner(object):
         # Capture the output into a file.
         with tee(fstderr_name, stderr=True, stdout=False),\
                 tee(fstdout_name, stderr=False, stdout=True):
-            return self._run_test(testobj, fstdout_name,
+            return self._run_test_wrapped(testobj, fstdout_name,
                                   fstderr_name, fixtures)
 
-    def _run_test(self, testobj, fstdout_name, fstderr_name, fixtures):
+    def _run_test_wrapped(self, testobj, fstdout_name, fstderr_name, fixtures):
         if fixtures is None:
             fixtures = {}
 
@@ -290,11 +296,7 @@ class Runner(object):
         fixtures = fixtures.copy()
         fixtures.update(testobj.fixtures)
 
-        test_timer = _util.Timer()
-        test_timer.start()
-
-        for logger in self.result_loggers:
-            logger.begin(testobj)
+        self.callbacks.begin(item=testobj)
 
         def _run_test():
             reason = None
@@ -321,7 +323,7 @@ class Runner(object):
 
         # Build any fixtures that haven't been built yet.
         log.debug('Building fixtures for TestCase: %s' % testobj.name)
-        failed_builds = self.setup_unbuilt(
+        failed_builds = self._setup_unbuilt(
                 fixtures.values(),
                 setup_lazy_init=True)
 
@@ -338,17 +340,14 @@ class Runner(object):
         for fixture in testobj.fixtures.values():
             fixture.teardown()
 
-        test_timer.stop()
-        self._log_outcome(
-                outcome,
+        self.callbacks.set_outcome(
+                item=testobj,
+                outcome=outcome,
                 reason=reason,
-                runtime=test_timer.runtime(),
                 fstdout_name=fstdout_name,
-                fstderr_name=fstderr_name)
-
-        for logger in self.result_loggers:
-            logger.end_current()
-
+                fstderr_name=fstderr_name
+        )
+        self.callbacks.end(item=testobj)
         return outcome
 
     def _remaining_testlist_tests(self, current_item, testlist,
@@ -391,17 +390,18 @@ class Runner(object):
         for testcase in remaining_iterator:
             if isinstance(testcase, TestCase):
                 reason = ("Previous test '%s' failed in a failfast"
-                        " TestSuite." % failed_test)
-                for logger in self.result_loggers:
-                    logger.skip(testcase, reason=reason)
+                          " TestSuite." % failed_test)
+
+                self.callbacks.set_outcome(
+                        item=testcase,
+                        outcome=Outcome.SKIP,
+                        reason=reason,
+                        ff_skipped=True
+                )
             elif __debug__:
                 raise AssertionError(_util.unexpected_item_msg)
 
-    def _log_outcome(self, outcome, **kwargs):
-        for logger in self.result_loggers:
-            logger.set_current_outcome(outcome, **kwargs)
-
-    def setup_unbuilt(self, fixtures, setup_lazy_init=False):
+    def _setup_unbuilt(self, fixtures, setup_lazy_init=False):
         failures = []
         for fixture in fixtures:
             if not fixture.built:
@@ -412,3 +412,74 @@ class Runner(object):
                         failures.append((fixture.name,
                                          traceback.format_exc()))
         return failures
+
+    class _CallbackWrapper(object):
+        '''
+        Class returns a function for accessed attributes which will access the
+        attribute of all loggers.
+        '''
+        def __init__(self, runner):
+            self.runner = runner
+        def __getattr__(self, attr):
+            def do_with_loggers(**kwargs):
+                for logger in self.__dict__['runner'].loggers:
+                    getattr(logger, attr)(**kwargs)
+            return do_with_loggers
+
+    #class _RunnerPool(MulticoreWorkerPool):
+    class _RunnerPool(ComplexMulticorePool):
+        '''
+        Wrapper for WorkerPool which defines methods specific to the Runner class.
+        '''
+        def __init__(self, runner, threads):
+            super(Runner._RunnerPool, self).__init__(threads)
+            self.runner = runner
+
+        def run_test_items(self, test_items):
+            if self.parallel:
+                return self._run_parallel(test_items)
+            return self._run_serial(test_items)
+
+        def _run_parallel(self, test_items):
+            # Pass the TestItem UID to the parallelized run function. (Test Items
+            # are not serializable.)
+            test_items = (test_item.uid for test_item in test_items)
+
+            # We need to do post processing on items generated here in order
+            # to report them with our own reporters.
+            def merge_result(result_logger):
+                for logger in self.runner.loggers:
+                    if hasattr(logger, 'insert_results'):
+                        logger.insert_results(result_logger)
+                return result_logger.results[0]
+
+            for result in self.imap_unordered(_run_parallel, test_items):
+                yield merge_result(result)
+
+        def _run_serial(self, test_items):
+            return self.imap_unordered(self.runner._run_item, test_items)
+
+def _run_parallel(uid):
+    '''
+    Module level function used by the workers in the RunnerPool to run test
+    items with the given UID.
+
+    .. note:: This must be exposed at the module level in order to be
+        reachable by the multiprocessing module. (Methods can't be pickled.)
+    '''
+    # We import here since this will be in a separate process (and is only
+    # needed in that process).
+    from ..loader import TestLoader
+    from ..result import InternalLogger, ConsoleLogger
+    import tempfile
+
+    # Reload the test in the new child process. (We can't pickle this easily.)
+    test_item = TestLoader.load_uid(uid)
+
+    # Run the test and log to a tempfile.
+    (file_handle, file_name) = tempfile.mkstemp()
+    with open(file_name, 'w') as result_file:
+        logger = InternalLogger(result_file)
+        runner = Runner(threads=1, loggers=(logger,))
+        runner._run_item(test_item)
+        return logger

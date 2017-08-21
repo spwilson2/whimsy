@@ -41,6 +41,7 @@ import abc
 import argparse
 import copy
 import os
+from ConfigParser import ConfigParser
 from pickle import HIGHEST_PROTOCOL as highest_pickle_protocol
 
 from helper import absdirpath
@@ -78,6 +79,11 @@ class _Config(object):
     def _init(self, parser):
         self._parse_commandline_args(parser)
         self._run_post_processors()
+        self._initialized = True
+
+    def _init_with_dicts(self, config, defaults):
+        self._config = config
+        self._defaults = defaults
         self._initialized = True
 
     def _add_post_processor(self, attr, post_processor):
@@ -199,6 +205,12 @@ def define_constants(constants):
     constants.gem5_binary_fixture_name = 'gem5'
     constants.pickle_protocol = highest_pickle_protocol
 
+    # The root directory which all test names will be based off of.
+    constants.testing_base = absdirpath(os.path.join(absdirpath(__file__),
+                                                     os.pardir))
+    constants.credential_header = 'Credentials'
+    constants.default_credentials_file = os.path.join(os.getcwd(), 'credentials.ini')
+
 def define_post_processors(config):
     '''
     post_processors are used to do final configuration of variables. This is
@@ -223,11 +235,30 @@ def define_post_processors(config):
         return build_dir
 
     def fix_verbosity_hack(verbose):
-        verbose = (verbose[0].val,)
-        return verbose
+        return (verbose[0].val,)
+
+    def threads_as_int(threads):
+        if threads is not None:
+            return (int(threads[0]),)
+
+    def parse_server_credentials(credentials_file):
+        if credentials_file is not None:
+            if credentials_file[0] is None:
+                credentials_file = (constants.default_credentials_file,)
+
+            print credentials_file
+            parser = ConfigParser()
+            parser.read(credentials_file[0])
+            hostname = parser.get(constants.credential_header, 'hostname')
+            port = parser.get(constants.credential_header, 'port')
+            passkey = parser.get(constants.credential_header, 'passkey')
+            config._set('credentials', (hostname, int(port), passkey))
+            return credentials_file
 
     config._add_post_processor('build_dir', set_default_build_dir)
     config._add_post_processor('verbose', fix_verbosity_hack)
+    config._add_post_processor('threads', threads_as_int)
+    config._add_post_processor('credentials_file', parse_server_credentials)
 
 class Argument(object):
     '''
@@ -356,7 +387,12 @@ def define_common_args(config):
             action='store_true',
             default=False,
             help='Only list tests that failed.'
-        )
+        ),
+        Argument('--credentials_file',
+                action='store',
+                default=None,
+                help='File to parse for server information.'
+        ),
     ]
 
     # NOTE: There is a limitation which arises due to this format. If you have
@@ -415,6 +451,7 @@ class RunParser(ArgParser):
         common_args.fail_fast.add_to(parser)
         common_args.threads.add_to(parser)
         common_args.list_only_failed.add_to(parser)
+        common_args.credentials_file.add_to(parser)
 
         # Modify the help statement for the tags common_arg
         mytags = common_args.tags.copy()
@@ -482,6 +519,25 @@ class RerunParser(ArgParser):
         common_args.threads.add_to(parser)
         common_args.list_only_failed.add_to(parser)
 
+class ClientParser(ArgParser):
+    '''
+    Parser for the \'client\' command.
+    '''
+    def __init__(self, subparser):
+        parser = subparser.add_parser(
+            'client',
+            help='''Act as a client/helper for a test server instance.'''
+        )
+
+        super(ClientParser, self).__init__(parser)
+
+        common_args.credentials_file.add_to(parser)
+
+        arg = common_args.threads.copy()
+        arg.kwargs['help'] = ('The number of helper instances to spawn on'
+                              ' this client.')
+        arg.add_to(parser)
+
 config = _Config()
 define_constants(config.constants)
 
@@ -510,6 +566,7 @@ def initialize_config():
     runparser = RunParser(baseparser.subparser)
     listparser = ListParser(baseparser.subparser)
     rerunparser = RerunParser(baseparser.subparser)
+    clientparser = ClientParser(baseparser.subparser)
 
     # Initialize the config by parsing args and running callbacks.
     config._init(baseparser)
