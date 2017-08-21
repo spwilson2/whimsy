@@ -4,7 +4,8 @@ from multiprocessing.managers import SyncManager
 import Queue
 from itertools import imap
 
-from ..config import config
+#from .. import config
+from .. import config_module
 from ..logger import log
 
 class WorkerPool(object):
@@ -19,10 +20,8 @@ class WorkerPool(object):
         pass
 
     def imap_unordered(self, map_function, args):
-        print 'imap unordered'
         if self.parallel:
             return self._imap_parallel(map_function, args)
-        print 'imap unordered'
         return self._imap_serial(map_function, args)
 
     _imap_serial = imap
@@ -43,8 +42,7 @@ class MulticoreWorkerPool(WorkerPool):
 
         self._process_pool = None
         if self.parallel:
-            #self._process_pool = multiprocessing.Pool(threads)
-            self._process_pool = ComplexMulticorePool(threads)
+            self._process_pool = multiprocessing.Pool(threads)
 
     @property
     def pool(self):
@@ -78,12 +76,22 @@ class ComplexMulticorePool(WorkerPool):
     '''
     def __init__(self, threads=None):
         super(ComplexMulticorePool, self).__init__(threads)
-        credentials = ('', 11112, 'hi') # TODO/FIXME, use the config.
-        self.server = WorkServer(*credentials)
 
         if self.parallel:
-            #self._additional_workers = [WorkClient(*credentials)]
-            pass
+            credentials = config_module.config.credentials
+            self.server = WorkServer(*credentials)
+
+            # The work server starts it's own worker, so we only make n-1
+            # additional workers.
+            self._additional_workers = []
+            for thread in range(1, threads):
+                new_worker = WorkClient(*credentials)
+                new_worker.daemon = True
+                # NOTE: When this pool is deleted and the server closes down
+                # this process will be killed.
+                new_worker.start()
+                self._additional_workers.append(new_worker)
+
 
     @property
     def pool(self):
@@ -104,12 +112,20 @@ class WorkQueueServer(SyncManager):
         self.register('get_work_queue', lambda:self.work_queue)
         self.register('get_result_queue', lambda:self.result_queue)
 
+        # NOTE: We use a tuple with dictionaries because the SyncManager will
+        # not automatically pass 'deepcopy's of objects. So the config manually
+        # builds out of dictionaries rather than copying a parent __dict__.
+        self.register('get_shared_config',
+                lambda:(config_module.config._config,
+                        config_module.config._defaults))
+
         super(WorkQueueServer, self).__init__((hostname, port), passkey)
 
 class WorkQueueClient(SyncManager):
     def __init__(self, hostname, port, passkey):
         self.register('get_work_queue')
         self.register('get_result_queue')
+        self.register('get_shared_config')
         super(WorkQueueClient, self).__init__((hostname, port), passkey)
 
 class WorkServer(object):
@@ -158,13 +174,36 @@ class WorkClient(multiprocessing.Process):
         self.queue_client = WorkQueueClient(hostname, port, passkey)
         super(WorkClient, self).__init__()
 
+
     def run(self):
-        self.queue_client.connect()
-        log_if_client(log.bold, 'Connected to test server.')
-        work_queue = self.queue_client.get_work_queue()
-        result_queue = self.queue_client.get_result_queue()
-        self.imap_task(work_queue, result_queue)
-        log_if_client(log.bold, 'Work completed for test server, closing.')
+        try:
+            self.queue_client.connect()
+        except:
+            log.bold('WorkClient failed to connect to WorkServer.')
+            return
+        else:
+            log_if_client(log.bold, 'Connected to test server.')
+
+        disconnected_msg = ('WorkClient disconnected from WorkServer before it'
+                            ' could start.')
+        try:
+            self._copy_config()
+            work_queue = self.queue_client.get_work_queue()
+            result_queue = self.queue_client.get_result_queue()
+        except IOError:
+            log.bold(disconnected_msg)
+        except EOFError:
+            log.bold(disconnected_msg)
+        else:
+            self.imap_task(work_queue, result_queue)
+            log_if_client(log.bold, 'Work completed for test server, closing.')
+
+
+    def _copy_config(self):
+        newconfig = self.queue_client.get_shared_config()
+        config_module.config._init_with_dicts(*newconfig._getvalue())
+        # In the copied config, don't spawn additional threads.
+        config_module.config._set('threads', 1)
 
     @staticmethod
     def imap_task(wq, rq):
@@ -182,7 +221,7 @@ def runloop(*credentials):
     work_client.join()
 
 def log_if_client(callback, *args, **kwargs):
-    if config.command == 'client':
+    if config_module.config.command == 'client':
         callback(*args, **kwargs)
 
 

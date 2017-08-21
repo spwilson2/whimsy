@@ -125,13 +125,26 @@ def doclient():
     '''
     Handle the `client` command.
     '''
-    credentials = ('', 11112, 'hi') # TODO/FIXME, use the config.
-    wc = WorkClient(*credentials)
-    log.bold('Starting a client instance.')
-    wc.start()
-    wc.join()
-    # TODO: Parse the credentials.
-    # TODO: Act as a client for a server.
+    credentials = config.config.credentials
+
+    threads = config.config.threads
+
+    clients = []
+    if threads > 1:
+        log.bold('Starting %s client instances.' % threads)
+        for _ in range(threads):
+            wc = WorkClient(*credentials)
+            log.bold('Starting a client instance.')
+            wc.start()
+            clients.append(wc)
+    else:
+        wc = WorkClient(*credentials)
+        log.bold('Starting a client instance.')
+        wc.start()
+        clients.append(wc)
+    for wc in clients:
+        wc.join()
+
     # TODO: Spawn other clents based on the number of threads given.
 
 def main():
