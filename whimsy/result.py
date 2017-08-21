@@ -70,7 +70,8 @@ class ResultLogger(object):
         Helper function to delegate a method for the given function based on
         the type of the given instance.
 
-        Effectively is shorthand for
+        Effectively is shorthand for:
+
         >>> if isinstance(instance, TestSuite):
         >>>     self._call_this_testsuite(*args, **kwargs)
         >>> elif isinstance(instance, TestCase):
@@ -114,8 +115,9 @@ class ResultLogger(object):
         :param item: The test item which we are setting the outcome of
         :param outcome: The outcome the test item will be set to
 
-        TestCase Only kwargs
-        ---------------------
+
+        TestCase Only kwargs:
+
         :param reason: Reason for the test case outcome.
         :param fstdout_name: Name of the file stdout is available at.
         :param fstderr_name: Name of the file stdout is available at.

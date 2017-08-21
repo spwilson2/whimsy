@@ -113,6 +113,13 @@ whimsy\.query module
     :undoc-members:
     :show-inheritance:
 
+whimsy\.runner\.parallel module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: whimsy.runner.parallel
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 whimsy\.tee module
 ^^^^^^^^^^^^^^^^^^
