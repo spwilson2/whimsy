@@ -178,10 +178,10 @@ server is likely to hang. This is one area for further development.</p>
 <p>In order to run the test suite in a multithreaded manner. The server and client
 should both have the same filesystem structure. (It would be simpliest to share
 a nfs mount, but copies will work just fine.) In both the client and server
-a <cite>credentials.ini</cite> file must exist in the current working directory. The file
+a <code class="docutils literal"><span class="pre">credentials.ini</span></code> file must exist in the current working directory. The file
 should contain the information to start the server and for the client to
 connect to it.</p>
-<p>The <cite>credentials.ini</cite> should be formatted as follows:</p>
+<p>The <code class="docutils literal"><span class="pre">credentials.ini</span></code> should be formatted as follows:</p>
 <div class="code ini highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Credentials</span><span class="p">]</span>
 <span class="n">hostname</span><span class="o">=</span><span class="n">localhost</span>
 <span class="n">port</span><span class="o">=</span><span class="mi">11111</span>
@@ -189,20 +189,20 @@ connect to it.</p>
 </pre></div>
 </div>
 <p>Then when you wish to begin testing start up the client and server:</p>
-<p>Client:
-.. code:: bash</p>
-<blockquote>
-<div>whimsy client -j 8</div></blockquote>
-<p>Server:
-.. code:: bash</p>
-<blockquote>
-<div>whimsy run -j 8</div></blockquote>
+<p>Client:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">whimsy</span> <span class="n">client</span> <span class="o">-</span><span class="n">j</span> <span class="mi">8</span>
+</pre></div>
+</div>
+<p>Server:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">whimsy</span> <span class="n">run</span> <span class="o">-</span><span class="n">j</span> <span class="mi">8</span>
+</pre></div>
+</div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">It is required that the server be started with the flag <cite>-j2</cite>
 or more in order for multithreading support to be enabled.</p>
 </div>
-<p>This support allows non <cite>lazy_init</cite> <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a> objects to
+<p>This support allows non <code class="docutils literal"><span class="pre">lazy_init</span></code> <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a> objects to
 be built once and shared across test clients. I.E. expensive setup items like
 SCons targets will be built once and all test clients will be able to share
 them (assuming a client has the gem5 build attached via nfs).</p>

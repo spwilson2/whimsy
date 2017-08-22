@@ -15,11 +15,11 @@ a multiple clients.
 In order to run the test suite in a multithreaded manner. The server and client
 should both have the same filesystem structure. (It would be simpliest to share
 a nfs mount, but copies will work just fine.) In both the client and server
-a `credentials.ini` file must exist in the current working directory. The file
+a ``credentials.ini`` file must exist in the current working directory. The file
 should contain the information to start the server and for the client to
 connect to it.
 
-The `credentials.ini` should be formatted as follows:
+The ``credentials.ini`` should be formatted as follows:
 
 .. code:: ini
 
@@ -31,11 +31,13 @@ The `credentials.ini` should be formatted as follows:
 Then when you wish to begin testing start up the client and server:
 
 Client:
+
 .. code:: bash
 
     whimsy client -j 8
 
 Server:
+
 .. code:: bash
 
     whimsy run -j 8
@@ -44,7 +46,7 @@ Server:
     or more in order for multithreading support to be enabled.
 
 
-This support allows non `lazy_init` :class:`whimsy.fixture.Fixture` objects to
+This support allows non ``lazy_init`` :class:`whimsy.fixture.Fixture` objects to
 be built once and shared across test clients. I.E. expensive setup items like
 SCons targets will be built once and all test clients will be able to share
 them (assuming a client has the gem5 build attached via nfs).
