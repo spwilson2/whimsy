@@ -1,0 +1,413 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.suite &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>whimsy.suite</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whimsy.suite</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">getcwd</span>
+
+<span class="kn">from</span> <span class="nn">uid</span> <span class="k">import</span> <span class="n">uid</span>
+
+<div class="viewcode-block" id="TestSuite"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.TestSuite">[docs]</a><span class="k">class</span> <span class="nc">TestSuite</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    An object containing a collection of tests, represents a completely</span>
+<span class="sd">    self-contained testing unit. That is, if it should be able to be ran</span>
+<span class="sd">    without relying on any other suites running.</span>
+
+<span class="sd">    .. note:: In order for TestSuite objects to be enumerated by the test</span>
+<span class="sd">        system this class&#39; :code:`__new__` method must be called. The loader class</span>
+<span class="sd">        will monkey patch this method in order to enumerate suites.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">tests</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(),</span> <span class="n">tags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixtures</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">fail_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param name: Name of the TestSuite</span>
+
+<span class="sd">        :param tags: Iterable of tags to mark this suite and all containted</span>
+<span class="sd">            tests with.</span>
+
+<span class="sd">        :param tests: An interable of test cases. If is a TestList the</span>
+<span class="sd">            heirarchy will be maintained.</span>
+
+<span class="sd">        :param fail_fast: If True indicates the first test to fail in the test</span>
+<span class="sd">            suite will cause the execution of the test suite to halt.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">testlist</span> <span class="o">=</span> <span class="n">TestList</span><span class="p">(</span><span class="n">tests</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail_fast</span> <span class="o">=</span> <span class="n">fail_fast</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="k">if</span> <span class="n">fixtures</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fixtures</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fixtures</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">fixtures</span> <span class="o">=</span> <span class="p">{</span><span class="n">fixture</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">fixture</span> <span class="k">for</span> <span class="n">fixture</span> <span class="ow">in</span> <span class="n">fixtures</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixtures</span> <span class="o">=</span> <span class="n">fixtures</span>
+
+        <span class="k">if</span> <span class="n">tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">getcwd</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">uid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">uid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">TestSuite</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">testcases</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return a tuple containing all the test cases this TestSuite holds.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">testcase</span> <span class="k">for</span> <span class="n">testcase</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">))</span>
+
+<div class="viewcode-block" id="TestSuite.iter_testlists"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.TestSuite.iter_testlists">[docs]</a>    <span class="k">def</span> <span class="nf">iter_testlists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Iterate through tests yielding a tuple of the containing TestList and</span>
+<span class="sd">        the TestCase.</span>
+
+<span class="sd">        :returns: iterator of :code:`(testlist, testcase)` objects.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">testlist</span><span class="o">.</span><span class="n">iter_keep_containers</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Iterates over all the contained test cases in this suite.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">testlist</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns the number of test cases in this suite.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">testlist</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestSuite.append"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.TestSuite.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Adds the given TestCase or TestList to this TestSuite&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">testlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+<div class="viewcode-block" id="TestSuite.extend"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.TestSuite.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Adds the given TestCases or TestLists to this TestSuite&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">testlist</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
+
+    <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+        <span class="c1"># This is a method that will be created by the test loader in order to</span>
+        <span class="c1"># manually remove a suite. See the TestLoader load_file description for</span>
+        <span class="c1"># more details.</span>
+        <span class="n">__no_collect__</span> <span class="o">=</span> <span class="bp">NotImplemented</span></div>
+
+
+<div class="viewcode-block" id="SuiteList"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.SuiteList">[docs]</a><span class="k">class</span> <span class="nc">SuiteList</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Container class for test suites which provides some utility functions.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suites</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suites</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suites</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">suites</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suites</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suites</span><span class="p">)</span>
+<div class="viewcode-block" id="SuiteList.append"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.SuiteList.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+<div class="viewcode-block" id="SuiteList.extend"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.SuiteList.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suites</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SuiteList.iter_fixtures"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.SuiteList.iter_fixtures">[docs]</a>    <span class="k">def</span> <span class="nf">iter_fixtures</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return an iterable of all fixtures of all TestSuites and their</span>
+<span class="sd">        contained TestCases in this collection.</span>
+
+<span class="sd">        .. note:: Will return duplicates if fixtures are duplicated across</span>
+<span class="sd">            test cases.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">suite</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">fixture</span> <span class="ow">in</span> <span class="n">suite</span><span class="o">.</span><span class="n">fixtures</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">yield</span> <span class="n">fixture</span>
+
+            <span class="k">for</span> <span class="n">testcase</span> <span class="ow">in</span> <span class="n">suite</span><span class="o">.</span><span class="n">testcases</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">fixture</span> <span class="ow">in</span> <span class="n">testcase</span><span class="o">.</span><span class="n">fixtures</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="n">fixture</span></div>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SuiteList</span><span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestList"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.TestList">[docs]</a><span class="k">class</span> <span class="nc">TestList</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Container class for :class:`whimsy.test.TestCase` objects which provides</span>
+<span class="sd">    some utility functions for iteration as well as the fail_fast variable.</span>
+<span class="sd">    A TestList can be heirarchical, in which case iteration yields tests in</span>
+<span class="sd">    in-order traversal.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="p">[],</span> <span class="n">fail_fast</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param fail_fast: If any TestCase fails in this TestList, all remaing</span>
+<span class="sd">        tests in this collection should be skipped.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail_fast</span> <span class="o">=</span> <span class="n">fail_fast</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">TestList</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keep_containers</span><span class="p">):</span>
+
+        <span class="c1"># We can&#39;t use the _util iter_recursively function to do this since we</span>
+        <span class="c1"># have defined a unusual __iter__</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">TestList</span><span class="p">):</span>
+                <span class="c1"># Recurse into that list.</span>
+                <span class="k">for</span> <span class="n">item_of_item</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">_iter</span><span class="p">(</span><span class="n">keep_containers</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">item_of_item</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">keep_containers</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">item</span>
+
+<div class="viewcode-block" id="TestList.iter_keep_containers"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.TestList.iter_keep_containers">[docs]</a>    <span class="k">def</span> <span class="nf">iter_keep_containers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Iterate through tests yielding a tuple of the containing TestList and</span>
+<span class="sd">        the TestCase.</span>
+
+<span class="sd">        :returns: iterator of :code:`(testlist, testcase)` objects.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestList.iter_tests"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.TestList.iter_tests">[docs]</a>    <span class="k">def</span> <span class="nf">iter_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Iterate in-order over all contained tests.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Iterate in-order over all contained tests.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_tests</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return the number of tests contained in this tree.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+<div class="viewcode-block" id="TestList.append"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.TestList.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Add the item to the end of this TestList.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+<div class="viewcode-block" id="TestList.extend"><a class="viewcode-back" href="../../whimsy.html#whimsy.suite.TestList.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Add the items to the end of this TestList.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

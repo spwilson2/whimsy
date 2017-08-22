@@ -1,0 +1,787 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.loader &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>whimsy.loader</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whimsy.loader</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Contains the :class:`Loader` which is responsible for discovering and loading</span>
+<span class="sd">tests.</span>
+
+<span class="sd">Loading typically follows the following stages.</span>
+
+<span class="sd">1. Recurse down a given directory looking for tests which match a given regex.</span>
+
+<span class="sd">The default regex used will match any python file (ending in .py) that has</span>
+<span class="sd">a name starting or ending in test(s). If there are any additional components</span>
+<span class="sd">of the name they must be connected with &#39;-&#39; or &#39;_&#39;. Lastly, file names that</span>
+<span class="sd">begin with &#39;.&#39; will be ignored.</span>
+
+<span class="sd">The following names would match:</span>
+
+<span class="sd">- `tests.py`</span>
+<span class="sd">- `test.py`</span>
+<span class="sd">- `test-this.py`</span>
+<span class="sd">- `tests-that.py`</span>
+<span class="sd">- `these-test.py`</span>
+
+<span class="sd">These would not match:</span>
+
+<span class="sd">- `.test.py`    - &#39;hidden&#39; files are ignored.</span>
+<span class="sd">- `test`        - Must end in &#39;.py&#39;</span>
+<span class="sd">- `test-.py`    - Needs a character after the hypen.</span>
+<span class="sd">- `testthis.py` - Needs a hypen or underscore to separate &#39;test&#39; and &#39;this&#39;</span>
+
+
+<span class="sd">2. With all files discovered execute each file gathering its test items we\</span>
+<span class="sd">   care about collecting. (`TestCase`, `TestSuite` and `Fixture` objects.)</span>
+
+<span class="sd">In order to collect these objects the :class:`TestLoader` must find a way to</span>
+<span class="sd">capture objects as they are instantiated. To do this, before calling</span>
+<span class="sd">:func:`execfile` on the file about to be loaded, :class:`TestLoader` will</span>
+<span class="sd">monkey patch the :func:`__new__` method of test item classes. The monkey</span>
+<span class="sd">patched `__new__` will insert the new instance of the test method as it is</span>
+<span class="sd">created into an :class:`OrderedSet` saved in the :class:`TestLoader`.</span>
+
+<span class="sd">In addition to adding a callback to the :func:`__new__` function of these test</span>
+<span class="sd">objects the loader adds a :func:`__no_collect__` method. This method can be</span>
+<span class="sd">used by test writers to prevent a test item from being collected. This</span>
+<span class="sd">functionallity is exposed to test writers with the :func:`no_collect` function</span>
+<span class="sd">in this module. Users might create an item that fits almost all their needs</span>
+<span class="sd">butbut wish to make copy of it and modify a single attribute without the</span>
+<span class="sd">original version being collected.</span>
+
+<span class="sd">&gt;&gt;&gt; from __future__ import print_function</span>
+<span class="sd">&gt;&gt;&gt; from testlib import *</span>
+<span class="sd">&gt;&gt;&gt; from copy import copy</span>
+<span class="sd">&gt;&gt;&gt; hello_func = lambda : print(&#39;Hello&#39;)</span>
+<span class="sd">&gt;&gt;&gt; test = TestFunction(hello_func)</span>
+<span class="sd">&gt;&gt;&gt; # Create a copy, don&#39;t collect the original.</span>
+<span class="sd">&gt;&gt;&gt; test_copy = copy(no_collect(test))</span>
+<span class="sd">&gt;&gt;&gt; test_copy.name = &#39;hello-test&#39;</span>
+
+<span class="sd">As a final note, :class:`TestCase` instances which are not put into</span>
+<span class="sd">a :class:`TestSuite` by the test writer will be placed into</span>
+<span class="sd">a :class:`TestSuite` named after the module.</span>
+
+<span class="sd">.. seealso:: :func:`load_file`</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">types</span> <span class="k">import</span> <span class="n">MethodType</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">import</span> <span class="nn">types</span>
+
+<span class="kn">from</span> <span class="nn">fixture</span> <span class="k">import</span> <span class="n">Fixture</span>
+<span class="kn">from</span> <span class="nn">helper</span> <span class="k">import</span> <span class="n">OrderedSet</span><span class="p">,</span> <span class="n">absdirpath</span><span class="p">,</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">logger</span> <span class="k">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">suite</span> <span class="k">import</span> <span class="n">TestSuite</span><span class="p">,</span> <span class="n">SuiteList</span><span class="p">,</span> <span class="n">TestList</span>
+<span class="kn">from</span> <span class="nn">test</span> <span class="k">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">uid</span> <span class="k">import</span> <span class="n">path_from_uid</span>
+
+<span class="c1"># Will match filenames that either begin or end with &#39;test&#39; or tests and use</span>
+<span class="c1"># - or _ to separate additional name components.</span>
+<span class="n">default_filepath_regex</span> <span class="o">=</span> \
+        <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(((.+[-_])?tests?)|(tests?([-_].+)?))\.py$&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="default_filepath_filter"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.default_filepath_filter">[docs]</a><span class="k">def</span> <span class="nf">default_filepath_filter</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;The default filter applied to filepaths to marks as test sources.&#39;&#39;&#39;</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">default_filepath_regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+        <span class="c1"># Make sure doesn&#39;t start with .</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">filepath</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="path_as_modulename"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.path_as_modulename">[docs]</a><span class="k">def</span> <span class="nf">path_as_modulename</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Return the given filepath as a module name.&#39;&#39;&#39;</span>
+    <span class="c1"># Remove the file extention (.py)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filepath</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="path_as_testsuite"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.path_as_testsuite">[docs]</a><span class="k">def</span> <span class="nf">path_as_testsuite</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Return the given filepath as a testsuite.</span>
+
+<span class="sd">    The testsuite will be named after the containing directory of the file.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">TestSuite</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">absdirpath</span><span class="p">(</span><span class="n">filepath</span><span class="p">))[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="no_collect"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.no_collect">[docs]</a><span class="k">def</span> <span class="nf">no_collect</span><span class="p">(</span><span class="n">test_item</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Prevent the collection of the test item by the :class:`TestLoader`.</span>
+
+<span class="sd">    :returns: the item given so this can be easily used in comprehensions.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">test_item</span><span class="p">,</span> <span class="s1">&#39;__no_collect__&#39;</span><span class="p">):</span>
+        <span class="n">test_item</span><span class="o">.</span><span class="n">__no_collect__</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">test_item</span></div>
+
+<span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_assert_files_in_same_dir</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="n">directory</span>
+
+<span class="k">class</span> <span class="nc">_MethodWrapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Class used to wrap and unwrap a method of a class with an additional</span>
+<span class="sd">    callback function.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">_sentinal</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">method_name</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">clsmethod</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param cls: Class to wrap.</span>
+<span class="sd">        :param method_name: Name of method to wrap</span>
+
+<span class="sd">        :param callback: Function to call in addition to the original cls</span>
+<span class="sd">        method.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span> <span class="o">=</span> <span class="n">callback</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cls</span> <span class="o">=</span> <span class="bp">cls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_method_name</span> <span class="o">=</span> <span class="n">method_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_old_method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sentinal</span>
+        <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_replaced_method</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clsmethod</span> <span class="o">=</span> <span class="n">clsmethod</span>
+
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Wrap the cls method_name with a method that will call both the class&#39;</span>
+<span class="sd">        original method if there was one and our callback.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">old_method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sentinal</span><span class="p">)</span>
+        <span class="n">sentinal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sentinal</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span>
+
+        <span class="k">def</span> <span class="nf">combined_method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">old_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">sentinal</span><span class="p">,</span> <span class="bp">NotImplemented</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">callback</span><span class="p">(</span><span class="n">__retval__</span><span class="o">=</span><span class="n">old_method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                                <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">callback</span><span class="p">(</span><span class="n">__retval__</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clsmethod</span><span class="p">:</span>
+            <span class="n">combined_method</span> <span class="o">=</span> <span class="nb">classmethod</span><span class="p">(</span><span class="n">combined_method</span><span class="p">)</span>
+
+        <span class="n">replacement</span> <span class="o">=</span> <span class="n">combined_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_old_method</span> <span class="o">=</span> <span class="n">old_method</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_name</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+            <span class="c1"># NOTE: We do this after we have set since in python2 functions and</span>
+            <span class="c1"># methods are different types.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_replaced_method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">unwrap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return the wrapped class method to the state it was in when we</span>
+<span class="sd">        called :func:`wrap` on it.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_old_method</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sentinal</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_name</span><span class="p">)</span> \
+                    <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replaced_method</span><span class="p">,</span> \
+                    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&#39;s </span><span class="si">%s</span><span class="s2"> has changed, we can not restore it.&quot;</span> \
+                    <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_name</span><span class="p">)</span>
+
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_old_method</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_name</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TestLoader"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader">[docs]</a><span class="k">class</span> <span class="nc">TestLoader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Base class for discovering tests.</span>
+
+<span class="sd">    To simply discover and load all tests using the default filter create an</span>
+<span class="sd">    instance and `load_root`.</span>
+
+<span class="sd">    &gt;&gt;&gt; import os</span>
+<span class="sd">    &gt;&gt;&gt; tl = TestLoader()</span>
+<span class="sd">    &gt;&gt;&gt; tl.load_root(os.getcwd())</span>
+
+<span class="sd">    .. note:: If tests are not manually placed in a TestSuite, they will</span>
+<span class="sd">        automatically be placed into one for the module.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath_filter</span><span class="o">=</span><span class="n">default_filepath_filter</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_suites</span> <span class="o">=</span> <span class="n">SuiteList</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepath_filter</span> <span class="o">=</span> <span class="n">filepath_filter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quiet</span> <span class="o">=</span> <span class="n">quiet</span>
+
+        <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+            <span class="c1"># Used to check if we have ran load_file to make sure we have</span>
+            <span class="c1"># actually tried to load a file into our suite.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_a_file</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># List of all the fixtures we have collected.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fixtures</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Tests and suites are identified by the test loader in a format that</span>
+        <span class="c1"># enforces uniqueness - both so users and the test system can identify</span>
+        <span class="c1"># unique tests.</span>
+        <span class="c1"># Reverse index: testitem-&gt;uid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_index</span>  <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_suite_index</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="c1"># Reverse index: uid-&gt;testitem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_rindex</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_suite_rindex</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="c1"># Holds a mapping of tag-&gt;testitem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_tag_index</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Member variables used to keep track of instances of suites, cases,</span>
+        <span class="c1"># and fixtures when execfile&#39;ing.</span>
+        <span class="c1"># They are temporary and will be reset for each file we load.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wrapped_classes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collected_test_items</span> <span class="o">=</span> <span class="n">OrderedSet</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collected_fixtures</span> <span class="o">=</span> <span class="n">OrderedSet</span><span class="p">()</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">suites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_a_file</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suites</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tests</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_a_file</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_test_rindex</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fixtures</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_a_file</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fixtures</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_a_file</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag_index</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestLoader.get_uid"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader.get_uid">[docs]</a>    <span class="k">def</span> <span class="nf">get_uid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uid</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return the test item with the given uid.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_test_index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suite_index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_tag_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return dictionary of key-&gt;[testitem].&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_tag_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_tags</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_suites</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_tag_index</span>
+
+<div class="viewcode-block" id="TestLoader.suites_with_tag"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader.suites_with_tag">[docs]</a>    <span class="k">def</span> <span class="nf">suites_with_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tag_index</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">TestSuite</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="TestLoader.tag_index"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader.tag_index">[docs]</a>    <span class="k">def</span> <span class="nf">tag_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return a list of test items with the given tag.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag_index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="p">[])</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suites</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Build a dictionary mapping a tag to a list of TestSuites and TestCases</span>
+<span class="sd">        with that tag.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">item_tags</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">uniq_tags</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="c1"># Build index of testitem-&gt;[tags]</span>
+        <span class="k">for</span> <span class="n">test_suite</span> <span class="ow">in</span> <span class="n">suites</span><span class="p">:</span>
+            <span class="n">item_tags</span><span class="p">[</span><span class="n">test_suite</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_suite</span><span class="o">.</span><span class="n">tags</span>
+            <span class="n">uniq_tags</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">test_suite</span><span class="o">.</span><span class="n">tags</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">test_suite</span><span class="p">:</span>
+                <span class="n">item_tags</span><span class="p">[</span><span class="n">test</span><span class="p">]</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">tags</span> <span class="o">|</span> <span class="n">test_suite</span><span class="o">.</span><span class="n">tags</span>
+                <span class="n">uniq_tags</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">test</span><span class="o">.</span><span class="n">tags</span><span class="p">)</span>
+
+        <span class="c1"># Build Reverse index (tag-&gt;[testitems])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_tag_index</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">itemtags</span> <span class="ow">in</span> <span class="n">item_tags</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">_tag</span> <span class="ow">in</span> <span class="n">uniq_tags</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_tag</span> <span class="ow">in</span> <span class="n">itemtags</span><span class="p">:</span>
+                    <span class="n">testlist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_tag_index</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">_tag</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="n">testlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TestLoader.drop_caches"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader.drop_caches">[docs]</a>    <span class="k">def</span> <span class="nf">drop_caches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Drop our internal tag cache.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_tag_index</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="TestLoader.discover_files"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader.discover_files">[docs]</a>    <span class="k">def</span> <span class="nf">discover_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Recurse down from the given root directory returning a list of</span>
+<span class="sd">        directories which contain a list of files matching</span>
+<span class="sd">        `self.filepath_filter`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Will probably want to order this traversal.</span>
+        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirnames</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
+            <span class="n">dirnames</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">filenames</span><span class="p">:</span>
+                <span class="n">filenames</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+                <span class="n">filepaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> \
+                             <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">]</span>
+                <span class="n">filepaths</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath_filter</span><span class="p">,</span> <span class="n">filepaths</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">filepaths</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">filepaths</span></div>
+
+<div class="viewcode-block" id="TestLoader.load_root"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader.load_root">[docs]</a>    <span class="k">def</span> <span class="nf">load_root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Load files from the given root directory which match</span>
+<span class="sd">        `self.filepath_filter`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_a_file</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">discover_files</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">directory</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+                    <span class="n">_assert_files_in_same_dir</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">directory</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestLoader.load_dir"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader.load_dir">[docs]</a>    <span class="k">def</span> <span class="nf">load_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">dir_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">discover_files</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+                <span class="n">_assert_files_in_same_dir</span><span class="p">(</span><span class="n">dir_</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dir_</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">break</span></div>
+
+<div class="viewcode-block" id="TestLoader.load_uid"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader.load_uid">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">load_uid</span><span class="p">(</span><span class="n">uid</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Attempt to load the given UID.</span>
+
+<span class="sd">        :param uid: The uid to attempt to load a test item for.</span>
+
+<span class="sd">        :returns: A :class:`whimsy.suite.TestSuite` or</span>
+<span class="sd">            :class:`whimsy.test.TestCase` if the given UID can be found, else</span>
+<span class="sd">            None.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Create a dummy TestLoader instance.</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">TestLoader</span><span class="p">(</span><span class="n">quiet</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Parse the path back out of the uid.</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path_from_uid</span><span class="p">(</span><span class="n">uid</span><span class="p">)</span>
+        <span class="c1"># Modify the path based on the directory we are actually in.</span>
+        <span class="n">loader</span><span class="o">.</span><span class="n">load_dir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loader</span><span class="o">.</span><span class="n">get_uid</span><span class="p">(</span><span class="n">uid</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestLoader.load_file"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.TestLoader.load_file">[docs]</a>    <span class="k">def</span> <span class="nf">load_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Load the given path for tests collecting all created instances of</span>
+<span class="sd">        :class:`TestSuite`, :class:`TestCase`, and :code:`Fixture` objects.</span>
+
+<span class="sd">        TestSuites are placed into self._suites (a private SuiteList).</span>
+<span class="sd">        TestCases which are not explicitly stored within a TestSuite are</span>
+<span class="sd">        placed into a TestSuite which is generated from the filepath name.</span>
+
+<span class="sd">        There are couple of things that might be unexpected to the user in the</span>
+<span class="sd">        loading namespace.</span>
+
+<span class="sd">        First, the current working directory will change to the directory path</span>
+<span class="sd">        of the file being loaded.</span>
+
+<span class="sd">        Second, in order to collect tests we wrap __new__ calls of collected</span>
+<span class="sd">        objects before calling :code:`execfile`.  If a user wishes to prevent</span>
+<span class="sd">        an instantiated object from being collected (possibly to create a copy</span>
+<span class="sd">        with a modified attribute) they should use :func:`no_collect` to do</span>
+<span class="sd">        so. (Internally a :code:`__no_collect__` method is added to objects we</span>
+<span class="sd">        plan to collect. This method will then remove the object from those</span>
+<span class="sd">        collected from the file.)</span>
+
+<span class="sd">        .. note:: Automatically drop_caches</span>
+
+<span class="sd">        .. warning:: There isn&#39;t a way to prevent reloading of test modules</span>
+<span class="sd">            that are imported by other test modules. It&#39;s up to users to never</span>
+<span class="sd">            import a test module from a test module, otherwise those tests</span>
+<span class="sd">            enumerated during the importer module&#39;s load.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_a_file</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Remove our cache of tagged test items since they may be modified.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_caches</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">collection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suites</span>
+
+        <span class="c1"># Create a custom dictionary for the loaded module.</span>
+        <span class="n">newdict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;__builtins__&#39;</span><span class="p">:</span><span class="n">__builtins__</span><span class="p">,</span>
+            <span class="s1">&#39;__name__&#39;</span><span class="p">:</span> <span class="n">path_as_modulename</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+            <span class="s1">&#39;__file__&#39;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+            <span class="s1">&#39;__directory__&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_collection</span><span class="p">(</span><span class="n">TestSuite</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collected_test_items</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_collection</span><span class="p">(</span><span class="n">TestCase</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collected_test_items</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_collection</span><span class="p">(</span><span class="n">Fixture</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collected_fixtures</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># Add the file&#39;s containing directory to the system path. So it can do</span>
+        <span class="c1"># relative imports naturally.</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">cleanup</span><span class="p">():</span>
+            <span class="c1"># Undo all the wrapping of class methods used to gather test</span>
+            <span class="c1"># items. (Placed here to compare against the above stuff it</span>
+            <span class="c1"># undoes.)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unwrap_collection</span><span class="p">(</span><span class="n">TestSuite</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unwrap_collection</span><span class="p">(</span><span class="n">TestCase</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unwrap_collection</span><span class="p">(</span><span class="n">Fixture</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_collected_fixtures</span> <span class="o">=</span> <span class="n">OrderedSet</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_collected_test_items</span> <span class="o">=</span> <span class="n">OrderedSet</span><span class="p">()</span>
+            <span class="k">del</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">execfile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">newdict</span><span class="p">,</span> <span class="n">newdict</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">quiet</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Tried to load tests from </span><span class="si">%s</span><span class="s1"> but failed with an&#39;</span>
+                         <span class="s1">&#39; exception.&#39;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
+            <span class="n">cleanup</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Separate the instances so we can manipulate them more easily.</span>
+        <span class="c1"># We also keep them together so we maintain ordering.</span>
+        <span class="n">test_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collected_test_items</span>
+        <span class="n">testcases</span> <span class="o">=</span> <span class="n">OrderedSet</span><span class="p">()</span>
+        <span class="n">testsuites</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">test_items</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+                <span class="n">testcases</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">TestSuite</span><span class="p">):</span>
+                <span class="n">testsuites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_collected_test_items</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fixtures</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_collected_fixtures</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">testcases</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">quiet</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="s1">&#39;Discovered </span><span class="si">%d</span><span class="s1"> tests and </span><span class="si">%d</span><span class="s1"> testsuites in </span><span class="si">%s</span><span class="s1">&#39;</span>
+                            <span class="s1">&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">testcases</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">testsuites</span><span class="p">),</span> <span class="n">path</span><span class="p">))</span>
+
+            <span class="c1"># Remove all tests already contained in a TestSuite.</span>
+            <span class="k">if</span> <span class="n">testsuites</span><span class="p">:</span>
+                <span class="n">testcases</span> <span class="o">=</span> <span class="n">OrderedSet</span><span class="p">(</span><span class="n">testcases</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">testsuite</span> <span class="ow">in</span> <span class="n">testsuites</span><span class="p">:</span>
+                    <span class="n">testcases</span> <span class="o">-=</span> <span class="n">OrderedSet</span><span class="p">(</span><span class="n">testsuite</span><span class="o">.</span><span class="n">testcases</span><span class="p">)</span>
+
+            <span class="c1"># If there are any remaining tests, create a TestSuite for the</span>
+            <span class="c1"># module and place those tests into it.</span>
+            <span class="k">if</span> <span class="n">testcases</span><span class="p">:</span>
+                <span class="n">module_testsuite</span> <span class="o">=</span> <span class="n">path_as_testsuite</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="n">testsuites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">module_testsuite</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">test_item</span> <span class="ow">in</span> <span class="n">test_items</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test_item</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+                        <span class="n">module_testsuite</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_item</span><span class="p">)</span>
+
+                <span class="c1"># Add our new testsuite into the index as well</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">(</span><span class="n">module_testsuite</span><span class="p">)</span>
+
+
+            <span class="n">collection</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">testsuites</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">quiet</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">testsuites</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No tests discovered in </span><span class="si">%s</span><span class="s1">, but found </span><span class="si">%d</span><span class="s1"> &#39;</span>
+                         <span class="s1">&#39; TestSuites&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">testsuites</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No tests discovered in </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="n">cleanup</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_wrap_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">collector</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Wrap the given cls&#39; `__new__` method with a wrapper that will keep an</span>
+<span class="sd">        OrderedSet of the instances. Also attach a `__no_collect__` method</span>
+<span class="sd">        which can be used to remove the object from our collected objects with</span>
+<span class="sd">        the exposed :func:`no_collect`.</span>
+
+<span class="sd">        :param cls: Class to wrap methods of for collection.</span>
+
+<span class="sd">        :param collector: The :code:`set` to add/remove collected instances</span>
+<span class="sd">            to.</span>
+
+<span class="sd">        .. warning:: If any other class monkey patches the `__new__` method as</span>
+<span class="sd">            well, this will lead to issues. Keep `__debug__` mode enabled to</span>
+<span class="sd">            enable checks that this never happens.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">assert</span> <span class="bp">cls</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapped_classes</span>
+        <span class="k">def</span> <span class="nf">instance_decollector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">collector</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;__retval__&#39;</span><span class="p">]</span>
+        <span class="k">def</span> <span class="nf">instance_new</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">_cls</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;__retval__&#39;</span><span class="p">]</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">_cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">_cls</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">collector</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">retval</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">retval</span>
+
+        <span class="n">wrappers</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">_MethodWrapper</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;__no_collect__&#39;</span><span class="p">,</span> <span class="n">instance_decollector</span><span class="p">),</span>
+                <span class="n">_MethodWrapper</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;__new__&#39;</span><span class="p">,</span> <span class="n">instance_new</span><span class="p">,</span> <span class="n">clsmethod</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">wrapper</span> <span class="ow">in</span> <span class="n">wrappers</span><span class="p">:</span>
+            <span class="n">wrapper</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wrapped_classes</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span> <span class="o">=</span> <span class="n">wrappers</span>
+
+    <span class="k">def</span> <span class="nf">_unwrap_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        .. warning:: If any other class monkey patches the `__new__`  method</span>
+<span class="sd">            as well, this will lead to issues. Keep `__debug__` mode enabled to</span>
+<span class="sd">            enable checks that this never happens.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">wrapper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapped_classes</span><span class="p">[</span><span class="bp">cls</span><span class="p">]:</span>
+            <span class="n">wrapper</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapped_classes</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">testitems</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Adds collected testitems into our datastructures for querying.&#39;&#39;&#39;</span>
+
+        <span class="k">def</span> <span class="nf">add_to_index</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">rindex</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DuplicateTestItemError</span><span class="p">(</span>
+                        <span class="s2">&quot;Item uid: &#39;</span><span class="si">%s</span><span class="s2">&#39; already exists&quot;</span> <span class="o">%</span> <span class="n">item</span><span class="o">.</span><span class="n">uid</span><span class="p">)</span>
+            <span class="n">rindex</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">uid</span>
+            <span class="n">index</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">testitems</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+                <span class="n">add_to_index</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_test_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_test_rindex</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">TestSuite</span><span class="p">):</span>
+                <span class="n">add_to_index</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suite_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suite_rindex</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">__debug__</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s1">&#39;Only can enumerate TestCase and&#39;</span>
+                                     <span class="s1">&#39; TestSuite objects&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DuplicateTestItemError"><a class="viewcode-back" href="../../whimsy.html#whimsy.loader.DuplicateTestItemError">[docs]</a><span class="k">class</span> <span class="nc">DuplicateTestItemError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

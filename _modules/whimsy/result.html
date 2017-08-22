@@ -1,0 +1,726 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.result &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>whimsy.result</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whimsy.result</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Module which contains streaming result loggers. The main goal of these loggers</span>
+<span class="sd">is to support large amounts of results and not create large standing pools of</span>
+<span class="sd">strings.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">xml.sax.saxutils</span> <span class="k">import</span> <span class="n">escape</span> <span class="k">as</span> <span class="n">xml_escape</span>
+<span class="kn">from</span> <span class="nn">string</span> <span class="k">import</span> <span class="n">maketrans</span>
+
+<span class="kn">import</span> <span class="nn">terminal</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">helper</span> <span class="k">import</span> <span class="n">joinpath</span>
+<span class="kn">from</span> <span class="nn">test</span> <span class="k">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">suite</span> <span class="k">import</span> <span class="n">TestSuite</span>
+<span class="kn">from</span> <span class="nn">logger</span> <span class="k">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">_util</span> <span class="k">import</span> <span class="n">Timer</span><span class="p">,</span> <span class="n">Enum</span>
+
+<div class="viewcode-block" id="InvalidResultException"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.InvalidResultException">[docs]</a><span class="k">class</span> <span class="nc">InvalidResultException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+<span class="n">Outcome</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span>
+    <span class="p">[</span>
+    <span class="s1">&#39;PASS&#39;</span><span class="p">,</span>   <span class="c1"># The test passed successfully.</span>
+    <span class="s1">&#39;XFAIL&#39;</span><span class="p">,</span>  <span class="c1"># The test ran and failed as expected.</span>
+    <span class="s1">&#39;SKIP&#39;</span><span class="p">,</span>   <span class="c1"># The test was skipped.</span>
+    <span class="s1">&#39;ERROR&#39;</span><span class="p">,</span>  <span class="c1"># There was an error during the setup of the test.</span>
+    <span class="s1">&#39;FAIL&#39;</span><span class="p">,</span>   <span class="c1"># The test failed to pass.</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+<span class="n">Outcome</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> \
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    An :class:`Enum` which contains the different possible test outcomes.</span>
+
+<span class="sd">    PASS    - The test passed successfully.</span>
+<span class="sd">    XFAIL   - The test ran and failed as expected.</span>
+<span class="sd">    SKIP    - The test was skipped.</span>
+<span class="sd">    ERROR   - There was an error during the setup of the test.</span>
+<span class="sd">    FAIL    - The test failed to pass.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+<span class="c1"># Add all result enums to this module&#39;s namespace.</span>
+<span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">Outcome</span><span class="o">.</span><span class="n">enums</span><span class="p">:</span>
+    <span class="nb">globals</span><span class="p">()[</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)]</span> <span class="o">=</span> <span class="n">result</span>
+
+<span class="c1"># Hard fail cases which mean a test contained in a failfast container should</span>
+<span class="c1"># fail remaining test items.</span>
+<span class="n">Outcome</span><span class="o">.</span><span class="n">failfast</span> <span class="o">=</span> <span class="p">{</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">FAIL</span><span class="p">}</span>
+
+<div class="viewcode-block" id="test_results_output_path"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.test_results_output_path">[docs]</a><span class="k">def</span> <span class="nf">test_results_output_path</span><span class="p">(</span><span class="n">test_case</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Return the path which results for a specific test case should be</span>
+<span class="sd">    stored.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">joinpath</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">result_path</span><span class="p">,</span> <span class="n">test_case</span><span class="o">.</span><span class="n">uid</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ResultLogger"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ResultLogger">[docs]</a><span class="k">class</span> <span class="nc">ResultLogger</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Interface which allows writing of streaming results to a file stream.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">not_supplied</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+    <span class="sd">&#39;&#39;&#39;A sentinel value indicating that the kwarg wasn&#39;t supplied.&#39;&#39;&#39;</span>
+
+    <span class="n">bad_item</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Result formatter can only handle test cases&#39;</span>
+                <span class="s1">&#39; and test suites&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ResultLogger.delegate_instance"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ResultLogger.delegate_instance">[docs]</a>    <span class="k">def</span> <span class="nf">delegate_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Helper function to delegate a method for the given function based on</span>
+<span class="sd">        the type of the given instance.</span>
+
+<span class="sd">        Effectively is shorthand for:</span>
+
+<span class="sd">        &gt;&gt;&gt; if isinstance(instance, TestSuite):</span>
+<span class="sd">        &gt;&gt;&gt;     self._call_this_testsuite(*args, **kwargs)</span>
+<span class="sd">        &gt;&gt;&gt; elif isinstance(instance, TestCase):</span>
+<span class="sd">        &gt;&gt;&gt;     self._call_this_testsuite(*args, **kwargs)</span>
+<span class="sd">        &gt;&gt;&gt; elif __debug__:</span>
+<span class="sd">        &gt;&gt;&gt;     raise AssertionError</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">for</span> <span class="n">class_</span> <span class="ow">in</span> <span class="p">(</span><span class="n">TestSuite</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">class_</span><span class="p">):</span>
+                <span class="n">instance_name</span> <span class="o">=</span> <span class="n">class_</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_item</span><span class="p">)</span>
+
+        <span class="n">mem_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                           <span class="n">instance_name</span><span class="p">)),</span>
+                           <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mem_func</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ResultLogger.begin_testing"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ResultLogger.begin_testing">[docs]</a>    <span class="k">def</span> <span class="nf">begin_testing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Signal the beginning of writing to the file stream. Indicates that</span>
+<span class="sd">        results are about to be logged.</span>
+
+<span class="sd">        This is garunteed to be called before any results are added.</span>
+<span class="sd">        &#39;&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="ResultLogger.begin"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ResultLogger.begin">[docs]</a>    <span class="k">def</span> <span class="nf">begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Signal the beginning of the given item.</span>
+<span class="sd">        :param item: The test item which is about to begin running</span>
+<span class="sd">        &#39;&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="ResultLogger.set_outcome"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ResultLogger.set_outcome">[docs]</a>    <span class="k">def</span> <span class="nf">set_outcome</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Set the outcome of the given item.</span>
+
+<span class="sd">        :param item: The test item which we are setting the outcome of</span>
+<span class="sd">        :param outcome: The outcome the test item will be set to</span>
+
+
+<span class="sd">        TestCase Only kwargs:</span>
+
+<span class="sd">        :param reason: Reason for the test case outcome.</span>
+<span class="sd">        :param fstdout_name: Name of the file stdout is available at.</span>
+<span class="sd">        :param fstderr_name: Name of the file stdout is available at.</span>
+
+<span class="sd">        :param ff_skipped: Indicates that the test was skipped due to</span>
+<span class="sd">            a fail_fast condition.</span>
+<span class="sd">        &#39;&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="ResultLogger.end"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ResultLogger.end">[docs]</a>    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Signal the end of the current item.</span>
+
+<span class="sd">        :param item: The test item which is finished running</span>
+<span class="sd">        &#39;&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="ResultLogger.end_testing"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ResultLogger.end_testing">[docs]</a>    <span class="k">def</span> <span class="nf">end_testing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Indicates that results are done being collected.</span>
+
+<span class="sd">        This is guaranteed to be called after all results are added.</span>
+<span class="sd">        &#39;&#39;&#39;</span></div></div>
+
+<div class="viewcode-block" id="ConsoleLogger"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ConsoleLogger">[docs]</a><span class="k">class</span> <span class="nc">ConsoleLogger</span><span class="p">(</span><span class="n">ResultLogger</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A logger implementing the streaming ResultLogger interface. This logger is</span>
+<span class="sd">    used to stream testing result output to a user terminal.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">get_termcap</span><span class="p">()</span>
+    <span class="n">reset</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">colormap</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">FAIL</span><span class="p">:</span> <span class="n">color</span><span class="o">.</span><span class="n">Red</span><span class="p">,</span>
+            <span class="n">ERROR</span><span class="p">:</span> <span class="n">color</span><span class="o">.</span><span class="n">Red</span><span class="p">,</span>
+            <span class="n">PASS</span><span class="p">:</span> <span class="n">color</span><span class="o">.</span><span class="n">Green</span><span class="p">,</span>
+            <span class="n">XFAIL</span><span class="p">:</span> <span class="n">color</span><span class="o">.</span><span class="n">Cyan</span><span class="p">,</span>
+            <span class="n">SKIP</span><span class="p">:</span> <span class="n">color</span><span class="o">.</span><span class="n">Cyan</span><span class="p">,</span>
+            <span class="p">}</span>
+    <span class="n">sep_fmtkey</span> <span class="o">=</span> <span class="s1">&#39;separator&#39;</span>
+    <span class="n">sep_fmtstr</span> <span class="o">=</span> <span class="s1">&#39;{</span><span class="si">%s</span><span class="s1">}&#39;</span> <span class="o">%</span> <span class="n">sep_fmtkey</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outcome_count</span> <span class="o">=</span> <span class="p">{</span><span class="n">outcome</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">Outcome</span><span class="o">.</span><span class="n">enums</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ConsoleLogger.begin_testing"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ConsoleLogger.begin_testing">[docs]</a>    <span class="k">def</span> <span class="nf">begin_testing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="ConsoleLogger.begin"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ConsoleLogger.begin">[docs]</a>    <span class="k">def</span> <span class="nf">begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delegate_instance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">_begin_testsuite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_suite</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting TestSuite: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">test_suite</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_begin_testcase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_case</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting TestCase: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">test_case</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConsoleLogger.set_outcome"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ConsoleLogger.set_outcome">[docs]</a>    <span class="k">def</span> <span class="nf">set_outcome</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delegate_instance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">set_outcome</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">_set_outcome_testcase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outcome_count</span><span class="p">[</span><span class="n">outcome</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_display_outcome</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">reason</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConsoleLogger.end_testing"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ConsoleLogger.end_testing">[docs]</a>    <span class="k">def</span> <span class="nf">end_testing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_display_summary</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="nf">_display_outcome</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_case_name</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colormap</span><span class="p">[</span><span class="n">outcome</span><span class="p">]</span>
+                 <span class="o">+</span> <span class="n">test_case_name</span>
+                 <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reason:&#39;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">reason</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">terminal</span><span class="o">.</span><span class="n">separator</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_display_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">most_severe_outcome</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">outcome_fmt</span> <span class="o">=</span> <span class="s1">&#39; </span><span class="si">{count}</span><span class="s1"> </span><span class="si">{outcome}</span><span class="s1">&#39;</span>
+        <span class="n">strings</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Iterate over enums so they are in order of severity</span>
+        <span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">Outcome</span><span class="o">.</span><span class="n">enums</span><span class="p">:</span>
+            <span class="n">count</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcome_count</span><span class="p">[</span><span class="n">outcome</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">count</span><span class="p">:</span>
+                <span class="n">strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outcome_fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span>
+                                                  <span class="n">outcome</span><span class="o">=</span><span class="n">outcome</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="n">most_severe_outcome</span> <span class="o">=</span> <span class="n">outcome</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">strings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">most_severe_outcome</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="s1">&#39; No testing done&#39;</span>
+            <span class="n">most_severe_outcome</span> <span class="o">=</span> <span class="n">Outcome</span><span class="o">.</span><span class="n">PASS</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="s1">&#39; in </span><span class="si">{time:.2}</span><span class="s1"> seconds &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">runtime</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">terminal</span><span class="o">.</span><span class="n">insert_separator</span><span class="p">(</span>
+                <span class="n">string</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colormap</span><span class="p">[</span><span class="n">most_severe_outcome</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="o">.</span><span class="n">Bold</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConsoleLogger.insert_results"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.ConsoleLogger.insert_results">[docs]</a>    <span class="k">def</span> <span class="nf">insert_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">internal_results</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Insert the given results from an :class:`whimsy.result.InternalLogger`</span>
+<span class="sd">        into the console logger. (Display them.)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">internal_results</span><span class="o">.</span><span class="n">testcases</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_display_outcome</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">outcome</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">reason</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">outcome_count</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">outcome</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span></div></div>
+
+<div class="viewcode-block" id="TestResult"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.TestResult">[docs]</a><span class="k">class</span> <span class="nc">TestResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">outcome</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uid</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">uid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outcome</span> <span class="o">=</span> <span class="n">outcome</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runtime</span> <span class="o">=</span> <span class="n">runtime</span></div>
+
+<div class="viewcode-block" id="TestCaseResult"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.TestCaseResult">[docs]</a><span class="k">class</span> <span class="nc">TestCaseResult</span><span class="p">(</span><span class="n">TestResult</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fstdout_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fstderr_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">ff_skipped</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TestCaseResult</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fstdout_name</span> <span class="o">=</span> <span class="n">fstdout_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fstderr_name</span> <span class="o">=</span> <span class="n">fstderr_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="n">reason</span></div>
+
+<div class="viewcode-block" id="TestSuiteResult"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.TestSuiteResult">[docs]</a><span class="k">class</span> <span class="nc">TestSuiteResult</span><span class="p">(</span><span class="n">TestResult</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_case_results</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">TestSuiteResult</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_case_results</span> <span class="o">=</span> <span class="n">test_case_results</span></div>
+
+
+<div class="viewcode-block" id="InternalLogger"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.InternalLogger">[docs]</a><span class="k">class</span> <span class="nc">InternalLogger</span><span class="p">(</span><span class="n">ResultLogger</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    An internal logger which writes streaming pickle items on completion of</span>
+<span class="sd">    TestSuite items.</span>
+
+<span class="sd">    This logger also offers some metadata methods to and can load back out</span>
+<span class="sd">    previous results.</span>
+
+<span class="sd">    .. seealso:: :func:`load` :func:`suites`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filestream</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filestream</span> <span class="o">=</span> <span class="n">filestream</span>
+
+        <span class="c1"># Dictionaries mapping uid-&gt;result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_case_results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_suite_results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># We keep a list to maintain ordering</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">_write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filestream</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InternalLogger.begin_testing"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.InternalLogger.begin_testing">[docs]</a>    <span class="k">def</span> <span class="nf">begin_testing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="InternalLogger.set_outcome"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.InternalLogger.set_outcome">[docs]</a>    <span class="k">def</span> <span class="nf">set_outcome</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delegate_instance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">set_outcome</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_set_outcome_testcase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">TestCaseResult</span><span class="p">(</span><span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_case_results</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">_set_outcome_testsuite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">suite_results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tc</span><span class="o">.</span><span class="n">uid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_case_results</span><span class="p">:</span>
+                <span class="n">suite_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_case_results</span><span class="p">[</span><span class="n">tc</span><span class="o">.</span><span class="n">uid</span><span class="p">])</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">TestSuiteResult</span><span class="p">(</span><span class="n">suite_results</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_suite_results</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="InternalLogger.end_testing"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.InternalLogger.end_testing">[docs]</a>    <span class="k">def</span> <span class="nf">end_testing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="InternalLogger.load"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.InternalLogger.load">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">filestream</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Load results out of a dumped file replacing our own results.&#39;&#39;&#39;</span>
+        <span class="n">loaded_results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filestream</span><span class="p">)</span>
+                <span class="n">loaded_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">EOFError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">new_logger</span> <span class="o">=</span> <span class="n">InternalLogger</span><span class="p">(</span><span class="n">filestream</span><span class="p">)</span>
+        <span class="n">new_logger</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">loaded_results</span>
+        <span class="k">return</span> <span class="n">new_logger</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">suites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return an iterator over all the test suite results loaded or collected.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">TestSuiteResult</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">result</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">testcases</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">TestCaseResult</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="InternalLogger.insert_results"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.InternalLogger.insert_results">[docs]</a>    <span class="k">def</span> <span class="nf">insert_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">internal_results</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">internal_results</span><span class="o">.</span><span class="n">results</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="JUnitLogger"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.JUnitLogger">[docs]</a><span class="k">class</span> <span class="nc">JUnitLogger</span><span class="p">(</span><span class="n">InternalLogger</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Logger which uses the internal logger to collect streaming results to the</span>
+<span class="sd">    internal_fstream, and on completion of testing writes the results out to</span>
+<span class="sd">    a junit_fstream.</span>
+
+<span class="sd">    :param junit_fstream: File stream to write junit formatted results to.</span>
+
+<span class="sd">    :param internal_fstream: File stream to write internal formatted results</span>
+<span class="sd">        to.</span>
+
+<span class="sd">    .. seealso:: :class:`~InternalLogger`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># We use an internal logger to stream the output into a format we can</span>
+    <span class="c1"># retrieve at the end and then format it into JUnit.</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">junit_fstream</span><span class="p">,</span> <span class="n">internal_fstream</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">JUnitLogger</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">internal_fstream</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_junit_fstream</span> <span class="o">=</span> <span class="n">junit_fstream</span>
+
+<div class="viewcode-block" id="JUnitLogger.end_testing"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.JUnitLogger.end_testing">[docs]</a>    <span class="k">def</span> <span class="nf">end_testing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Signal the end of writing to the file stream. We will write all our</span>
+<span class="sd">        results to our junit_fstream.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">JUnitLogger</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">end_testing</span><span class="p">()</span>
+        <span class="n">JUnitFormatter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_junit_fstream</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="JUnitFormatter"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.JUnitFormatter">[docs]</a><span class="k">class</span> <span class="nc">JUnitFormatter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Formats TestResults into the JUnit XML format.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># NOTE: We manually build the tags so we can place possibly large</span>
+    <span class="c1"># system-out system-err logs without storing them in memory.</span>
+
+    <span class="n">xml_header</span> <span class="o">=</span> <span class="s1">&#39;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="n">passing_results</span> <span class="o">=</span> <span class="p">{</span><span class="n">PASS</span><span class="p">,</span> <span class="n">XFAIL</span><span class="p">}</span>
+    <span class="c1"># Testcase stuff</span>
+    <span class="n">testcase_opening</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&lt;testcase name=&quot;</span><span class="si">{name}</span><span class="s1">&quot; classname=&quot;</span><span class="si">{classname}</span><span class="s1">&quot;&#39;</span>
+                        <span class="s1">&#39; status=&quot;</span><span class="si">{status}</span><span class="s1">&quot; time=&quot;</span><span class="si">{time}</span><span class="s1">&quot;&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># Indicates test skipped</span>
+    <span class="n">skipped_tag</span> <span class="o">=</span> <span class="s1">&#39;&lt;skipped/&gt;&#39;</span>
+    <span class="n">error_tag</span> <span class="o">=</span> <span class="s1">&#39;&lt;error message=&quot;</span><span class="si">{message}</span><span class="s1">&quot;&gt;&lt;/error&gt;</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="n">fail_tag</span> <span class="o">=</span> <span class="s1">&#39;&lt;failure message=&quot;</span><span class="si">{message}</span><span class="s1">&quot;&gt;&lt;/error&gt;</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="n">system_out_opening</span> <span class="o">=</span> <span class="s1">&#39;&lt;system-out&gt;&#39;</span>
+    <span class="n">system_err_opening</span> <span class="o">=</span> <span class="s1">&#39;&lt;system-err&gt;&#39;</span>
+
+    <span class="c1"># Testsuite stuff</span>
+    <span class="n">testsuite_opening</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&lt;testsuite name=&quot;</span><span class="si">{name}</span><span class="s1">&quot; tests=&quot;</span><span class="si">{numtests}</span><span class="s1">&quot;&#39;</span>
+                         <span class="s1">&#39; errors=&quot;</span><span class="si">{errors}</span><span class="s1">&quot; failures=&quot;</span><span class="si">{failures}</span><span class="s1">&quot;&#39;</span>
+                         <span class="s1">&#39; skipped=&quot;</span><span class="si">{skipped}</span><span class="s1">&quot; id=</span><span class="si">{suitenum}</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39; time=&quot;</span><span class="si">{time}</span><span class="s1">&quot;&gt;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                         <span class="p">)</span>
+    <span class="c1"># Testsuites stuff</span>
+    <span class="n">testsuites_opening</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&lt;testsuites errors=&quot;</span><span class="si">{errors}</span><span class="s1">&quot; failures=&quot;</span><span class="si">{failures}</span><span class="s1">&quot;&#39;</span>
+                          <span class="s1">&#39; tests=&quot;</span><span class="si">{tests}</span><span class="s1">&quot;&#39;</span> <span class="c1"># total number of sucessful tests.</span>
+                          <span class="s1">&#39; time=&quot;</span><span class="si">{time}</span><span class="s1">&quot;&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># Generic closing tag for any opening tag.</span>
+    <span class="n">generic_closing</span> <span class="o">=</span> <span class="s1">&#39;&lt;/</span><span class="si">{tag}</span><span class="s1">&gt;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">internal_results</span><span class="p">,</span> <span class="n">translate_names</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">internal_results</span><span class="o">.</span><span class="n">results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runtime</span> <span class="o">=</span> <span class="n">internal_results</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">runtime</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">translate_names</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name_table</span> <span class="o">=</span> <span class="n">maketrans</span><span class="p">(</span><span class="s1">&#39;/.&#39;</span><span class="p">,</span> <span class="s1">&#39;.-&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name_table</span> <span class="o">=</span> <span class="n">maketrans</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JUnitFormatter.dump_testcase"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.JUnitFormatter.dump_testcase">[docs]</a>    <span class="k">def</span> <span class="nf">dump_testcase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fstream</span><span class="p">,</span> <span class="n">testcase</span><span class="p">):</span>
+
+        <span class="n">tag</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">testcase</span><span class="o">.</span><span class="n">outcome</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing_results</span><span class="p">:</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="n">PASS</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;passed&#39;</span>
+        <span class="k">elif</span> <span class="n">testcase</span><span class="o">.</span><span class="n">outcome</span> <span class="o">==</span> <span class="n">SKIP</span><span class="p">:</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="n">SKIP</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;skipped&#39;</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skipped_tag</span>
+        <span class="k">elif</span> <span class="n">testcase</span><span class="o">.</span><span class="n">outcome</span> <span class="o">==</span> <span class="n">FAIL</span><span class="p">:</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="n">SKIP</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;failed&#39;</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fail_tag</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">testcase</span><span class="o">.</span><span class="n">reason</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">testcase</span><span class="o">.</span><span class="n">outcome</span> <span class="o">==</span> <span class="n">ERROR</span><span class="p">:</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="n">SKIP</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;errored&#39;</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_tag</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">testcase</span><span class="o">.</span><span class="n">reason</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">__debug__</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s1">&#39;Unknown test state&#39;</span><span class="p">)</span>
+
+        <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">testcase_opening</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">testcase</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">classname</span><span class="o">=</span><span class="n">testcase</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">time</span><span class="o">=</span><span class="n">testcase</span><span class="o">.</span><span class="n">runtime</span><span class="p">,</span>
+                <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">))</span>
+
+        <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+
+        <span class="c1"># Write out systemout and systemerr from their containing files.</span>
+        <span class="k">if</span> <span class="n">testcase</span><span class="o">.</span><span class="n">fstdout_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system_out_opening</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">testcase</span><span class="o">.</span><span class="n">fstdout_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">testout_stdout</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">testout_stdout</span><span class="p">:</span>
+                    <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">xml_escape</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+            <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_closing</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;system-out&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">testcase</span><span class="o">.</span><span class="n">fstderr_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system_err_opening</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">testcase</span><span class="o">.</span><span class="n">fstderr_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">testout_stderr</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">testout_stderr</span><span class="p">:</span>
+                    <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">xml_escape</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+            <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_closing</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;system-err&#39;</span><span class="p">))</span>
+
+        <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_closing</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;testcase&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="JUnitFormatter.dump_testsuite"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.JUnitFormatter.dump_testsuite">[docs]</a>    <span class="k">def</span> <span class="nf">dump_testsuite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fstream</span><span class="p">,</span> <span class="n">suite</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="c1"># Tally results first.</span>
+        <span class="n">outcome_tally</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">((</span><span class="n">PASS</span><span class="p">,</span> <span class="n">SKIP</span><span class="p">,</span> <span class="n">FAIL</span><span class="p">,</span> <span class="n">ERROR</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">testcase</span> <span class="ow">in</span> <span class="n">suite</span><span class="o">.</span><span class="n">test_case_results</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">testcase</span><span class="o">.</span><span class="n">outcome</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing_results</span><span class="p">:</span>
+                <span class="n">outcome_tally</span><span class="p">[</span><span class="n">PASS</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">outcome_tally</span><span class="p">[</span><span class="n">testcase</span><span class="o">.</span><span class="n">outcome</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">testsuite_opening</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">suite</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">numtests</span><span class="o">=</span><span class="n">outcome_tally</span><span class="p">[</span><span class="n">PASS</span><span class="p">],</span>
+                    <span class="n">errors</span><span class="o">=</span><span class="n">outcome_tally</span><span class="p">[</span><span class="n">ERROR</span><span class="p">],</span>
+                    <span class="n">failures</span><span class="o">=</span><span class="n">outcome_tally</span><span class="p">[</span><span class="n">FAIL</span><span class="p">],</span>
+                    <span class="n">skipped</span><span class="o">=</span><span class="n">outcome_tally</span><span class="p">[</span><span class="n">SKIP</span><span class="p">],</span>
+                    <span class="n">suitenum</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span>
+                    <span class="n">time</span><span class="o">=</span><span class="n">suite</span><span class="o">.</span><span class="n">runtime</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">testcase</span> <span class="ow">in</span> <span class="n">suite</span><span class="o">.</span><span class="n">test_case_results</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dump_testcase</span><span class="p">(</span><span class="n">fstream</span><span class="p">,</span> <span class="n">testcase</span><span class="p">)</span>
+
+        <span class="n">fstream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_closing</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;testsuite&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="JUnitFormatter.dump"><a class="viewcode-back" href="../../whimsy.html#whimsy.result.JUnitFormatter.dump">[docs]</a>    <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dumpfile</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># First tally results.</span>
+        <span class="n">outcome_tally</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">((</span><span class="n">PASS</span><span class="p">,</span> <span class="n">SKIP</span><span class="p">,</span> <span class="n">FAIL</span><span class="p">,</span> <span class="n">ERROR</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">TestCaseResult</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">outcome</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">passing_results</span><span class="p">:</span>
+                    <span class="n">outcome_tally</span><span class="p">[</span><span class="n">PASS</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">outcome_tally</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">outcome</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">dumpfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">testsuites_opening</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">tests</span><span class="o">=</span><span class="n">outcome_tally</span><span class="p">[</span><span class="n">PASS</span><span class="p">],</span>
+            <span class="n">errors</span><span class="o">=</span><span class="n">outcome_tally</span><span class="p">[</span><span class="n">ERROR</span><span class="p">],</span>
+            <span class="n">failures</span><span class="o">=</span><span class="n">outcome_tally</span><span class="p">[</span><span class="n">FAIL</span><span class="p">],</span>
+            <span class="n">time</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runtime</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+            <span class="c1"># NOTE: We assume that all tests are contained within a testsuite,</span>
+            <span class="c1"># although as far as junit is concerned this isn&#39;t neccesary.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">TestSuiteResult</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dump_testsuite</span><span class="p">(</span><span class="n">dumpfile</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+                <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">dumpfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_closing</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;testsuites&#39;</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

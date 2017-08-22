@@ -1,0 +1,533 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.runner.parallel &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>whimsy.runner.parallel</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whimsy.runner.parallel</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Implements a base :class:`~.WorkerPool` which will execute a serial or parallel</span>
+<span class="sd">implementation of imap_unordered depending on the number of threads requested</span>
+<span class="sd">on subclass `__init__`. A single instance of imap_unordered may be active at</span>
+<span class="sd">one time. Additional executions will require that the previous imap have</span>
+<span class="sd">finished.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="k">import</span> <span class="n">SyncManager</span>
+<span class="kn">import</span> <span class="nn">Queue</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">imap</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">config_module</span>
+<span class="kn">from</span> <span class="nn">..logger</span> <span class="k">import</span> <span class="n">log</span>
+
+<div class="viewcode-block" id="WorkerPool"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkerPool">[docs]</a><span class="k">class</span> <span class="nc">WorkerPool</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Will execute a serial or parallel implementation of imap_unordered</span>
+<span class="sd">    depending on the number of threads requested on subclass `__init__`.</span>
+<span class="sd">    A single instance of imap_unordered may be active at one time. Additional</span>
+<span class="sd">    executions will require that the previous imap have finished.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threads</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threads</span> <span class="o">=</span> <span class="n">threads</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span> <span class="o">=</span> <span class="n">threads</span> <span class="ow">and</span> <span class="n">threads</span> <span class="o">&gt;</span> <span class="mi">1</span>
+
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractproperty</span>
+    <span class="k">def</span> <span class="nf">pool</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="WorkerPool.imap_unordered"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkerPool.imap_unordered">[docs]</a>    <span class="k">def</span> <span class="nf">imap_unordered</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">map_function</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param function: A module level function to supply jobs to. (Note: Must</span>
+<span class="sd">            be exposed globaly by a module.</span>
+<span class="sd">        :param args: An iterable containing arguments provided to members of</span>
+<span class="sd">            the pool which the function will take.</span>
+
+<span class="sd">        Effectively this function performs:</span>
+
+<span class="sd">        &gt;&gt;&gt; return (map_function(arg) for arg in args)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imap_parallel</span><span class="p">(</span><span class="n">map_function</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imap_serial</span><span class="p">(</span><span class="n">map_function</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div>
+
+    <span class="n">_imap_serial</span> <span class="o">=</span> <span class="n">imap</span>
+
+    <span class="k">def</span> <span class="nf">_imap_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">map_function</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">imap_unordered</span><span class="p">(</span><span class="n">map_function</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MulticoreWorkerPool"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.MulticoreWorkerPool">[docs]</a><span class="k">class</span> <span class="nc">MulticoreWorkerPool</span><span class="p">(</span><span class="n">WorkerPool</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A worker takes jobs of its queue used to initalize it and sends them to</span>
+<span class="sd">    the process which it wraps to execute.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threads</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MulticoreWorkerPool</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process_pool</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pool</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_process_pool&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_imap_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">map_function</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="p">((</span><span class="n">map_function</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">gen</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MulticoreWorkerPool</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_imap_parallel</span><span class="p">(</span>
+                    <span class="n">subprocess_exception_wrapper</span><span class="p">,</span>
+                    <span class="n">jobs</span>
+            <span class="p">)</span>
+
+            <span class="c1"># We need to use polling since termination is broken in python2.</span>
+            <span class="c1"># (Blocking waits do not internally poll for us.)</span>
+            <span class="c1">#</span>
+            <span class="c1"># NOTE: The cpython library will automatically poll faster than</span>
+            <span class="c1"># the time we give it.</span>
+            <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">gen</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">res</span>
+
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+            <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="ComplexMulticorePool"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.ComplexMulticorePool">[docs]</a><span class="k">class</span> <span class="nc">ComplexMulticorePool</span><span class="p">(</span><span class="n">WorkerPool</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Class implements the server container for a multi-client remote and local</span>
+<span class="sd">    multiprocessing pool. Exposes an :meth:`imap_unordered` method which will</span>
+<span class="sd">    either execute serially if only initialized with a single thread, or will</span>
+<span class="sd">    exececute in parallel if more given.</span>
+
+<span class="sd">    Additionally, if more than one thread is given will allow remote clients to</span>
+<span class="sd">    connect and join the pool.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threads</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ComplexMulticorePool</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">threads</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span><span class="p">:</span>
+            <span class="n">credentials</span> <span class="o">=</span> <span class="n">config_module</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">credentials</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">server</span> <span class="o">=</span> <span class="n">WorkServer</span><span class="p">(</span><span class="o">*</span><span class="n">credentials</span><span class="p">)</span>
+
+            <span class="c1"># The work server starts it&#39;s own worker, so we only make n-1</span>
+            <span class="c1"># additional workers.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_additional_workers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">threads</span><span class="p">):</span>
+                <span class="n">new_worker</span> <span class="o">=</span> <span class="n">WorkClient</span><span class="p">(</span><span class="o">*</span><span class="n">credentials</span><span class="p">,</span> <span class="n">as_client</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">new_worker</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="c1"># NOTE: When this pool is deleted and the server closes down</span>
+                <span class="c1"># this process will be killed.</span>
+                <span class="n">new_worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_additional_workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_worker</span><span class="p">)</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pool</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span>
+
+    <span class="k">def</span> <span class="nf">_imap_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">imap_unordered</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">i</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="WorkQueueServer"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkQueueServer">[docs]</a><span class="k">class</span> <span class="nc">WorkQueueServer</span><span class="p">(</span><span class="n">SyncManager</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Implements a server which clients can connect to get work and result queues</span>
+<span class="sd">    as well as the server&#39;s config setup.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">passkey</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">work_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;get_work_queue&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">work_queue</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;get_result_queue&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">result_queue</span><span class="p">)</span>
+
+        <span class="c1"># NOTE: We use a tuple with dictionaries because the SyncManager will</span>
+        <span class="c1"># not automatically pass &#39;deepcopy&#39;s of objects. So the config manually</span>
+        <span class="c1"># builds out of dictionaries rather than copying a parent __dict__.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;get_shared_config&#39;</span><span class="p">,</span>
+                <span class="k">lambda</span><span class="p">:(</span><span class="n">config_module</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span>
+                        <span class="n">config_module</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_defaults</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">WorkQueueServer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">),</span> <span class="n">passkey</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WorkQueueClient"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkQueueClient">[docs]</a><span class="k">class</span> <span class="nc">WorkQueueClient</span><span class="p">(</span><span class="n">SyncManager</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">passkey</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;get_work_queue&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;get_result_queue&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;get_shared_config&#39;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">WorkQueueClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">),</span> <span class="n">passkey</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WorkServer"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkServer">[docs]</a><span class="k">class</span> <span class="nc">WorkServer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Implements a server object which creates work queues and result queues</span>
+<span class="sd">    which clients can connect to to assist in work. Additionally in order to</span>
+<span class="sd">    implement an imap_unordered function that does not block, a separate client</span>
+<span class="sd">    is spawned with the server.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">passkey</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_server</span> <span class="o">=</span> <span class="n">WorkQueueServer</span><span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">passkey</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dest</span> <span class="o">=</span> <span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">passkey</span><span class="p">)</span>
+
+        <span class="c1"># Indicates that a imap function is already in progress.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_progress</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="WorkServer.start"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkServer.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Start the server and the helping work_client.&#39;&#39;&#39;</span>
+        <span class="c1"># Start the work queue manager.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Spawn a subprocess to also participate in work in case we are a server</span>
+        <span class="c1"># with no workers.</span>
+        <span class="c1"># NOTE: We use a subprocess rather than a thread so we are not required</span>
+        <span class="c1"># to wait for the sockets to cleanup.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">work_client</span> <span class="o">=</span> <span class="n">WorkClient</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dest</span><span class="p">,</span> <span class="n">as_client</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">work_client</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">work_client</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="WorkServer.shutdown"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkServer.shutdown">[docs]</a>    <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Shutdown the server, the client will close asynchronosly since it</span>
+<span class="sd">        will block in its own process waiting for the socket to close.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_server</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span></div>
+        <span class="c1"># NOTE: It will take a decent amount of time for the work_client to close</span>
+        <span class="c1"># its sockets so we don&#39;t bother joining. Just let the process cleanup</span>
+        <span class="c1"># on its own.</span>
+        <span class="c1"># self.p.terminate()</span>
+        <span class="c1"># self.work_client.join()</span>
+
+<div class="viewcode-block" id="WorkServer.imap_unordered"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkServer.imap_unordered">[docs]</a>    <span class="k">def</span> <span class="nf">imap_unordered</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Provides functional equivalence of:</span>
+
+<span class="sd">        &gt;&gt;&gt; return (function(arg) for arg in args)</span>
+
+<span class="sd">        .. note:: This will not block since we also spawn a `work_client` to</span>
+<span class="sd">            assist this process.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">work_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue_server</span><span class="o">.</span><span class="n">get_work_queue</span><span class="p">()</span>
+        <span class="n">result_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue_server</span><span class="o">.</span><span class="n">get_result_queue</span><span class="p">()</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">length</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">work_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">function</span><span class="p">,</span> <span class="n">arg</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">result_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div></div>
+
+<div class="viewcode-block" id="WorkClient"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkClient">[docs]</a><span class="k">class</span> <span class="nc">WorkClient</span><span class="p">(</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">):</span>
+    <span class="c1"># Signals sent through the work queue.</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">passkey</span><span class="p">,</span> <span class="n">as_client</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param as_client: Set the config.command of the client process to</span>
+<span class="sd">            &#39;client&#39;.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dest</span> <span class="o">=</span> <span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">passkey</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_client</span> <span class="o">=</span> <span class="n">WorkQueueClient</span><span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">passkey</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">as_client</span> <span class="o">=</span> <span class="n">as_client</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">WorkClient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="WorkClient.run"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkClient.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Connects to the server and gathers its work and result queues. Also</span>
+<span class="sd">        the majority of the config of the server process. (Allowing flags like</span>
+<span class="sd">        `fail_fast` to be passed to us.)</span>
+
+<span class="sd">        .. note:: Exectued on the client process.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">queue_client</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">(</span><span class="s1">&#39;WorkClient failed to connect to WorkServer.&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log_if_client</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">,</span> <span class="s1">&#39;Connected to test server.&#39;</span><span class="p">)</span>
+
+        <span class="n">disconnected_msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;WorkClient disconnected from WorkServer before it&#39;</span>
+                            <span class="s1">&#39; could start.&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_copy_config</span><span class="p">()</span>
+            <span class="n">work_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue_client</span><span class="o">.</span><span class="n">get_work_queue</span><span class="p">()</span>
+            <span class="n">result_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue_client</span><span class="o">.</span><span class="n">get_result_queue</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">(</span><span class="n">disconnected_msg</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">EOFError</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">(</span><span class="n">disconnected_msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imap_task</span><span class="p">(</span><span class="n">work_queue</span><span class="p">,</span> <span class="n">result_queue</span><span class="p">)</span>
+            <span class="n">log_if_client</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">,</span> <span class="s1">&#39;Work completed for test server, closing.&#39;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_copy_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Copies the config of the server, modifying it sligtly to fit the</span>
+<span class="sd">        requirements for a work client.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">newconfig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue_client</span><span class="o">.</span><span class="n">get_shared_config</span><span class="p">()</span>
+        <span class="n">config_module</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_init_with_dicts</span><span class="p">(</span><span class="o">*</span><span class="n">newconfig</span><span class="o">.</span><span class="n">_getvalue</span><span class="p">())</span>
+        <span class="c1"># In the copied config, don&#39;t spawn additional threads.</span>
+        <span class="n">config_module</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="s1">&#39;threads&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_client</span><span class="p">:</span>
+            <span class="n">config_module</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="s1">&#39;command&#39;</span><span class="p">,</span> <span class="s1">&#39;client&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WorkClient.imap_task"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.WorkClient.imap_task">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">imap_task</span><span class="p">(</span><span class="n">wq</span><span class="p">,</span> <span class="n">rq</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span> <span class="o">=</span> <span class="n">wq</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                <span class="n">rq</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">function</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">EOFError</span><span class="p">:</span>
+            <span class="k">return</span></div></div>
+
+<div class="viewcode-block" id="log_if_client"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.log_if_client">[docs]</a><span class="k">def</span> <span class="nf">log_if_client</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Execute the given callback if the client command was given at program startup.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">config_module</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s1">&#39;client&#39;</span><span class="p">:</span>
+        <span class="n">callback</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SubprocessException"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.SubprocessException">[docs]</a><span class="k">class</span> <span class="nc">SubprocessException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Exception represents an exception that occured in a child python</span>
+<span class="sd">    process.</span>
+<span class="sd">    &#39;&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="subprocess_exception_wrapper"><a class="viewcode-back" href="../../../whimsy.html#whimsy.runner.parallel.subprocess_exception_wrapper">[docs]</a><span class="k">def</span> <span class="nf">subprocess_exception_wrapper</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Wraps a python child process with a function that will enable tracebacks</span>
+<span class="sd">    to be printed from child python processes.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">import</span> <span class="nn">traceback</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">=</span> <span class="n">args</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SubprocessException</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exception</span><span class="p">(</span><span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">())))</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

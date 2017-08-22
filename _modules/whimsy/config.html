@@ -1,0 +1,798 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.config &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>whimsy.config</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whimsy.config</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Global configuration module which exposes two types of configuration</span>
+<span class="sd">variables:</span>
+
+<span class="sd">1. config</span>
+<span class="sd">2. constants (Also attached to the config variable as an attribute)</span>
+
+<span class="sd">The main motivation for this module is to have a centralized location for</span>
+<span class="sd">defaults and configuration by command line and files for the test framework.</span>
+
+<span class="sd">A secondary goal is to reduce programming errors by providing common constant</span>
+<span class="sd">strings and values as python attributes to simplify detection of typos.</span>
+<span class="sd">A simple typo in a string can take a lot of debugging to uncover the issue,</span>
+<span class="sd">attribute errors are easier to notice and most autocompletion systems detect</span>
+<span class="sd">them.</span>
+
+<span class="sd">The config variable is initialzed by callling :func:`initialize_config`.</span>
+<span class="sd">Before this point only ``constants`` will be availaible. This is to ensure</span>
+<span class="sd">that library function writers never accidentally get stale config attributes.</span>
+
+<span class="sd">Program arguments/flag arguments are available from the config as attributes.</span>
+<span class="sd">If a attribute was not set by the command line or the optional config file,</span>
+<span class="sd">then it will fallback to the `_defaults` value, if still the value is not</span>
+<span class="sd">found an AttributeError will be raised.</span>
+
+<span class="sd">:func define_defaults:</span>
+<span class="sd">    Provided by the config if the attribute is not found in the config or</span>
+<span class="sd">    commandline. For instance, if we are using the list command fixtures might</span>
+<span class="sd">    not be able to count on the build_dir being provided since we aren&#39;t going</span>
+<span class="sd">    to build anything.</span>
+
+<span class="sd">:var constants:</span>
+<span class="sd">    Values not directly exposed by the config, but are attached to the object</span>
+<span class="sd">    for centralized access. I.E. you can reach them with</span>
+<span class="sd">    :code:`config.constants.attribute`. These should be used for setting</span>
+<span class="sd">    common string names used across the test framework.</span>
+<span class="sd">    :code:`_defaults.build_dir = None` Once this module has been imported</span>
+<span class="sd">    constants should not be modified and their base attributes are frozen.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">ConfigParser</span> <span class="k">import</span> <span class="n">ConfigParser</span>
+<span class="kn">from</span> <span class="nn">pickle</span> <span class="k">import</span> <span class="n">HIGHEST_PROTOCOL</span> <span class="k">as</span> <span class="n">highest_pickle_protocol</span>
+
+<span class="kn">from</span> <span class="nn">helper</span> <span class="k">import</span> <span class="n">absdirpath</span>
+<span class="kn">from</span> <span class="nn">_util</span> <span class="k">import</span> <span class="n">AttrDict</span><span class="p">,</span> <span class="n">FrozenAttrDict</span>
+
+<div class="viewcode-block" id="UninitialzedAttributeException"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.UninitialzedAttributeException">[docs]</a><span class="k">class</span> <span class="nc">UninitialzedAttributeException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Signals that an attribute in the config file was not initialized.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="UninitializedConfigException"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.UninitializedConfigException">[docs]</a><span class="k">class</span> <span class="nc">UninitializedConfigException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Signals that the config was not initialized before trying to access an</span>
+<span class="sd">    attribute.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">pass</span></div>
+
+<span class="k">class</span> <span class="nc">_Config</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_initialized</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">__shared_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">constants</span> <span class="o">=</span> <span class="n">AttrDict</span><span class="p">()</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="n">AttrDict</span><span class="p">()</span>
+    <span class="n">_config</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">_cli_args</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">_post_processors</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This object will act as if it were a singleton.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shared_dict</span>
+
+    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_commandline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_post_processors</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_init_with_dicts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">defaults</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span> <span class="o">=</span> <span class="n">defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_add_post_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">post_processor</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param attr: Attribute to pass to and recieve from the</span>
+<span class="sd">        :func:`post_processor`.</span>
+
+<span class="sd">        :param post_processor: A callback functions called in a chain to</span>
+<span class="sd">            perform additional setup for a config argument. Should return a tuple</span>
+<span class="sd">            containing the new value for the config attr.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post_processors</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_post_processors</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_post_processors</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">post_processor</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">_parse_commandline_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_args</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+            <span class="c1"># Ignore non-argument attributes.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_file_args</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_file_args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_run_post_processors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">callbacks</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post_processors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">newval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup_val</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="n">callbacks</span><span class="p">:</span>
+                <span class="n">newval</span> <span class="o">=</span> <span class="n">callback</span><span class="p">(</span><span class="n">newval</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">newval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">newval</span> <span class="o">=</span> <span class="n">newval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">newval</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">_lookup_val</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get the attribute from the config or fallback to defaults.</span>
+
+<span class="sd">        :returns: If the value is not stored return None. Otherwise a tuple</span>
+<span class="sd">            containing the value.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="n">attr</span><span class="p">],)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_defaults</span><span class="p">,</span> <span class="n">attr</span><span class="p">),)</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">_Config</span><span class="p">,</span> <span class="bp">self</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">_Config</span><span class="p">,</span> <span class="bp">self</span><span class="p">),</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UninitializedConfigException</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot directly access elements from the config before it is&#39;</span>
+                <span class="s1">&#39; initialized&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup_val</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">UninitialzedAttributeException</span><span class="p">(</span>
+                    <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> was not initialzed in the config.&#39;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="define_defaults"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.define_defaults">[docs]</a><span class="k">def</span> <span class="nf">define_defaults</span><span class="p">(</span><span class="n">defaults</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Defaults are provided by the config if the attribute is not found in the</span>
+<span class="sd">    config or commandline. For instance, if we are using the list command</span>
+<span class="sd">    fixtures might not be able to count on the build_dir being provided since we</span>
+<span class="sd">    aren&#39;t going to build anything.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">defaults</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">absdirpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+                                                      <span class="n">os</span><span class="o">.</span><span class="n">pardir</span><span class="p">,</span>
+                                                      <span class="n">os</span><span class="o">.</span><span class="n">pardir</span><span class="p">))</span>
+    <span class="n">defaults</span><span class="o">.</span><span class="n">result_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;.testing-results&#39;</span><span class="p">)</span>
+    <span class="n">defaults</span><span class="o">.</span><span class="n">list_only_failed</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="define_constants"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.define_constants">[docs]</a><span class="k">def</span> <span class="nf">define_constants</span><span class="p">(</span><span class="n">constants</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    &#39;constants&#39; are values not directly exposed by the config, but are attached</span>
+<span class="sd">    to the object for centralized access. These should be used for setting</span>
+<span class="sd">    common string names used across the test framework. A simple typo in</span>
+<span class="sd">    a string can take a lot of debugging to uncover the issue, attribute errors</span>
+<span class="sd">    are easier to notice and most autocompletion systems detect them.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">system_out_name</span> <span class="o">=</span> <span class="s1">&#39;system-out&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">system_err_name</span> <span class="o">=</span> <span class="s1">&#39;system-err&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">x86_tag</span> <span class="o">=</span> <span class="s1">&#39;X86&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">sparc_tag</span> <span class="o">=</span> <span class="s1">&#39;SPARC&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">alpha_tag</span> <span class="o">=</span> <span class="s1">&#39;ALPHA&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">riscv_tag</span> <span class="o">=</span> <span class="s1">&#39;RISCV&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">arm_tag</span> <span class="o">=</span> <span class="s1">&#39;ARM&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">supported_isas</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">constants</span><span class="o">.</span><span class="n">x86_tag</span><span class="p">,</span>
+            <span class="n">constants</span><span class="o">.</span><span class="n">sparc_tag</span><span class="p">,</span>
+            <span class="n">constants</span><span class="o">.</span><span class="n">alpha_tag</span><span class="p">,</span>
+            <span class="n">constants</span><span class="o">.</span><span class="n">riscv_tag</span><span class="p">,</span>
+            <span class="n">constants</span><span class="o">.</span><span class="n">arm_tag</span>
+    <span class="p">)</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">opt_tag</span> <span class="o">=</span> <span class="s1">&#39;opt&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">debug_tag</span> <span class="o">=</span> <span class="s1">&#39;debug&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">fast_tag</span> <span class="o">=</span> <span class="s1">&#39;fast&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">supported_optimizations</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">constants</span><span class="o">.</span><span class="n">opt_tag</span><span class="p">,</span>
+            <span class="n">constants</span><span class="o">.</span><span class="n">debug_tag</span><span class="p">,</span>
+            <span class="n">constants</span><span class="o">.</span><span class="n">fast_tag</span>
+    <span class="p">)</span>
+
+    <span class="n">constants</span><span class="o">.</span><span class="n">tempdir_fixture_name</span> <span class="o">=</span> <span class="s1">&#39;tempdir&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_stderr</span> <span class="o">=</span> <span class="s1">&#39;simerr&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_stdout</span> <span class="o">=</span> <span class="s1">&#39;simout&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_stats</span> <span class="o">=</span> <span class="s1">&#39;stats.txt&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_config_ini</span> <span class="o">=</span> <span class="s1">&#39;config.ini&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_config_json</span> <span class="o">=</span> <span class="s1">&#39;config.json&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">gem5_returncode_fixture_name</span> <span class="o">=</span> <span class="s1">&#39;gem5-returncode&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">gem5_binary_fixture_name</span> <span class="o">=</span> <span class="s1">&#39;gem5&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">pickle_protocol</span> <span class="o">=</span> <span class="n">highest_pickle_protocol</span>
+
+    <span class="c1"># The root directory which all test names will be based off of.</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">testing_base</span> <span class="o">=</span> <span class="n">absdirpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">absdirpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+                                                     <span class="n">os</span><span class="o">.</span><span class="n">pardir</span><span class="p">))</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">credential_header</span> <span class="o">=</span> <span class="s1">&#39;Credentials&#39;</span>
+    <span class="n">constants</span><span class="o">.</span><span class="n">default_credentials_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;credentials.ini&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="define_post_processors"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.define_post_processors">[docs]</a><span class="k">def</span> <span class="nf">define_post_processors</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    post_processors are used to do final configuration of variables. This is</span>
+<span class="sd">    useful if there is a dynamically set default, or some function that needs</span>
+<span class="sd">    to be applied after parsing in order to set a configration value.</span>
+
+<span class="sd">    Post processors must accept a single argument that will either be a tuple</span>
+<span class="sd">    containing the already set config value or ``None`` if the config value</span>
+<span class="sd">    has not been set to anything. They must return the modified value in the</span>
+<span class="sd">    same format.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">set_default_build_dir</span><span class="p">(</span><span class="n">build_dir</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Post-processor to set the default build_dir based on the base_dir.</span>
+
+<span class="sd">        .. seealso :func:`~_Config._add_post_processor`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">build_dir</span> <span class="ow">or</span> <span class="n">build_dir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base_dir</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">_lookup_val</span><span class="p">(</span><span class="s1">&#39;base_dir&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">build_dir</span> <span class="o">=</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="s1">&#39;build&#39;</span><span class="p">),)</span>
+        <span class="k">return</span> <span class="n">build_dir</span>
+
+    <span class="k">def</span> <span class="nf">fix_verbosity_hack</span><span class="p">(</span><span class="n">verbose</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">verbose</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">threads_as_int</span><span class="p">(</span><span class="n">threads</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">threads</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">threads</span><span class="p">[</span><span class="mi">0</span><span class="p">]),)</span>
+
+    <span class="k">def</span> <span class="nf">parse_server_credentials</span><span class="p">(</span><span class="n">credentials_file</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">credentials_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">credentials_file</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">credentials_file</span> <span class="o">=</span> <span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">default_credentials_file</span><span class="p">,)</span>
+
+            <span class="nb">print</span> <span class="n">credentials_file</span>
+            <span class="n">parser</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">credentials_file</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">hostname</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">credential_header</span><span class="p">,</span> <span class="s1">&#39;hostname&#39;</span><span class="p">)</span>
+            <span class="n">port</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">credential_header</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">)</span>
+            <span class="n">passkey</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">credential_header</span><span class="p">,</span> <span class="s1">&#39;passkey&#39;</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="s1">&#39;credentials&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">),</span> <span class="n">passkey</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">credentials_file</span>
+
+    <span class="n">config</span><span class="o">.</span><span class="n">_add_post_processor</span><span class="p">(</span><span class="s1">&#39;build_dir&#39;</span><span class="p">,</span> <span class="n">set_default_build_dir</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">_add_post_processor</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="n">fix_verbosity_hack</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">_add_post_processor</span><span class="p">(</span><span class="s1">&#39;threads&#39;</span><span class="p">,</span> <span class="n">threads_as_int</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">_add_post_processor</span><span class="p">(</span><span class="s1">&#39;credentials_file&#39;</span><span class="p">,</span> <span class="n">parse_server_credentials</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Argument"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.Argument">[docs]</a><span class="k">class</span> <span class="nc">Argument</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Class represents a cli argument/flag for a argparse parser.</span>
+
+<span class="sd">    :attr name: The long name of this object that will be stored in the arg</span>
+<span class="sd">        output by the final parser.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">flags</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Need at least one argument.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;dest&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dest&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">flags</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">flags</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;invalid option string </span><span class="si">%s</span><span class="s2">: must start&quot;</span>
+                    <span class="s2">&quot;with a character &#39;-&#39;&quot;</span> <span class="o">%</span> <span class="n">flag</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">flag</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;--&#39;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">flag</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">flags</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Argument.add_to"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.Argument.add_to">[docs]</a>    <span class="k">def</span> <span class="nf">add_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Add this argument to the given parser.&#39;&#39;&#39;</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">flags</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Argument.copy"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.Argument.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Copy this argument so you might modify any of its kwargs.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_StickyInt</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A class that is used to cheat the verbosity count incrementer by</span>
+<span class="sd">    pretending to be an int. This makes the int stay on the heap and eat other</span>
+<span class="sd">    real numbers when they are added to it.</span>
+
+<span class="sd">    We use this so we can allow the verbose flag to be provided before or after</span>
+<span class="sd">    the subcommand. This likely has no utility outside of this use case.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="nb">int</span>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">+=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<span class="n">common_args</span> <span class="o">=</span> <span class="bp">NotImplemented</span>
+
+<div class="viewcode-block" id="define_common_args"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.define_common_args">[docs]</a><span class="k">def</span> <span class="nf">define_common_args</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Common args are arguments which are likely to be simular between different</span>
+<span class="sd">    subcommands, so they are available to all by placing their definitions</span>
+<span class="sd">    here.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">global</span> <span class="n">common_args</span>
+
+    <span class="c1"># A list of common arguments/flags used across cli parsers.</span>
+    <span class="n">common_args</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;directory&#39;</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to start searching for tests in&#39;</span><span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--fail-fast&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Stop running on the first instance of failure&#39;</span><span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--tags&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">help</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--uid&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;UID of a specific test item to run.&#39;</span><span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--build-dir&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Build directory for SCons&#39;</span><span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--base-dir&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">_defaults</span><span class="o">.</span><span class="n">base_dir</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to change to in order to exec scons.&#39;</span><span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;-j&#39;</span><span class="p">,</span> <span class="s1">&#39;--threads&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of threads to run SCons with.&#39;</span><span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;-v&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">,</span>
+            <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">_StickyInt</span><span class="p">(),</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Increase verbosity&#39;</span><span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--config-path&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to read a testing.ini config in&#39;</span>
+        <span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--skip-build&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Skip the building component of SCons targets.&#39;</span>
+        <span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--result-path&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The path to store results in.&#39;</span>
+        <span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--list-only-failed&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Only list tests that failed.&#39;</span>
+        <span class="p">),</span>
+        <span class="n">Argument</span><span class="p">(</span><span class="s1">&#39;--credentials_file&#39;</span><span class="p">,</span>
+                <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s1">&#39;File to parse for server information.&#39;</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="c1"># NOTE: There is a limitation which arises due to this format. If you have</span>
+    <span class="c1"># multiple arguments with the same name only the final one in the list will be</span>
+    <span class="c1"># saved.</span>
+    <span class="c1">#</span>
+    <span class="c1"># e.g. if you have a -v argument which increments verbosity level and</span>
+    <span class="c1"># a separate --verbose flag which &#39;store&#39;s verbosity level. the final one in</span>
+    <span class="c1"># the list will be saved.</span>
+    <span class="n">common_args</span> <span class="o">=</span> <span class="n">AttrDict</span><span class="p">({</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">:</span><span class="n">arg</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">common_args</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="ArgParser"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.ArgParser">[docs]</a><span class="k">class</span> <span class="nc">ArgParser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="c1"># Copy public methods of the parser.</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">parser</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">parser</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_argument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span>
+
+        <span class="c1"># Argument will be added to all parsers and subparsers.</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">verbose</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CommandParser"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.CommandParser">[docs]</a><span class="k">class</span> <span class="nc">CommandParser</span><span class="p">(</span><span class="n">ArgParser</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Main parser which parses command strings and uses those to direct to</span>
+<span class="sd">    a subparser.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CommandParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subparser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s1">&#39;command&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RunParser"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.RunParser">[docs]</a><span class="k">class</span> <span class="nc">RunParser</span><span class="p">(</span><span class="n">ArgParser</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Parser for the \&#39;run\&#39; command.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subparser</span><span class="p">):</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">subparser</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+            <span class="s1">&#39;run&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;Run Tests.&#39;&#39;&#39;</span>
+        <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">RunParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+
+        <span class="n">common_args</span><span class="o">.</span><span class="n">uid</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">skip_build</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">directory</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">build_dir</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">base_dir</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">fail_fast</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">threads</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">list_only_failed</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">credentials_file</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+
+        <span class="c1"># Modify the help statement for the tags common_arg</span>
+        <span class="n">mytags</span> <span class="o">=</span> <span class="n">common_args</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">mytags</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;help&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Only run items marked with one of the given&#39;</span>
+                                 <span class="s1">&#39; tags.&#39;</span><span class="p">)</span>
+        <span class="n">mytags</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ListParser"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.ListParser">[docs]</a><span class="k">class</span> <span class="nc">ListParser</span><span class="p">(</span><span class="n">ArgParser</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Parser for the \&#39;list\&#39; command.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subparser</span><span class="p">):</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">subparser</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+            <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;List and query test metadata.&#39;&#39;&#39;</span>
+        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ListParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--suites&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;List all test suites.&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--tests&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;List all test cases.&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--fixtures&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;List all fixtures.&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">Argument</span><span class="p">(</span>
+            <span class="s1">&#39;--all-tags&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;List all tags.&#39;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+
+        <span class="n">common_args</span><span class="o">.</span><span class="n">directory</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">mytags</span> <span class="o">=</span> <span class="n">common_args</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">mytags</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;help&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Only list items marked with one of the&#39;</span>
+                                 <span class="s1">&#39; given tags.&#39;</span><span class="p">)</span>
+        <span class="n">mytags</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RerunParser"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.RerunParser">[docs]</a><span class="k">class</span> <span class="nc">RerunParser</span><span class="p">(</span><span class="n">ArgParser</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subparser</span><span class="p">):</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">subparser</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+            <span class="s1">&#39;rerun&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;Rerun failed tests.&#39;&#39;&#39;</span>
+        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RerunParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+
+        <span class="n">common_args</span><span class="o">.</span><span class="n">skip_build</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">directory</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">build_dir</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">base_dir</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">fail_fast</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">threads</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">common_args</span><span class="o">.</span><span class="n">list_only_failed</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ClientParser"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.ClientParser">[docs]</a><span class="k">class</span> <span class="nc">ClientParser</span><span class="p">(</span><span class="n">ArgParser</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Parser for the \&#39;client\&#39; command.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subparser</span><span class="p">):</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">subparser</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+            <span class="s1">&#39;client&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;Act as a client/helper for a test server instance.&#39;&#39;&#39;</span>
+        <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">ClientParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+
+        <span class="n">common_args</span><span class="o">.</span><span class="n">credentials_file</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">common_args</span><span class="o">.</span><span class="n">threads</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">arg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;help&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;The number of helper instances to spawn on&#39;</span>
+                              <span class="s1">&#39; this client.&#39;</span><span class="p">)</span>
+        <span class="n">arg</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span></div>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">_Config</span><span class="p">()</span>
+<span class="n">define_constants</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">constants</span><span class="p">)</span>
+
+<span class="c1"># Constants are directly exposed and available once this module is created.</span>
+<span class="c1"># All constants MUST be defined before this point.</span>
+<span class="n">config</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="n">FrozenAttrDict</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+<span class="n">constants</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">constants</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">This config object is the singleton config object available throughtout the</span>
+<span class="sd">framework.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="initialize_config"><a class="viewcode-back" href="../../whimsy.html#whimsy.config.initialize_config">[docs]</a><span class="k">def</span> <span class="nf">initialize_config</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Parse the commandline arguments and setup the config varibles.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">global</span> <span class="n">config</span>
+
+    <span class="c1"># Setup constants and defaults</span>
+    <span class="n">define_defaults</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">_defaults</span><span class="p">)</span>
+    <span class="n">define_post_processors</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">define_common_args</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="c1"># Setup parser and subcommands</span>
+    <span class="n">baseparser</span> <span class="o">=</span> <span class="n">CommandParser</span><span class="p">()</span>
+    <span class="n">runparser</span> <span class="o">=</span> <span class="n">RunParser</span><span class="p">(</span><span class="n">baseparser</span><span class="o">.</span><span class="n">subparser</span><span class="p">)</span>
+    <span class="n">listparser</span> <span class="o">=</span> <span class="n">ListParser</span><span class="p">(</span><span class="n">baseparser</span><span class="o">.</span><span class="n">subparser</span><span class="p">)</span>
+    <span class="n">rerunparser</span> <span class="o">=</span> <span class="n">RerunParser</span><span class="p">(</span><span class="n">baseparser</span><span class="o">.</span><span class="n">subparser</span><span class="p">)</span>
+    <span class="n">clientparser</span> <span class="o">=</span> <span class="n">ClientParser</span><span class="p">(</span><span class="n">baseparser</span><span class="o">.</span><span class="n">subparser</span><span class="p">)</span>
+
+    <span class="c1"># Initialize the config by parsing args and running callbacks.</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">baseparser</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

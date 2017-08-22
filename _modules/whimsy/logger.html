@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.logger &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>whimsy.logger</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whimsy.logger</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Provides a common logging system. With ability to add additional logging</span>
+<span class="sd">levels.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="c1"># TODO: Should add a debug flag system.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">_logging</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">terminal</span>
+
+<span class="c1"># Logging level to be used to always display information to the user</span>
+<div class="viewcode-block" id="add_logging_level"><a class="viewcode-back" href="../../whimsy.html#whimsy.logger.add_logging_level">[docs]</a><span class="k">def</span> <span class="nf">add_logging_level</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">_logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">log_at_level</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="c1"># Add the logging helper function as lowercase</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">_logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">log_at_level</span><span class="p">)</span>
+
+    <span class="c1"># Add the value to the naming module as CAPITALIZED</span>
+    <span class="nb">globals</span><span class="p">()[</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> <span class="n">val</span></div>
+
+<span class="c1"># Add all default logging levels to this module</span>
+<span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">,</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span> <span class="s1">&#39;FATAL&#39;</span><span class="p">,</span> <span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;WARN&#39;</span><span class="p">):</span>
+    <span class="nb">globals</span><span class="p">()[</span><span class="n">level</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_logging</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+
+<span class="c1"># The minimum level which will always be displayed no matter verbosity.</span>
+<span class="n">always_display_level</span> <span class="o">=</span> <span class="n">WARN</span>
+
+<span class="c1"># Logging level used to display bold information for users.</span>
+<span class="n">add_logging_level</span><span class="p">(</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="c1"># Logging level to always output (Use for UI stuff.)</span>
+<span class="n">add_logging_level</span><span class="p">(</span><span class="s1">&#39;display&#39;</span><span class="p">,</span> <span class="mi">999</span><span class="p">)</span>
+
+<span class="c1"># Make sure these items will always be displayed.</span>
+<span class="k">assert</span> <span class="n">DISPLAY</span> <span class="o">&gt;</span> <span class="n">always_display_level</span>
+<span class="k">assert</span> <span class="n">BOLD</span> <span class="o">&gt;</span> <span class="n">always_display_level</span>
+
+<span class="c1"># Logging level will be incredibly verbose, use to trace through testing.</span>
+<span class="n">add_logging_level</span><span class="p">(</span><span class="s1">&#39;trace&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="set_logging_verbosity"><a class="viewcode-back" href="../../whimsy.html#whimsy.logger.set_logging_verbosity">[docs]</a><span class="k">def</span> <span class="nf">set_logging_verbosity</span><span class="p">(</span><span class="n">verbosity</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Set the logging level based on the number of verbosity flags given.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">always_display_level</span> <span class="o">-</span> <span class="n">verbosity</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="n">TRACE</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ConsoleLogFormatter"><a class="viewcode-back" href="../../whimsy.html#whimsy.logger.ConsoleLogFormatter">[docs]</a><span class="k">class</span> <span class="nc">ConsoleLogFormatter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Formats output to be sent to an interactive terminal. Colors may be added</span>
+<span class="sd">    based on logging level.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># For now, just change color based on the logging level.</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">terminal</span><span class="o">.</span><span class="n">get_termcap</span><span class="p">()</span>
+    <span class="n">reset</span> <span class="o">=</span> <span class="n">color</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">level_colormap</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">BOLD</span><span class="p">:</span> <span class="n">color</span><span class="o">.</span><span class="n">White</span> <span class="o">+</span> <span class="n">color</span><span class="o">.</span><span class="n">Bold</span><span class="p">,</span>
+        <span class="n">FATAL</span><span class="p">:</span> <span class="n">color</span><span class="o">.</span><span class="n">Red</span><span class="p">,</span>
+        <span class="n">WARN</span><span class="p">:</span> <span class="n">color</span><span class="o">.</span><span class="n">Yellow</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="ConsoleLogFormatter.format"><a class="viewcode-back" href="../../whimsy.html#whimsy.logger.ConsoleLogFormatter.format">[docs]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="n">color_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_colormap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">levelno</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="o">.</span><span class="n">Normal</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">color_str</span> <span class="o">+</span> <span class="n">record</span><span class="o">.</span><span class="n">msg</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset</span></div></div>
+
+
+<span class="c1"># The common logger used everywhere in the framework.</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;Main Console Logger&#39;</span><span class="p">)</span>
+
+<span class="c1"># Save stdout and stderr incase they are modified somewhere else. (Tee for</span>
+<span class="c1"># example.)</span>
+<span class="n">saved_stderr</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+<span class="n">saved_stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+
+<span class="n">stdout_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">saved_stdout</span><span class="p">)</span>
+<span class="n">stdout_logger</span><span class="o">.</span><span class="n">formatter</span> <span class="o">=</span> <span class="n">ConsoleLogFormatter</span><span class="p">()</span>
+<span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">stdout_logger</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.gem5.verifier &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>whimsy.gem5.verifier</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whimsy.gem5.verifier</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Built in test cases that verify particular details about a gem5 run.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">test</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="k">import</span> <span class="n">constants</span>
+<span class="kn">from</span> <span class="nn">.._util</span> <span class="k">import</span> <span class="n">diff_out_file</span>
+<span class="kn">from</span> <span class="nn">..helper</span> <span class="k">import</span> <span class="n">joinpath</span>
+
+<div class="viewcode-block" id="Verifier"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.Verifier">[docs]</a><span class="k">class</span> <span class="nc">Verifier</span><span class="p">(</span><span class="n">test</span><span class="o">.</span><span class="n">TestFunction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Verifier</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MatchGoldStandard"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.MatchGoldStandard">[docs]</a><span class="k">class</span> <span class="nc">MatchGoldStandard</span><span class="p">(</span><span class="n">Verifier</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compares a standard output to the test output and passes if they match,</span>
+<span class="sd">    fails if they do not.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">standard_filename</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_regex</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">test_filename</span><span class="o">=</span><span class="s1">&#39;simout&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param standard_filename: The path of the standard file to compare</span>
+<span class="sd">        output to.</span>
+
+<span class="sd">        :param ignore_regex: A string, compiled regex, or iterable containing</span>
+<span class="sd">        either which will be ignored in &#39;standard&#39; and test output files when</span>
+<span class="sd">        diffing.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MatchGoldStandard</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">standard_filename</span> <span class="o">=</span> <span class="n">standard_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_filename</span> <span class="o">=</span> <span class="n">test_filename</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_regex</span> <span class="o">=</span> <span class="n">_iterable_regex</span><span class="p">(</span><span class="n">ignore_regex</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MatchGoldStandard.test"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.MatchGoldStandard.test">[docs]</a>    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixtures</span><span class="p">):</span>
+        <span class="c1"># We need a tempdir fixture from our parent verifier suite.</span>
+
+        <span class="c1"># Get the file from the tempdir of the test.</span>
+        <span class="n">tempdir</span> <span class="o">=</span> <span class="n">fixtures</span><span class="p">[</span><span class="n">constants</span><span class="o">.</span><span class="n">tempdir_fixture_name</span><span class="p">]</span><span class="o">.</span><span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_filename</span> <span class="o">=</span> <span class="n">joinpath</span><span class="p">(</span><span class="n">tempdir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_filename</span><span class="p">)</span>
+
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">diff_out_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">standard_filename</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">test_filename</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">ignore_regex</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">diff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">test</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Stdout did not match:</span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">diff</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_generic_instance_warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Method for helper classes to tell users to use this more generic class</span>
+<span class="sd">        if they are going to manually override the test_filename param.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="s1">&#39;test_filename&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;If you are setting test_filename use the more&#39;</span>
+                             <span class="s1">&#39; generic </span><span class="si">%s</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39; instead&#39;</span> <span class="o">%</span> <span class="n">MatchGoldStandard</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DerivedGoldStandard"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.DerivedGoldStandard">[docs]</a><span class="k">class</span> <span class="nc">DerivedGoldStandard</span><span class="p">(</span><span class="n">MatchGoldStandard</span><span class="p">):</span>
+    <span class="n">__ignore_regex_sentinel</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+    <span class="n">_file</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_default_ignore_regex</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">standard_filename</span><span class="p">,</span>
+                 <span class="n">ignore_regex</span><span class="o">=</span><span class="n">__ignore_regex_sentinel</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">ignore_regex</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ignore_regex_sentinel</span><span class="p">:</span>
+            <span class="n">ignore_regex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_ignore_regex</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_generic_instance_warning</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">DerivedGoldStandard</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">standard_filename</span><span class="p">,</span>
+            <span class="n">test_filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">,</span>
+            <span class="n">ignore_regex</span><span class="o">=</span><span class="n">ignore_regex</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MatchStdout"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.MatchStdout">[docs]</a><span class="k">class</span> <span class="nc">MatchStdout</span><span class="p">(</span><span class="n">DerivedGoldStandard</span><span class="p">):</span>
+    <span class="n">_file</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_stdout</span>
+    <span class="n">_default_ignore_regex</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^Redirecting (stdout|stderr) to&#39;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^gem5 compiled &#39;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^gem5 started &#39;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^gem5 executing on &#39;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^command line:&#39;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^Couldn&#39;t import dot_parser,&quot;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^info: kernel located at:&quot;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^Couldn&#39;t unlink &quot;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^Using GPU kernel code file\(s\) &quot;</span><span class="p">),</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="MatchStderr"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.MatchStderr">[docs]</a><span class="k">class</span> <span class="nc">MatchStderr</span><span class="p">(</span><span class="n">DerivedGoldStandard</span><span class="p">):</span>
+    <span class="n">_file</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_stderr</span>
+    <span class="n">_default_ignore_regex</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="MatchStats"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.MatchStats">[docs]</a><span class="k">class</span> <span class="nc">MatchStats</span><span class="p">(</span><span class="n">DerivedGoldStandard</span><span class="p">):</span>
+    <span class="c1"># TODO: Likely will want to change this verifier since we have the weird</span>
+    <span class="c1"># perl script right now. A simple diff probably isn&#39;t going to work.</span>
+    <span class="n">_file</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_stats</span>
+    <span class="n">_default_ignore_regex</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="MatchConfigINI"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.MatchConfigINI">[docs]</a><span class="k">class</span> <span class="nc">MatchConfigINI</span><span class="p">(</span><span class="n">DerivedGoldStandard</span><span class="p">):</span>
+    <span class="n">_file</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_config_ini</span>
+    <span class="n">_default_ignore_regex</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^(executable|readfile|kernel|image_file)=&quot;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^(cwd|input|codefile)=&quot;</span><span class="p">),</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="MatchConfigJSON"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.MatchConfigJSON">[docs]</a><span class="k">class</span> <span class="nc">MatchConfigJSON</span><span class="p">(</span><span class="n">DerivedGoldStandard</span><span class="p">):</span>
+    <span class="n">_file</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_config_json</span>
+    <span class="n">_default_ignore_regex</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&#39;&#39;^\s*&quot;(executable|readfile|kernel|image_file)&quot;:&#39;&#39;&#39;</span><span class="p">),</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&#39;&#39;^\s*&quot;(cwd|input|codefile)&quot;:&#39;&#39;&#39;</span><span class="p">),</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="MatchRegex"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.MatchRegex">[docs]</a><span class="k">class</span> <span class="nc">MatchRegex</span><span class="p">(</span><span class="n">Verifier</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">regex</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">match_stderr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">match_stdout</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MatchRegex</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regex</span> <span class="o">=</span> <span class="n">_iterable_regex</span><span class="p">(</span><span class="n">regex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">match_stderr</span> <span class="o">=</span> <span class="n">match_stderr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">match_stdout</span> <span class="o">=</span> <span class="n">match_stdout</span>
+
+<div class="viewcode-block" id="MatchRegex.test"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.MatchRegex.test">[docs]</a>    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixtures</span><span class="p">):</span>
+        <span class="c1"># Get the file from the tempdir of the test.</span>
+        <span class="n">tempdir</span> <span class="o">=</span> <span class="n">fixtures</span><span class="p">[</span><span class="n">constants</span><span class="o">.</span><span class="n">tempdir_fixture_name</span><span class="p">]</span><span class="o">.</span><span class="n">path</span>
+
+        <span class="k">def</span> <span class="nf">parse_file</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file_</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">regex</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regex</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+                            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_stdout</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">parse_file</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="n">tempdir</span><span class="p">,</span>
+                                   <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_stdout</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="c1"># Success</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_stderr</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">parse_file</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="n">tempdir</span><span class="p">,</span>
+                                   <span class="n">constants</span><span class="o">.</span><span class="n">gem5_simulation_stderr</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="c1"># Success</span>
+        <span class="n">test</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Could not match regex.&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="VerifyReturncode"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.VerifyReturncode">[docs]</a><span class="k">class</span> <span class="nc">VerifyReturncode</span><span class="p">(</span><span class="n">Verifier</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">returncode</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expected_returncode</span> <span class="o">=</span> <span class="n">returncode</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">VerifyReturncode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VerifyReturncode.test"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.verifier.VerifyReturncode.test">[docs]</a>    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixtures</span><span class="p">):</span>
+        <span class="n">test</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expected_returncode</span><span class="p">,</span>
+                <span class="n">fixtures</span><span class="p">[</span><span class="n">constants</span><span class="o">.</span><span class="n">gem5_returncode_fixture_name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">pass</span></div></div>
+
+<span class="n">_re_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">_iterable_regex</span><span class="p">(</span><span class="n">regex</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">_re_type</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">regex</span> <span class="o">=</span> <span class="p">(</span><span class="n">regex</span><span class="p">,)</span>
+    <span class="k">return</span> <span class="n">regex</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

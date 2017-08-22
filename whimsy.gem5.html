@@ -1,0 +1,491 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.gem5 package &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="index.html"/>
+        <link rel="up" title="The Whimsy Library" href="whimsy.html"/>
+        <link rel="prev" title="The Whimsy Library" href="whimsy.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="whimsy.html">The Whimsy Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="whimsy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">whimsy.gem5 package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-whimsy.gem5.fixture">whimsy.gem5.fixture module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-whimsy.gem5.suite">whimsy.gem5.suite module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-whimsy.gem5.verifier">whimsy.gem5.verifier module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-whimsy.gem5">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="whimsy.html#main-modules">Main Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="whimsy.html#test-items">Test Items</a></li>
+<li class="toctree-l2"><a class="reference internal" href="whimsy.html#support-modules">Support Modules</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="whimsy.html">The Whimsy Library</a> &raquo;</li>
+        
+      <li>whimsy.gem5 package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/whimsy.gem5.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="whimsy-gem5-package">
+<h1>whimsy.gem5 package<a class="headerlink" href="#whimsy-gem5-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-whimsy.gem5.fixture">
+<span id="whimsy-gem5-fixture-module"></span><h2>whimsy.gem5.fixture module<a class="headerlink" href="#module-whimsy.gem5.fixture" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="whimsy.gem5.fixture.Gem5Fixture">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.fixture.</code><code class="descname">Gem5Fixture</code><span class="sig-paren">(</span><em>isa</em>, <em>optimization</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#Gem5Fixture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.Gem5Fixture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.fixture.SConsTarget" title="whimsy.gem5.fixture.SConsTarget"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.fixture.SConsTarget</span></code></a></p>
+<dl class="method">
+<dt id="whimsy.gem5.fixture.Gem5Fixture.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#Gem5Fixture.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.Gem5Fixture.setup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.fixture.MakeFixture">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.fixture.</code><code class="descname">MakeFixture</code><span class="sig-paren">(</span><em>directory</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#MakeFixture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.MakeFixture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a></p>
+<dl class="method">
+<dt id="whimsy.gem5.fixture.MakeFixture.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#MakeFixture.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.MakeFixture.setup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.fixture.MakeTarget">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.fixture.</code><code class="descname">MakeTarget</code><span class="sig-paren">(</span><em>target</em>, <em>make_fixture=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#MakeTarget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.MakeTarget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a></p>
+<dl class="method">
+<dt id="whimsy.gem5.fixture.MakeTarget.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#MakeTarget.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.MakeTarget.setup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.fixture.SConsFixture">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.fixture.</code><code class="descname">SConsFixture</code><span class="sig-paren">(</span><em>name='SCons Fixture'</em>, <em>directory=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#SConsFixture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.SConsFixture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a></p>
+<p>Fixture will wait until all SCons targets are collected and tests are
+about to be ran, then will invocate a single instance of SCons for all
+targets.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>directory</strong> – The directory which scons will -C (cd) into before
+executing. If None is provided, will choose the config base_dir.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="whimsy.gem5.fixture.SConsFixture.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="headerlink" href="#whimsy.gem5.fixture.SConsFixture.setup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.gem5.fixture.SConsFixture.teardown">
+<code class="descname">teardown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#SConsFixture.teardown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.SConsFixture.teardown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.fixture.SConsTarget">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.fixture.</code><code class="descname">SConsTarget</code><span class="sig-paren">(</span><em>target</em>, <em>build_dir=None</em>, <em>invocation=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#SConsTarget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.SConsTarget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a></p>
+<dl class="attribute">
+<dt id="whimsy.gem5.fixture.SConsTarget.default_scons_invocation">
+<code class="descname">default_scons_invocation</code><em class="property"> = None</em><a class="headerlink" href="#whimsy.gem5.fixture.SConsTarget.default_scons_invocation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.gem5.fixture.SConsTarget.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#SConsTarget.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.SConsTarget.setup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.fixture.TempdirFixture">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.fixture.</code><code class="descname">TempdirFixture</code><span class="sig-paren">(</span><em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#TempdirFixture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.TempdirFixture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a></p>
+<dl class="attribute">
+<dt id="whimsy.gem5.fixture.TempdirFixture.default_name">
+<code class="descname">default_name</code><em class="property"> = 'tempdir'</em><a class="headerlink" href="#whimsy.gem5.fixture.TempdirFixture.default_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.gem5.fixture.TempdirFixture.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#TempdirFixture.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.TempdirFixture.setup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.fixture.TestProgram">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.fixture.</code><code class="descname">TestProgram</code><span class="sig-paren">(</span><em>program</em>, <em>isa</em>, <em>os</em>, <em>recompile=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#TestProgram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.TestProgram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.fixture.MakeTarget" title="whimsy.gem5.fixture.MakeTarget"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.fixture.MakeTarget</span></code></a></p>
+<dl class="method">
+<dt id="whimsy.gem5.fixture.TestProgram.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#TestProgram.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.TestProgram.setup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.fixture.VariableFixture">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.fixture.</code><code class="descname">VariableFixture</code><span class="sig-paren">(</span><em>value=None</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/fixture.html#VariableFixture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.fixture.VariableFixture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.gem5.suite">
+<span id="whimsy-gem5-suite-module"></span><h2>whimsy.gem5.suite module<a class="headerlink" href="#module-whimsy.gem5.suite" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="whimsy.gem5.suite.gem5_verify_config">
+<code class="descclassname">whimsy.gem5.suite.</code><code class="descname">gem5_verify_config</code><span class="sig-paren">(</span><em>name</em>, <em>config</em>, <em>config_args</em>, <em>verifiers</em>, <em>gem5_args=()</em>, <em>tags=[]</em>, <em>fixtures=[]</em>, <em>valid_isas=('X86'</em>, <em>'SPARC'</em>, <em>'ALPHA'</em>, <em>'RISCV'</em>, <em>'ARM')</em>, <em>valid_optimizations=('opt'</em>, <em>'debug'</em>, <em>'fast')</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/suite.html#gem5_verify_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.suite.gem5_verify_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper class to generate common gem5 tests using verifiers.</p>
+<p>The generated TestSuite will run gem5 with the provided config and
+config_args. After that it will run any provided verifiers to verify
+details about the gem5 run.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">For the verifiers see <a class="reference internal" href="#module-whimsy.gem5.verifier" title="whimsy.gem5.verifier"><code class="xref py py-mod docutils literal"><span class="pre">whimsy.gem5.verifier</span></code></a></p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> – Name of the test.</li>
+<li><strong>config</strong> – The config to give gem5.</li>
+<li><strong>config_args</strong> – A list of arguments to pass to the given config.</li>
+<li><strong>verifiers</strong> – An iterable with Verifier instances which will be placed
+into a suite that will be ran after a gem5 run.</li>
+<li><strong>gem5_args</strong> – An iterable with arguments to give to gem5. (Arguments
+that would normally go before the config path.)</li>
+<li><strong>valid_isas</strong> – An interable with the isas that this test can be ran
+for. If None given, will run for all supported_isas.</li>
+<li><strong>valid_optimizations</strong> – An interable with the optimization levels that
+this test can be ran for. (E.g. opt, debug)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.gem5.verifier">
+<span id="whimsy-gem5-verifier-module"></span><h2>whimsy.gem5.verifier module<a class="headerlink" href="#module-whimsy.gem5.verifier" title="Permalink to this headline">¶</a></h2>
+<p>Built in test cases that verify particular details about a gem5 run.</p>
+<dl class="class">
+<dt id="whimsy.gem5.verifier.DerivedGoldStandard">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">DerivedGoldStandard</code><span class="sig-paren">(</span><em>standard_filename</em>, <em>ignore_regex=&lt;object object&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#DerivedGoldStandard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.DerivedGoldStandard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.verifier.MatchGoldStandard" title="whimsy.gem5.verifier.MatchGoldStandard"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.MatchGoldStandard</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.verifier.MatchConfigINI">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">MatchConfigINI</code><span class="sig-paren">(</span><em>standard_filename</em>, <em>ignore_regex=&lt;object object&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#MatchConfigINI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.MatchConfigINI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.verifier.DerivedGoldStandard" title="whimsy.gem5.verifier.DerivedGoldStandard"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.DerivedGoldStandard</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.verifier.MatchConfigJSON">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">MatchConfigJSON</code><span class="sig-paren">(</span><em>standard_filename</em>, <em>ignore_regex=&lt;object object&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#MatchConfigJSON"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.MatchConfigJSON" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.verifier.DerivedGoldStandard" title="whimsy.gem5.verifier.DerivedGoldStandard"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.DerivedGoldStandard</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.verifier.MatchGoldStandard">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">MatchGoldStandard</code><span class="sig-paren">(</span><em>standard_filename</em>, <em>name=None</em>, <em>ignore_regex=None</em>, <em>test_filename='simout'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#MatchGoldStandard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.MatchGoldStandard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.verifier.Verifier" title="whimsy.gem5.verifier.Verifier"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.Verifier</span></code></a></p>
+<p>Compares a standard output to the test output and passes if they match,
+fails if they do not.</p>
+<dl class="method">
+<dt id="whimsy.gem5.verifier.MatchGoldStandard.test">
+<code class="descname">test</code><span class="sig-paren">(</span><em>fixtures</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#MatchGoldStandard.test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.MatchGoldStandard.test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.verifier.MatchRegex">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">MatchRegex</code><span class="sig-paren">(</span><em>regex</em>, <em>name=None</em>, <em>match_stderr=True</em>, <em>match_stdout=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#MatchRegex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.MatchRegex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.verifier.Verifier" title="whimsy.gem5.verifier.Verifier"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.Verifier</span></code></a></p>
+<dl class="method">
+<dt id="whimsy.gem5.verifier.MatchRegex.test">
+<code class="descname">test</code><span class="sig-paren">(</span><em>fixtures</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#MatchRegex.test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.MatchRegex.test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.verifier.MatchStats">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">MatchStats</code><span class="sig-paren">(</span><em>standard_filename</em>, <em>ignore_regex=&lt;object object&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#MatchStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.MatchStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.verifier.DerivedGoldStandard" title="whimsy.gem5.verifier.DerivedGoldStandard"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.DerivedGoldStandard</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.verifier.MatchStderr">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">MatchStderr</code><span class="sig-paren">(</span><em>standard_filename</em>, <em>ignore_regex=&lt;object object&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#MatchStderr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.MatchStderr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.verifier.DerivedGoldStandard" title="whimsy.gem5.verifier.DerivedGoldStandard"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.DerivedGoldStandard</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.verifier.MatchStdout">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">MatchStdout</code><span class="sig-paren">(</span><em>standard_filename</em>, <em>ignore_regex=&lt;object object&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#MatchStdout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.MatchStdout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.verifier.DerivedGoldStandard" title="whimsy.gem5.verifier.DerivedGoldStandard"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.DerivedGoldStandard</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.verifier.Verifier">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">Verifier</code><span class="sig-paren">(</span><em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#Verifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.Verifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="whimsy.html#whimsy.test.TestFunction" title="whimsy.test.TestFunction"><code class="xref py py-class docutils literal"><span class="pre">whimsy.test.TestFunction</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.gem5.verifier.VerifyReturncode">
+<em class="property">class </em><code class="descclassname">whimsy.gem5.verifier.</code><code class="descname">VerifyReturncode</code><span class="sig-paren">(</span><em>returncode</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#VerifyReturncode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.VerifyReturncode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.gem5.verifier.Verifier" title="whimsy.gem5.verifier.Verifier"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.Verifier</span></code></a></p>
+<dl class="method">
+<dt id="whimsy.gem5.verifier.VerifyReturncode.test">
+<code class="descname">test</code><span class="sig-paren">(</span><em>fixtures</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/gem5/verifier.html#VerifyReturncode.test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.gem5.verifier.VerifyReturncode.test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.gem5">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-whimsy.gem5" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="whimsy.html" class="btn btn-neutral" title="The Whimsy Library" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.main &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>whimsy.main</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whimsy.main</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python2</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">The main source for whimsy. Discovers and loads sources using the</span>
+<span class="sd">:class:`TestLoader` objects and runs tests using the :class:`Runner` object</span>
+<span class="sd">passing the runner :class:`ResultLogger` instances which will stream output</span>
+<span class="sd">data to the terminal and into various result files.</span>
+
+<span class="sd">There are three commands which this program handles:</span>
+
+<span class="sd">* run - By default will search for and run all tests in the current</span>
+<span class="sd">    and children directories reporting the results through the terminal,</span>
+<span class="sd">    saving them to a pickle file, and saving them to a junit file.</span>
+
+<span class="sd">* rerun - Load all tests and then rerun the tests which failed in the previous</span>
+<span class="sd">    run.</span>
+
+<span class="sd">* list  - List tests with various querying options.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">logger</span>
+<span class="kn">import</span> <span class="nn">query</span>
+<span class="kn">import</span> <span class="nn">result</span>
+
+<span class="kn">import</span> <span class="nn">config</span>
+<span class="kn">from</span> <span class="nn">test</span> <span class="k">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">helper</span> <span class="k">import</span> <span class="n">joinpath</span><span class="p">,</span> <span class="n">mkdir_p</span>
+<span class="kn">from</span> <span class="nn">loader</span> <span class="k">import</span> <span class="n">TestLoader</span>
+<span class="kn">from</span> <span class="nn">logger</span> <span class="k">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">runner</span> <span class="k">import</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">WorkClient</span>
+<span class="kn">from</span> <span class="nn">terminal</span> <span class="k">import</span> <span class="n">separator</span>
+
+<span class="c1"># TODO: Standardize separator usage.</span>
+<span class="c1"># Probably make it the caller responsiblity to place separators and internal</span>
+<span class="c1"># ones can be used to separate internal input.</span>
+
+<div class="viewcode-block" id="load_tests"><a class="viewcode-back" href="../../whimsy.html#whimsy.main.load_tests">[docs]</a><span class="k">def</span> <span class="nf">load_tests</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a TestLoader and load tests for the directory given by the config.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">testloader</span> <span class="o">=</span> <span class="n">TestLoader</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">separator</span><span class="p">())</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">(</span><span class="s1">&#39;Loading Tests&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">testloader</span><span class="o">.</span><span class="n">load_root</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">testloader</span></div>
+
+<div class="viewcode-block" id="dorun"><a class="viewcode-back" href="../../whimsy.html#whimsy.main.dorun">[docs]</a><span class="k">def</span> <span class="nf">dorun</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Handle the `run` command.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">load_tests</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">tags</span><span class="p">:</span>
+        <span class="n">suites</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">tags</span><span class="p">:</span>
+            <span class="n">suites</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">loader</span><span class="o">.</span><span class="n">suites_with_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">suites</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">suites</span>
+
+    <span class="c1"># Create directory to save junit and internal results in.</span>
+    <span class="n">mkdir_p</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">result_path</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">result_path</span><span class="p">,</span> <span class="s1">&#39;pickle&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">result_file</span><span class="p">,</span>\
+         <span class="nb">open</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">result_path</span><span class="p">,</span> <span class="s1">&#39;junit.xml&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">junit_f</span><span class="p">:</span>
+
+        <span class="n">junit_logger</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">JUnitLogger</span><span class="p">(</span><span class="n">junit_f</span><span class="p">,</span> <span class="n">result_file</span><span class="p">)</span>
+        <span class="n">console_logger</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">ConsoleLogger</span><span class="p">()</span>
+        <span class="n">loggers</span> <span class="o">=</span> <span class="p">(</span><span class="n">junit_logger</span><span class="p">,</span> <span class="n">console_logger</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">separator</span><span class="p">())</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">(</span><span class="s1">&#39;Running Tests&#39;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">uid</span><span class="p">:</span>
+
+            <span class="n">test_item</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">get_uid</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">uid</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test_item</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Running &#39;</span><span class="si">%s</span><span class="s2">&#39; as a TestCase it is likely not self&quot;</span>
+                         <span class="s2">&quot;-contained!&quot;</span> <span class="o">%</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Recommend running its containing suite instead.&#39;</span><span class="p">)</span>
+
+            <span class="n">results</span> <span class="o">=</span> <span class="n">Runner</span><span class="o">.</span><span class="n">run_items</span><span class="p">(</span><span class="n">test_item</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">testrunner</span> <span class="o">=</span> <span class="n">Runner</span><span class="p">(</span><span class="n">suites</span><span class="p">,</span> <span class="n">loggers</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">testrunner</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="dorerun"><a class="viewcode-back" href="../../whimsy.html#whimsy.main.dorerun">[docs]</a><span class="k">def</span> <span class="nf">dorerun</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Handle the `rerun` command.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># Load previous results</span>
+    <span class="c1"># TODO Catch bad file path error or load error.</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">result_path</span><span class="p">,</span> <span class="s1">&#39;pickle&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">old_fstream</span><span class="p">:</span>
+        <span class="n">old_formatter</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">InternalLogger</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">old_fstream</span><span class="p">)</span>
+
+    <span class="c1"># Load tests</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">load_tests</span><span class="p">()</span>
+
+    <span class="c1"># Get the self contained suites which hold tests that fail and run each.</span>
+    <span class="n">reruns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">suite</span> <span class="ow">in</span> <span class="n">old_formatter</span><span class="o">.</span><span class="n">suites</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">suite</span><span class="o">.</span><span class="n">outcome</span> <span class="ow">in</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">Outcome</span><span class="o">.</span><span class="n">FAIL</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Outcome</span><span class="o">.</span><span class="n">ERROR</span><span class="p">):</span>
+            <span class="n">suite</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">get_uid</span><span class="p">(</span><span class="n">suite</span><span class="o">.</span><span class="n">uid</span><span class="p">)</span>
+            <span class="n">reruns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suite</span><span class="p">)</span>
+
+    <span class="c1"># Run only the suites we need to rerun.</span>
+    <span class="n">testrunner</span> <span class="o">=</span> <span class="n">Runner</span><span class="p">(</span><span class="n">reruns</span><span class="p">)</span>
+    <span class="n">testrunner</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="dolist"><a class="viewcode-back" href="../../whimsy.html#whimsy.main.dolist">[docs]</a><span class="k">def</span> <span class="nf">dolist</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Handle the `list` command.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">load_tests</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">tags</span><span class="p">:</span>
+        <span class="n">query</span><span class="o">.</span><span class="n">list_tests_with_tags</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">tags</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">suites</span><span class="p">:</span>
+        <span class="n">query</span><span class="o">.</span><span class="n">list_suites</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">tests</span><span class="p">:</span>
+        <span class="n">query</span><span class="o">.</span><span class="n">list_tests</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">fixtures</span><span class="p">:</span>
+        <span class="n">query</span><span class="o">.</span><span class="n">list_fixtures</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">all_tags</span><span class="p">:</span>
+        <span class="n">query</span><span class="o">.</span><span class="n">list_tags</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="doclient"><a class="viewcode-back" href="../../whimsy.html#whimsy.main.doclient">[docs]</a><span class="k">def</span> <span class="nf">doclient</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Handle the `client` command.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">credentials</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">credentials</span>
+
+    <span class="n">threads</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">threads</span>
+
+    <span class="n">clients</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">threads</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">(</span><span class="s1">&#39;Starting </span><span class="si">%s</span><span class="s1"> client instances.&#39;</span> <span class="o">%</span> <span class="n">threads</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">threads</span><span class="p">):</span>
+            <span class="n">wc</span> <span class="o">=</span> <span class="n">WorkClient</span><span class="p">(</span><span class="o">*</span><span class="n">credentials</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">(</span><span class="s1">&#39;Starting a client instance.&#39;</span><span class="p">)</span>
+            <span class="n">wc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="n">clients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wc</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wc</span> <span class="o">=</span> <span class="n">WorkClient</span><span class="p">(</span><span class="o">*</span><span class="n">credentials</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">bold</span><span class="p">(</span><span class="s1">&#39;Starting a client instance.&#39;</span><span class="p">)</span>
+        <span class="n">wc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="n">clients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wc</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">wc</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">:</span>
+        <span class="n">wc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div>
+
+    <span class="c1"># TODO: Spawn other clents based on the number of threads given.</span>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../whimsy.html#whimsy.main.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># Start logging verbosity at its minimum</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">set_logging_verbosity</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Initialize the config</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">initialize_config</span><span class="p">()</span>
+
+    <span class="c1"># Then do parsing of the arguments to init config.</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">set_logging_verbosity</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="c1"># &#39;do&#39; the given command.</span>
+    <span class="nb">globals</span><span class="p">()[</span><span class="s1">&#39;do&#39;</span><span class="o">+</span><span class="n">config</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">command</span><span class="p">]()</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

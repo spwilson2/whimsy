@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Features &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="index.html"/>
+        <link rel="next" title="The Whimsy Library" href="whimsy.html"/>
+        <link rel="prev" title="Test Writing By Example" href="examples.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#distributed-test-support">Distributed Test Support</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Features</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/features.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="features">
+<h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="distributed-test-support">
+<h2>Distributed Test Support<a class="headerlink" href="#distributed-test-support" title="Permalink to this headline">¶</a></h2>
+<p>Whimsy has support for distributed testing baked in. This system supports
+running multiple tests on the same computer or running on both a server
+a multiple clients.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The support for remote clients is not particularly fault tolerant. If
+a client disconnects before completing its currently assigned task the
+server is likely to hang. This is one area for further development.</p>
+</div>
+<p>In order to run the test suite in a multithreaded manner. The server and client
+should both have the same filesystem structure. (It would be simpliest to share
+a nfs mount, but copies will work just fine.) In both the client and server
+a <cite>credentials.ini</cite> file must exist in the current working directory. The file
+should contain the information to start the server and for the client to
+connect to it.</p>
+<p>The <cite>credentials.ini</cite> should be formatted as follows:</p>
+<div class="code ini highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Credentials</span><span class="p">]</span>
+<span class="n">hostname</span><span class="o">=</span><span class="n">localhost</span>
+<span class="n">port</span><span class="o">=</span><span class="mi">11111</span>
+<span class="n">passkey</span><span class="o">=</span><span class="n">password</span>
+</pre></div>
+</div>
+<p>Then when you wish to begin testing start up the client and server:</p>
+<p>Client:
+.. code:: bash</p>
+<blockquote>
+<div>whimsy client -j 8</div></blockquote>
+<p>Server:
+.. code:: bash</p>
+<blockquote>
+<div>whimsy run -j 8</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It is required that the server be started with the flag <cite>-j2</cite>
+or more in order for multithreading support to be enabled.</p>
+</div>
+<p>This support allows non <cite>lazy_init</cite> <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a> objects to
+be built once and shared across test clients. I.E. expensive setup items like
+SCons targets will be built once and all test clients will be able to share
+them (assuming a client has the gem5 build attached via nfs).</p>
+<p>This distributed support is provisional and may possibly need to be modified to
+fit users solutions. Modders will find the currently implemented support in the
+<a class="reference internal" href="whimsy.html#module-whimsy.runner.parallel" title="whimsy.runner.parallel"><code class="xref py py-mod docutils literal"><span class="pre">whimsy.runner.parallel</span></code></a> and <code class="xref py py-mod docutils literal"><span class="pre">whimsy.runner.runner</span></code> modules.</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="whimsy.html" class="btn btn-neutral float-right" title="The Whimsy Library" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="examples.html" class="btn btn-neutral" title="Test Writing By Example" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

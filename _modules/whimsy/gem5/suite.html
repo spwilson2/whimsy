@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>whimsy.gem5.suite &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>whimsy.gem5.suite</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for whimsy.gem5.suite</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">from</span> <span class="nn">..test</span> <span class="k">import</span> <span class="n">TestFunction</span>
+<span class="kn">from</span> <span class="nn">..suite</span> <span class="k">import</span> <span class="n">TestList</span><span class="p">,</span> <span class="n">TestSuite</span>
+<span class="kn">from</span> <span class="nn">..helper</span> <span class="k">import</span> <span class="n">log_call</span><span class="p">,</span> <span class="n">CalledProcessError</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="k">import</span> <span class="n">constants</span><span class="p">,</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">..loader</span> <span class="k">import</span> <span class="n">no_collect</span>
+<span class="kn">from</span> <span class="nn">fixture</span> <span class="k">import</span> <span class="n">TempdirFixture</span><span class="p">,</span> <span class="n">Gem5Fixture</span><span class="p">,</span> <span class="n">VariableFixture</span>
+<span class="kn">import</span> <span class="nn">verifier</span>
+
+<div class="viewcode-block" id="gem5_verify_config"><a class="viewcode-back" href="../../../whimsy.gem5.html#whimsy.gem5.suite.gem5_verify_config">[docs]</a><span class="k">def</span> <span class="nf">gem5_verify_config</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                       <span class="n">config</span><span class="p">,</span>
+                       <span class="n">config_args</span><span class="p">,</span>
+                       <span class="n">verifiers</span><span class="p">,</span>
+                       <span class="n">gem5_args</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(),</span>
+                       <span class="n">tags</span><span class="o">=</span><span class="p">[],</span>
+                       <span class="n">fixtures</span><span class="o">=</span><span class="p">[],</span>
+                       <span class="n">valid_isas</span><span class="o">=</span><span class="n">constants</span><span class="o">.</span><span class="n">supported_isas</span><span class="p">,</span>
+                       <span class="n">valid_optimizations</span><span class="o">=</span><span class="n">constants</span><span class="o">.</span><span class="n">supported_optimizations</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Helper class to generate common gem5 tests using verifiers.</span>
+
+<span class="sd">    The generated TestSuite will run gem5 with the provided config and</span>
+<span class="sd">    config_args. After that it will run any provided verifiers to verify</span>
+<span class="sd">    details about the gem5 run.</span>
+
+<span class="sd">    .. seealso::  For the verifiers see :mod:`whimsy.gem5.verifier`</span>
+
+<span class="sd">    :param name: Name of the test.</span>
+<span class="sd">    :param config: The config to give gem5.</span>
+<span class="sd">    :param config_args: A list of arguments to pass to the given config.</span>
+
+<span class="sd">    :param verifiers: An iterable with Verifier instances which will be placed</span>
+<span class="sd">        into a suite that will be ran after a gem5 run.</span>
+
+<span class="sd">    :param gem5_args: An iterable with arguments to give to gem5. (Arguments</span>
+<span class="sd">        that would normally go before the config path.)</span>
+
+<span class="sd">    :param valid_isas: An interable with the isas that this test can be ran</span>
+<span class="sd">        for. If None given, will run for all supported_isas.</span>
+
+<span class="sd">    :param valid_optimizations: An interable with the optimization levels that</span>
+<span class="sd">        this test can be ran for. (E.g. opt, debug)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">verifier</span> <span class="ow">in</span> <span class="n">verifiers</span><span class="p">:</span>
+        <span class="n">no_collect</span><span class="p">(</span><span class="n">verifier</span><span class="p">)</span>
+
+    <span class="n">given_fixtures</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">given_fixtures</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fixtures</span><span class="p">)</span>
+    <span class="n">fixtures</span> <span class="o">=</span> <span class="n">given_fixtures</span>
+    <span class="n">original_verifiers</span> <span class="o">=</span> <span class="n">verifiers</span>
+
+    <span class="n">testsuites</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">valid_optimizations</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">isa</span> <span class="ow">in</span> <span class="n">valid_isas</span><span class="p">:</span>
+
+            <span class="c1"># Create a tempdir fixture to be shared throughout the test.</span>
+            <span class="n">tempdir</span> <span class="o">=</span> <span class="n">TempdirFixture</span><span class="p">(</span><span class="n">build_once</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lazy_init</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">gem5_returncode</span> <span class="o">=</span> <span class="n">VariableFixture</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">constants</span><span class="o">.</span><span class="n">gem5_returncode_fixture_name</span><span class="p">)</span>
+
+            <span class="c1"># Common name of this generated testcase.</span>
+            <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{given_name}</span><span class="s1"> [</span><span class="si">{isa}</span><span class="s1"> - </span><span class="si">{opt}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">given_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">isa</span><span class="o">=</span><span class="n">isa</span><span class="p">,</span>
+                    <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+
+            <span class="c1"># Create the running of gem5 subtest.</span>
+            <span class="c1"># NOTE: We specifically create this test before our verifiers so</span>
+            <span class="c1"># this is listed first.</span>
+            <span class="n">gem5_subtest</span> <span class="o">=</span> <span class="n">TestFunction</span><span class="p">(</span>
+                    <span class="n">_create_test_run_gem5</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">config_args</span><span class="p">,</span> <span class="n">gem5_args</span><span class="p">),</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">_name</span><span class="p">)</span>
+
+            <span class="c1"># Create copies of the verifier subtests for this isa and</span>
+            <span class="c1"># optimization.</span>
+            <span class="n">verifier_tests</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">verifier</span> <span class="ow">in</span> <span class="n">original_verifiers</span><span class="p">:</span>
+                <span class="n">verifier</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">verifier</span><span class="p">)</span>
+                <span class="n">verifier</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{name}</span><span class="s1"> (</span><span class="si">{vname}</span><span class="s1"> verifier)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">_name</span><span class="p">,</span>
+                        <span class="n">vname</span><span class="o">=</span><span class="n">verifier</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+                <span class="n">verifier_tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verifier</span><span class="p">)</span>
+
+            <span class="c1"># Place the verifier subtests into a collection.</span>
+            <span class="n">verifier_collection</span> <span class="o">=</span> <span class="n">TestList</span><span class="p">(</span><span class="n">verifier_tests</span><span class="p">,</span> <span class="n">fail_fast</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="c1"># Create the gem5 target for the specific architecture and</span>
+            <span class="c1"># optimization level.</span>
+            <span class="n">fixtures</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">given_fixtures</span><span class="p">)</span>
+            <span class="n">fixtures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Gem5Fixture</span><span class="p">(</span><span class="n">isa</span><span class="p">,</span> <span class="n">opt</span><span class="p">))</span>
+            <span class="n">fixtures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tempdir</span><span class="p">)</span>
+            <span class="n">fixtures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gem5_returncode</span><span class="p">)</span>
+            <span class="c1"># Add the isa and optimization to tags list.</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+            <span class="n">tags</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">opt</span><span class="p">,</span> <span class="n">isa</span><span class="p">))</span>
+
+            <span class="c1"># Place our gem5 run and verifiers into a failfast test</span>
+            <span class="c1"># collection. We failfast because if a gem5 run fails, there&#39;s no</span>
+            <span class="c1"># reason to verify results.</span>
+            <span class="n">gem5_test_collection</span> <span class="o">=</span>  <span class="n">TestList</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">gem5_subtest</span><span class="p">,</span> <span class="n">verifier_collection</span><span class="p">),</span>
+                    <span class="n">fail_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Finally construct the self contained TestSuite out of our</span>
+            <span class="c1"># tests.</span>
+            <span class="n">testsuites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TestSuite</span><span class="p">(</span>
+                <span class="n">_name</span><span class="p">,</span>
+                <span class="n">fixtures</span><span class="o">=</span><span class="n">fixtures</span><span class="p">,</span>
+                <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+                <span class="n">tests</span><span class="o">=</span><span class="n">gem5_test_collection</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">testsuites</span></div>
+
+<span class="k">def</span> <span class="nf">_create_test_run_gem5</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">config_args</span><span class="p">,</span> <span class="n">gem5_args</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_run_gem5</span><span class="p">(</span><span class="n">fixtures</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Simple \&#39;test\&#39; which runs gem5 and saves the result into a tempdir.</span>
+
+<span class="sd">        NOTE: Requires fixtures: tempdir, gem5</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">gem5_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_gem5_args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gem5_args</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># If just a single str, place it in an iterable</span>
+            <span class="n">_gem5_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">gem5_args</span><span class="p">,)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_gem5_args</span> <span class="o">=</span> <span class="n">gem5_args</span>
+
+        <span class="c1"># FIXME/TODO: I don&#39;t like the idea of having to modify this test run</span>
+        <span class="c1"># or always collect results even if not using a verifier. There should</span>
+        <span class="c1"># be some configuration in here that only gathers certain results for</span>
+        <span class="c1"># certain verifiers.</span>
+        <span class="c1">#</span>
+        <span class="c1"># I.E. Only the returncode verifier will use the gem5_returncode</span>
+        <span class="c1"># fixture, but we always require it even if that verifier isn&#39;t being</span>
+        <span class="c1"># ran.</span>
+
+        <span class="n">returncode</span> <span class="o">=</span> <span class="n">fixtures</span><span class="p">[</span><span class="n">constants</span><span class="o">.</span><span class="n">gem5_returncode_fixture_name</span><span class="p">]</span>
+        <span class="n">tempdir</span> <span class="o">=</span> <span class="n">fixtures</span><span class="p">[</span><span class="n">constants</span><span class="o">.</span><span class="n">tempdir_fixture_name</span><span class="p">]</span><span class="o">.</span><span class="n">path</span>
+        <span class="n">gem5</span> <span class="o">=</span> <span class="n">fixtures</span><span class="p">[</span><span class="n">constants</span><span class="o">.</span><span class="n">gem5_binary_fixture_name</span><span class="p">]</span><span class="o">.</span><span class="n">path</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">gem5</span><span class="p">,</span>
+            <span class="s1">&#39;-d&#39;</span><span class="p">,</span>  <span class="c1"># Set redirect dir to tempdir.</span>
+            <span class="n">tempdir</span><span class="p">,</span>
+            <span class="s1">&#39;-re&#39;</span><span class="p">,</span><span class="c1"># TODO: Change to const. Redirect stdout and stderr</span>
+        <span class="p">]</span>
+        <span class="n">command</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_gem5_args</span><span class="p">)</span>
+        <span class="n">command</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="c1"># Config_args should set up the program args.</span>
+        <span class="n">command</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">config_args</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">log_call</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">returncode</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">returncode</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">returncode</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">test_run_gem5</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

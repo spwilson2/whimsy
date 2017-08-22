@@ -1,0 +1,1975 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The Whimsy Library &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="index.html"/>
+        <link rel="next" title="whimsy.gem5 package" href="whimsy.gem5.html"/>
+        <link rel="prev" title="Features" href="features.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The Whimsy Library</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="whimsy.gem5.html">whimsy.gem5 package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#main-modules">Main Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.main">whimsy.main module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.loader">whimsy.loader module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.runner">whimsy.runner module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#test-items">Test Items</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.suite">whimsy.suite module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.test">whimsy.test module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.fixture">whimsy.fixture module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#support-modules">Support Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.result">whimsy.result module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.logger">whimsy.logger module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.config">whimsy.config module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.helper">whimsy.helper module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.query">whimsy.query module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.runner.parallel">whimsy.runner.parallel module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.tee">whimsy.tee module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-whimsy.terminal">whimsy.terminal module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>The Whimsy Library</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/whimsy.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="the-whimsy-library">
+<h1>The Whimsy Library<a class="headerlink" href="#the-whimsy-library" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="whimsy.gem5.html">whimsy.gem5 package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="whimsy.gem5.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="whimsy.gem5.html#module-whimsy.gem5.fixture">whimsy.gem5.fixture module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="whimsy.gem5.html#module-whimsy.gem5.suite">whimsy.gem5.suite module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="whimsy.gem5.html#module-whimsy.gem5.verifier">whimsy.gem5.verifier module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="whimsy.gem5.html#module-whimsy.gem5">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="main-modules">
+<h2>Main Modules<a class="headerlink" href="#main-modules" title="Permalink to this headline">¶</a></h2>
+<p>Modules which complete most of the hard work and the majority of execution time
+is spent in.</p>
+<div class="section" id="module-whimsy.main">
+<span id="whimsy-main-module"></span><h3>whimsy.main module<a class="headerlink" href="#module-whimsy.main" title="Permalink to this headline">¶</a></h3>
+<p>The main source for whimsy. Discovers and loads sources using the
+<code class="xref py py-class docutils literal"><span class="pre">TestLoader</span></code> objects and runs tests using the <code class="xref py py-class docutils literal"><span class="pre">Runner</span></code> object
+passing the runner <code class="xref py py-class docutils literal"><span class="pre">ResultLogger</span></code> instances which will stream output
+data to the terminal and into various result files.</p>
+<p>There are three commands which this program handles:</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>run - By default will search for and run all tests in the current</dt>
+<dd>and children directories reporting the results through the terminal,
+saving them to a pickle file, and saving them to a junit file.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>rerun - Load all tests and then rerun the tests which failed in the previous</dt>
+<dd>run.</dd>
+</dl>
+</li>
+<li>list  - List tests with various querying options.</li>
+</ul>
+<dl class="function">
+<dt id="whimsy.main.doclient">
+<code class="descclassname">whimsy.main.</code><code class="descname">doclient</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/main.html#doclient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.main.doclient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <cite>client</cite> command.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.main.dolist">
+<code class="descclassname">whimsy.main.</code><code class="descname">dolist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/main.html#dolist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.main.dolist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <cite>list</cite> command.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.main.dorerun">
+<code class="descclassname">whimsy.main.</code><code class="descname">dorerun</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/main.html#dorerun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.main.dorerun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <cite>rerun</cite> command.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.main.dorun">
+<code class="descclassname">whimsy.main.</code><code class="descname">dorun</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/main.html#dorun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.main.dorun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <cite>run</cite> command.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.main.load_tests">
+<code class="descclassname">whimsy.main.</code><code class="descname">load_tests</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/main.html#load_tests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.main.load_tests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a TestLoader and load tests for the directory given by the config.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.main.main">
+<code class="descclassname">whimsy.main.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/main.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.main.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.loader">
+<span id="whimsy-loader-module"></span><h3>whimsy.loader module<a class="headerlink" href="#module-whimsy.loader" title="Permalink to this headline">¶</a></h3>
+<p>Contains the <code class="xref py py-class docutils literal"><span class="pre">Loader</span></code> which is responsible for discovering and loading
+tests.</p>
+<p>Loading typically follows the following stages.</p>
+<ol class="arabic simple">
+<li>Recurse down a given directory looking for tests which match a given regex.</li>
+</ol>
+<p>The default regex used will match any python file (ending in .py) that has
+a name starting or ending in test(s). If there are any additional components
+of the name they must be connected with ‘-‘ or ‘_’. Lastly, file names that
+begin with ‘.’ will be ignored.</p>
+<p>The following names would match:</p>
+<ul class="simple">
+<li><cite>tests.py</cite></li>
+<li><cite>test.py</cite></li>
+<li><cite>test-this.py</cite></li>
+<li><cite>tests-that.py</cite></li>
+<li><cite>these-test.py</cite></li>
+</ul>
+<p>These would not match:</p>
+<ul class="simple">
+<li><cite>.test.py</cite>    - ‘hidden’ files are ignored.</li>
+<li><cite>test</cite>        - Must end in ‘.py’</li>
+<li><cite>test-.py</cite>    - Needs a character after the hypen.</li>
+<li><cite>testthis.py</cite> - Needs a hypen or underscore to separate ‘test’ and ‘this’</li>
+</ul>
+<ol class="arabic simple" start="2">
+<li>With all files discovered execute each file gathering its test items we   care about collecting. (<cite>TestCase</cite>, <cite>TestSuite</cite> and <cite>Fixture</cite> objects.)</li>
+</ol>
+<p>In order to collect these objects the <a class="reference internal" href="#whimsy.loader.TestLoader" title="whimsy.loader.TestLoader"><code class="xref py py-class docutils literal"><span class="pre">TestLoader</span></code></a> must find a way to
+capture objects as they are instantiated. To do this, before calling
+<code class="xref py py-func docutils literal"><span class="pre">execfile()</span></code> on the file about to be loaded, <a class="reference internal" href="#whimsy.loader.TestLoader" title="whimsy.loader.TestLoader"><code class="xref py py-class docutils literal"><span class="pre">TestLoader</span></code></a> will
+monkey patch the <code class="xref py py-func docutils literal"><span class="pre">__new__()</span></code> method of test item classes. The monkey
+patched <cite>__new__</cite> will insert the new instance of the test method as it is
+created into an <code class="xref py py-class docutils literal"><span class="pre">OrderedSet</span></code> saved in the <a class="reference internal" href="#whimsy.loader.TestLoader" title="whimsy.loader.TestLoader"><code class="xref py py-class docutils literal"><span class="pre">TestLoader</span></code></a>.</p>
+<p>In addition to adding a callback to the <code class="xref py py-func docutils literal"><span class="pre">__new__()</span></code> function of these test
+objects the loader adds a <code class="xref py py-func docutils literal"><span class="pre">__no_collect__()</span></code> method. This method can be
+used by test writers to prevent a test item from being collected. This
+functionallity is exposed to test writers with the <a class="reference internal" href="#whimsy.loader.no_collect" title="whimsy.loader.no_collect"><code class="xref py py-func docutils literal"><span class="pre">no_collect()</span></code></a> function
+in this module. Users might create an item that fits almost all their needs
+butbut wish to make copy of it and modify a single attribute without the
+original version being collected.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">testlib</span> <span class="k">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hello_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Hello&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test</span> <span class="o">=</span> <span class="n">TestFunction</span><span class="p">(</span><span class="n">hello_func</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create a copy, don&#39;t collect the original.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">no_collect</span><span class="p">(</span><span class="n">test</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_copy</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;hello-test&#39;</span>
+</pre></div>
+</div>
+<p>As a final note, <code class="xref py py-class docutils literal"><span class="pre">TestCase</span></code> instances which are not put into
+a <code class="xref py py-class docutils literal"><span class="pre">TestSuite</span></code> by the test writer will be placed into
+a <code class="xref py py-class docutils literal"><span class="pre">TestSuite</span></code> named after the module.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-func docutils literal"><span class="pre">load_file()</span></code></p>
+</div>
+<dl class="exception">
+<dt id="whimsy.loader.DuplicateTestItemError">
+<em class="property">exception </em><code class="descclassname">whimsy.loader.</code><code class="descname">DuplicateTestItemError</code><a class="reference internal" href="_modules/whimsy/loader.html#DuplicateTestItemError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.DuplicateTestItemError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.loader.TestLoader">
+<em class="property">class </em><code class="descclassname">whimsy.loader.</code><code class="descname">TestLoader</code><span class="sig-paren">(</span><em>filepath_filter=&lt;function default_filepath_filter&gt;</em>, <em>quiet=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Base class for discovering tests.</p>
+<p>To simply discover and load all tests using the default filter create an
+instance and <cite>load_root</cite>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tl</span> <span class="o">=</span> <span class="n">TestLoader</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tl</span><span class="o">.</span><span class="n">load_root</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If tests are not manually placed in a TestSuite, they will
+automatically be placed into one for the module.</p>
+</div>
+<dl class="method">
+<dt id="whimsy.loader.TestLoader.discover_files">
+<code class="descname">discover_files</code><span class="sig-paren">(</span><em>root</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader.discover_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader.discover_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recurse down from the given root directory returning a list of
+directories which contain a list of files matching
+<cite>self.filepath_filter</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.loader.TestLoader.drop_caches">
+<code class="descname">drop_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader.drop_caches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader.drop_caches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop our internal tag cache.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.loader.TestLoader.fixtures">
+<code class="descname">fixtures</code><a class="headerlink" href="#whimsy.loader.TestLoader.fixtures" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.loader.TestLoader.get_uid">
+<code class="descname">get_uid</code><span class="sig-paren">(</span><em>uid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader.get_uid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader.get_uid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the test item with the given uid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.loader.TestLoader.load_dir">
+<code class="descname">load_dir</code><span class="sig-paren">(</span><em>directory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader.load_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader.load_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.loader.TestLoader.load_file">
+<code class="descname">load_file</code><span class="sig-paren">(</span><em>path</em>, <em>collection=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader.load_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader.load_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the given path for tests collecting all created instances of
+<code class="xref py py-class docutils literal"><span class="pre">TestSuite</span></code>, <code class="xref py py-class docutils literal"><span class="pre">TestCase</span></code>, and <code class="code docutils literal"><span class="pre">Fixture</span></code> objects.</p>
+<p>TestSuites are placed into self._suites (a private SuiteList).
+TestCases which are not explicitly stored within a TestSuite are
+placed into a TestSuite which is generated from the filepath name.</p>
+<p>There are couple of things that might be unexpected to the user in the
+loading namespace.</p>
+<p>First, the current working directory will change to the directory path
+of the file being loaded.</p>
+<p>Second, in order to collect tests we wrap __new__ calls of collected
+objects before calling <code class="code docutils literal"><span class="pre">execfile</span></code>.  If a user wishes to prevent
+an instantiated object from being collected (possibly to create a copy
+with a modified attribute) they should use <a class="reference internal" href="#whimsy.loader.no_collect" title="whimsy.loader.no_collect"><code class="xref py py-func docutils literal"><span class="pre">no_collect()</span></code></a> to do
+so. (Internally a <code class="code docutils literal"><span class="pre">__no_collect__</span></code> method is added to objects we
+plan to collect. This method will then remove the object from those
+collected from the file.)</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Automatically drop_caches</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">There isn’t a way to prevent reloading of test modules
+that are imported by other test modules. It’s up to users to never
+import a test module from a test module, otherwise those tests
+enumerated during the importer module’s load.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.loader.TestLoader.load_root">
+<code class="descname">load_root</code><span class="sig-paren">(</span><em>root</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader.load_root"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader.load_root" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load files from the given root directory which match
+<cite>self.filepath_filter</cite>.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="whimsy.loader.TestLoader.load_uid">
+<em class="property">static </em><code class="descname">load_uid</code><span class="sig-paren">(</span><em>uid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader.load_uid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader.load_uid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempt to load the given UID.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>uid</strong> – The uid to attempt to load a test item for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference internal" href="#whimsy.suite.TestSuite" title="whimsy.suite.TestSuite"><code class="xref py py-class docutils literal"><span class="pre">whimsy.suite.TestSuite</span></code></a> or
+<a class="reference internal" href="#whimsy.test.TestCase" title="whimsy.test.TestCase"><code class="xref py py-class docutils literal"><span class="pre">whimsy.test.TestCase</span></code></a> if the given UID can be found, else
+None.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.loader.TestLoader.suites">
+<code class="descname">suites</code><a class="headerlink" href="#whimsy.loader.TestLoader.suites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.loader.TestLoader.suites_with_tag">
+<code class="descname">suites_with_tag</code><span class="sig-paren">(</span><em>tag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader.suites_with_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader.suites_with_tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.loader.TestLoader.tag_index">
+<code class="descname">tag_index</code><span class="sig-paren">(</span><em>tag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#TestLoader.tag_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.TestLoader.tag_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of test items with the given tag.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.loader.TestLoader.tags">
+<code class="descname">tags</code><a class="headerlink" href="#whimsy.loader.TestLoader.tags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.loader.TestLoader.tests">
+<code class="descname">tests</code><a class="headerlink" href="#whimsy.loader.TestLoader.tests" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.loader.default_filepath_filter">
+<code class="descclassname">whimsy.loader.</code><code class="descname">default_filepath_filter</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#default_filepath_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.default_filepath_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default filter applied to filepaths to marks as test sources.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.loader.no_collect">
+<code class="descclassname">whimsy.loader.</code><code class="descname">no_collect</code><span class="sig-paren">(</span><em>test_item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#no_collect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.no_collect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prevent the collection of the test item by the <a class="reference internal" href="#whimsy.loader.TestLoader" title="whimsy.loader.TestLoader"><code class="xref py py-class docutils literal"><span class="pre">TestLoader</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the item given so this can be easily used in comprehensions.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.loader.path_as_modulename">
+<code class="descclassname">whimsy.loader.</code><code class="descname">path_as_modulename</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#path_as_modulename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.path_as_modulename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the given filepath as a module name.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.loader.path_as_testsuite">
+<code class="descclassname">whimsy.loader.</code><code class="descname">path_as_testsuite</code><span class="sig-paren">(</span><em>filepath</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/loader.html#path_as_testsuite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.loader.path_as_testsuite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the given filepath as a testsuite.</p>
+<p>The testsuite will be named after the containing directory of the file.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.runner">
+<span id="whimsy-runner-module"></span><h3>whimsy.runner module<a class="headerlink" href="#module-whimsy.runner" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="test-items">
+<h2>Test Items<a class="headerlink" href="#test-items" title="Permalink to this headline">¶</a></h2>
+<p>Modules which implement the abstraction of different testing concepts.</p>
+<div class="section" id="module-whimsy.suite">
+<span id="whimsy-suite-module"></span><h3>whimsy.suite module<a class="headerlink" href="#module-whimsy.suite" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="whimsy.suite.SuiteList">
+<em class="property">class </em><code class="descclassname">whimsy.suite.</code><code class="descname">SuiteList</code><span class="sig-paren">(</span><em>suites=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#SuiteList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.SuiteList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Container class for test suites which provides some utility functions.</p>
+<dl class="method">
+<dt id="whimsy.suite.SuiteList.append">
+<code class="descname">append</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#SuiteList.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.SuiteList.append" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.suite.SuiteList.extend">
+<code class="descname">extend</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#SuiteList.extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.SuiteList.extend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.suite.SuiteList.iter_fixtures">
+<code class="descname">iter_fixtures</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#SuiteList.iter_fixtures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.SuiteList.iter_fixtures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an iterable of all fixtures of all TestSuites and their
+contained TestCases in this collection.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Will return duplicates if fixtures are duplicated across
+test cases.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.suite.TestList">
+<em class="property">class </em><code class="descclassname">whimsy.suite.</code><code class="descname">TestList</code><span class="sig-paren">(</span><em>items=[]</em>, <em>fail_fast=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#TestList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.TestList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Container class for <a class="reference internal" href="#whimsy.test.TestCase" title="whimsy.test.TestCase"><code class="xref py py-class docutils literal"><span class="pre">whimsy.test.TestCase</span></code></a> objects which provides
+some utility functions for iteration as well as the fail_fast variable.
+A TestList can be heirarchical, in which case iteration yields tests in
+in-order traversal.</p>
+<dl class="method">
+<dt id="whimsy.suite.TestList.append">
+<code class="descname">append</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#TestList.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.TestList.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the item to the end of this TestList.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.suite.TestList.extend">
+<code class="descname">extend</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#TestList.extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.TestList.extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the items to the end of this TestList.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.suite.TestList.iter_keep_containers">
+<code class="descname">iter_keep_containers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#TestList.iter_keep_containers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.TestList.iter_keep_containers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through tests yielding a tuple of the containing TestList and
+the TestCase.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">iterator of <code class="code docutils literal"><span class="pre">(testlist,</span> <span class="pre">testcase)</span></code> objects.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.suite.TestList.iter_tests">
+<code class="descname">iter_tests</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#TestList.iter_tests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.TestList.iter_tests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate in-order over all contained tests.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.suite.TestSuite">
+<em class="property">class </em><code class="descclassname">whimsy.suite.</code><code class="descname">TestSuite</code><span class="sig-paren">(</span><em>name</em>, <em>tests=()</em>, <em>tags=None</em>, <em>fixtures=None</em>, <em>fail_fast=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#TestSuite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.TestSuite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>An object containing a collection of tests, represents a completely
+self-contained testing unit. That is, if it should be able to be ran
+without relying on any other suites running.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In order for TestSuite objects to be enumerated by the test
+system this class’ <code class="code docutils literal"><span class="pre">__new__</span></code> method must be called. The loader class
+will monkey patch this method in order to enumerate suites.</p>
+</div>
+<dl class="method">
+<dt id="whimsy.suite.TestSuite.append">
+<code class="descname">append</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#TestSuite.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.TestSuite.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the given TestCase or TestList to this TestSuite</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.suite.TestSuite.extend">
+<code class="descname">extend</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#TestSuite.extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.TestSuite.extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the given TestCases or TestLists to this TestSuite</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.suite.TestSuite.iter_testlists">
+<code class="descname">iter_testlists</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/suite.html#TestSuite.iter_testlists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.suite.TestSuite.iter_testlists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through tests yielding a tuple of the containing TestList and
+the TestCase.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">iterator of <code class="code docutils literal"><span class="pre">(testlist,</span> <span class="pre">testcase)</span></code> objects.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.suite.TestSuite.name">
+<code class="descname">name</code><a class="headerlink" href="#whimsy.suite.TestSuite.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.suite.TestSuite.path">
+<code class="descname">path</code><a class="headerlink" href="#whimsy.suite.TestSuite.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.suite.TestSuite.testcases">
+<code class="descname">testcases</code><a class="headerlink" href="#whimsy.suite.TestSuite.testcases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tuple containing all the test cases this TestSuite holds.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.suite.TestSuite.uid">
+<code class="descname">uid</code><a class="headerlink" href="#whimsy.suite.TestSuite.uid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.test">
+<span id="whimsy-test-module"></span><h3>whimsy.test module<a class="headerlink" href="#module-whimsy.test" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="whimsy.test.TestCase">
+<em class="property">class </em><code class="descclassname">whimsy.test.</code><code class="descname">TestCase</code><span class="sig-paren">(</span><em>name</em>, <em>tags=None</em>, <em>fixtures=None</em>, <em>path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/test.html#TestCase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.test.TestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Abstract Base Class for test cases. All that’s missing is
+a <code class="xref py py-meth docutils literal"><span class="pre">__call__()</span></code> implementation.</p>
+<p>Represents a single major item of assertion. (Yes that’s vague.) Some
+examples are: Asserting that gem5 actually started, asserting that output
+from gem5 standard out matched a gold standard diff file. (See
+<a class="reference internal" href="whimsy.gem5.html#module-whimsy.gem5.verifier" title="whimsy.gem5.verifier"><code class="xref py py-mod docutils literal"><span class="pre">whimsy.gem5.verifier</span></code></a> for some concrete examples.)</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Although this class is abstract its <code class="docutils literal"><span class="pre">__new__</span></code> method must be
+called by subclasses in order for them to be discovered by the
+<a class="reference internal" href="#whimsy.loader.TestLoader" title="whimsy.loader.TestLoader"><code class="xref py py-class docutils literal"><span class="pre">whimsy.loader.TestLoader</span></code></a>.</p>
+</div>
+<dl class="attribute">
+<dt id="whimsy.test.TestCase.name">
+<code class="descname">name</code><a class="headerlink" href="#whimsy.test.TestCase.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.test.TestCase.path">
+<code class="descname">path</code><a class="headerlink" href="#whimsy.test.TestCase.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.test.TestCase.uid">
+<code class="descname">uid</code><a class="headerlink" href="#whimsy.test.TestCase.uid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="whimsy.test.TestFailException">
+<em class="property">exception </em><code class="descclassname">whimsy.test.</code><code class="descname">TestFailException</code><a class="reference internal" href="_modules/whimsy/test.html#TestFailException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.test.TestFailException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.test.TestingException" title="whimsy.test.TestingException"><code class="xref py py-class docutils literal"><span class="pre">whimsy.test.TestingException</span></code></a></p>
+<p>Signals that a test has failed.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.test.TestFunction">
+<em class="property">class </em><code class="descclassname">whimsy.test.</code><code class="descname">TestFunction</code><span class="sig-paren">(</span><em>test</em>, <em>name=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/test.html#TestFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.test.TestFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.test.TestCase" title="whimsy.test.TestCase"><code class="xref py py-class docutils literal"><span class="pre">whimsy.test.TestCase</span></code></a></p>
+<p>A concrete implementation of the abc TestCase. Uses a function as
+a test.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="whimsy.test.TestSkipException">
+<em class="property">exception </em><code class="descclassname">whimsy.test.</code><code class="descname">TestSkipException</code><a class="reference internal" href="_modules/whimsy/test.html#TestSkipException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.test.TestSkipException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.test.TestingException" title="whimsy.test.TestingException"><code class="xref py py-class docutils literal"><span class="pre">whimsy.test.TestingException</span></code></a></p>
+<p>Signals that a test has been skipped.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="whimsy.test.TestingException">
+<em class="property">exception </em><code class="descclassname">whimsy.test.</code><code class="descname">TestingException</code><a class="reference internal" href="_modules/whimsy/test.html#TestingException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.test.TestingException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+<p>Common ancestor for manual Testing Exceptions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.test.fail">
+<code class="descclassname">whimsy.test.</code><code class="descname">fail</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/test.html#fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.test.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cause the current test to fail with the given message.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.test.skip">
+<code class="descclassname">whimsy.test.</code><code class="descname">skip</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/test.html#skip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.test.skip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cause the current test to skip with the given message.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.test.testfunction">
+<code class="descclassname">whimsy.test.</code><code class="descname">testfunction</code><span class="sig-paren">(</span><em>function=None</em>, <em>name=None</em>, <em>tag=None</em>, <em>tags=None</em>, <em>fixtures=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/test.html#testfunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.test.testfunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator used to wrap a function as a TestFunction.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.fixture">
+<span id="whimsy-fixture-module"></span><h3>whimsy.fixture module<a class="headerlink" href="#module-whimsy.fixture" title="Permalink to this headline">¶</a></h3>
+<p>Exposes the <a class="reference internal" href="#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">Fixture</span></code></a> class.</p>
+<dl class="class">
+<dt id="whimsy.fixture.Fixture">
+<em class="property">class </em><code class="descclassname">whimsy.fixture.</code><code class="descname">Fixture</code><span class="sig-paren">(</span><em>name</em>, <em>build_once=False</em>, <em>lazy_init=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/fixture.html#Fixture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.fixture.Fixture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Base Class for a test Fixture.</p>
+<p>Fixtures are items which possibly require setup and/or tearing down after
+a TestCase or a TestSuite has run.</p>
+<p>Fixtures are the prefered method of carrying incremental results or
+variables between TestCases in TestSuites. (Rather than using globals.)
+The test system assumes that TestSuites are self contained so
+paralellization is possible in the future. Using global variables will
+likely cause things to break unexpectedly.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">no_collect function is provided by the <a class="reference internal" href="#module-whimsy.loader" title="whimsy.loader"><code class="xref py py-mod docutils literal"><span class="pre">loader</span></code></a> to
+remove a fixture that should not be collected.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In order for Fixtures to be enumerated by the test system this
+class’ <code class="code docutils literal"><span class="pre">__new__</span></code> method must be called. The loader class will
+monkey patch (modify at runtime) this method in order to enmerate
+tests.</p>
+</div>
+<dl class="attribute">
+<dt id="whimsy.fixture.Fixture.built">
+<code class="descname">built</code><a class="headerlink" href="#whimsy.fixture.Fixture.built" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.fixture.Fixture.require">
+<code class="descname">require</code><span class="sig-paren">(</span><em>other_fixture</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/fixture.html#Fixture.require"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.fixture.Fixture.require" title="Permalink to this definition">¶</a></dt>
+<dd><p>Require that the other_fixture be built before us.
+This is particularly useful for build targets.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="whimsy.gem5.html#whimsy.gem5.fixture.SConsTarget" title="whimsy.gem5.fixture.SConsTarget"><code class="xref py py-class docutils literal"><span class="pre">SConsTarget</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.fixture.Fixture.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/fixture.html#Fixture.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.fixture.Fixture.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call setup of fixtures we require.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.fixture.Fixture.teardown">
+<code class="descname">teardown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/fixture.html#Fixture.teardown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.fixture.Fixture.teardown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Empty method, meant to be overriden if fixture requires teardown.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="support-modules">
+<h2>Support Modules<a class="headerlink" href="#support-modules" title="Permalink to this headline">¶</a></h2>
+<p>Modules which act has helpers or support items throughout the framwework.</p>
+<div class="section" id="module-whimsy.result">
+<span id="whimsy-result-module"></span><h3>whimsy.result module<a class="headerlink" href="#module-whimsy.result" title="Permalink to this headline">¶</a></h3>
+<p>Module which contains streaming result loggers. The main goal of these loggers
+is to support large amounts of results and not create large standing pools of
+strings.</p>
+<dl class="class">
+<dt id="whimsy.result.ConsoleLogger">
+<em class="property">class </em><code class="descclassname">whimsy.result.</code><code class="descname">ConsoleLogger</code><a class="reference internal" href="_modules/whimsy/result.html#ConsoleLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ConsoleLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.result.ResultLogger" title="whimsy.result.ResultLogger"><code class="xref py py-class docutils literal"><span class="pre">whimsy.result.ResultLogger</span></code></a></p>
+<p>A logger implementing the streaming ResultLogger interface. This logger is
+used to stream testing result output to a user terminal.</p>
+<dl class="method">
+<dt id="whimsy.result.ConsoleLogger.begin">
+<code class="descname">begin</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ConsoleLogger.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ConsoleLogger.begin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ConsoleLogger.begin_testing">
+<code class="descname">begin_testing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ConsoleLogger.begin_testing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ConsoleLogger.begin_testing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.ConsoleLogger.color">
+<code class="descname">color</code><em class="property"> = &lt;whimsy.terminal.ColorStrings object&gt;</em><a class="headerlink" href="#whimsy.result.ConsoleLogger.color" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.ConsoleLogger.colormap">
+<code class="descname">colormap</code><em class="property"> = {&lt;whimsy._util._EnumVal object&gt;: '\x1b[31m', &lt;whimsy._util._EnumVal object&gt;: '\x1b[36m', &lt;whimsy._util._EnumVal object&gt;: '\x1b[31m', &lt;whimsy._util._EnumVal object&gt;: '\x1b[32m', &lt;whimsy._util._EnumVal object&gt;: '\x1b[36m'}</em><a class="headerlink" href="#whimsy.result.ConsoleLogger.colormap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ConsoleLogger.end_testing">
+<code class="descname">end_testing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ConsoleLogger.end_testing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ConsoleLogger.end_testing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ConsoleLogger.insert_results">
+<code class="descname">insert_results</code><span class="sig-paren">(</span><em>internal_results</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ConsoleLogger.insert_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ConsoleLogger.insert_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert the given results from an <a class="reference internal" href="#whimsy.result.InternalLogger" title="whimsy.result.InternalLogger"><code class="xref py py-class docutils literal"><span class="pre">whimsy.result.InternalLogger</span></code></a>
+into the console logger. (Display them.)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.ConsoleLogger.reset">
+<code class="descname">reset</code><em class="property"> = '\x1b(B\x1b[m'</em><a class="headerlink" href="#whimsy.result.ConsoleLogger.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.ConsoleLogger.sep_fmtkey">
+<code class="descname">sep_fmtkey</code><em class="property"> = 'separator'</em><a class="headerlink" href="#whimsy.result.ConsoleLogger.sep_fmtkey" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.ConsoleLogger.sep_fmtstr">
+<code class="descname">sep_fmtstr</code><em class="property"> = '{separator}'</em><a class="headerlink" href="#whimsy.result.ConsoleLogger.sep_fmtstr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ConsoleLogger.set_outcome">
+<code class="descname">set_outcome</code><span class="sig-paren">(</span><em>item</em>, <em>outcome</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ConsoleLogger.set_outcome"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ConsoleLogger.set_outcome" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.result.InternalLogger">
+<em class="property">class </em><code class="descclassname">whimsy.result.</code><code class="descname">InternalLogger</code><span class="sig-paren">(</span><em>filestream</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#InternalLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.InternalLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.result.ResultLogger" title="whimsy.result.ResultLogger"><code class="xref py py-class docutils literal"><span class="pre">whimsy.result.ResultLogger</span></code></a></p>
+<p>An internal logger which writes streaming pickle items on completion of
+TestSuite items.</p>
+<p>This logger also offers some metadata methods to and can load back out
+previous results.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#whimsy.result.InternalLogger.load" title="whimsy.result.InternalLogger.load"><code class="xref py py-func docutils literal"><span class="pre">load()</span></code></a> <a class="reference internal" href="#whimsy.result.InternalLogger.suites" title="whimsy.result.InternalLogger.suites"><code class="xref py py-func docutils literal"><span class="pre">suites()</span></code></a></p>
+</div>
+<dl class="method">
+<dt id="whimsy.result.InternalLogger.begin_testing">
+<code class="descname">begin_testing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#InternalLogger.begin_testing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.InternalLogger.begin_testing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.InternalLogger.end_testing">
+<code class="descname">end_testing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#InternalLogger.end_testing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.InternalLogger.end_testing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.InternalLogger.insert_results">
+<code class="descname">insert_results</code><span class="sig-paren">(</span><em>internal_results</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#InternalLogger.insert_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.InternalLogger.insert_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="whimsy.result.InternalLogger.load">
+<em class="property">static </em><code class="descname">load</code><span class="sig-paren">(</span><em>filestream</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#InternalLogger.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.InternalLogger.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load results out of a dumped file replacing our own results.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.InternalLogger.set_outcome">
+<code class="descname">set_outcome</code><span class="sig-paren">(</span><em>item</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#InternalLogger.set_outcome"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.InternalLogger.set_outcome" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.InternalLogger.suites">
+<code class="descname">suites</code><a class="headerlink" href="#whimsy.result.InternalLogger.suites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an iterator over all the test suite results loaded or collected.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.InternalLogger.testcases">
+<code class="descname">testcases</code><a class="headerlink" href="#whimsy.result.InternalLogger.testcases" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="whimsy.result.InvalidResultException">
+<em class="property">exception </em><code class="descclassname">whimsy.result.</code><code class="descname">InvalidResultException</code><a class="reference internal" href="_modules/whimsy/result.html#InvalidResultException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.InvalidResultException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.result.JUnitFormatter">
+<em class="property">class </em><code class="descclassname">whimsy.result.</code><code class="descname">JUnitFormatter</code><span class="sig-paren">(</span><em>internal_results</em>, <em>translate_names=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#JUnitFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.JUnitFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Formats TestResults into the JUnit XML format.</p>
+<dl class="method">
+<dt id="whimsy.result.JUnitFormatter.dump">
+<code class="descname">dump</code><span class="sig-paren">(</span><em>dumpfile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#JUnitFormatter.dump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.JUnitFormatter.dump" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.JUnitFormatter.dump_testcase">
+<code class="descname">dump_testcase</code><span class="sig-paren">(</span><em>fstream</em>, <em>testcase</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#JUnitFormatter.dump_testcase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.JUnitFormatter.dump_testcase" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.JUnitFormatter.dump_testsuite">
+<code class="descname">dump_testsuite</code><span class="sig-paren">(</span><em>fstream</em>, <em>suite</em>, <em>idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#JUnitFormatter.dump_testsuite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.JUnitFormatter.dump_testsuite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.error_tag">
+<code class="descname">error_tag</code><em class="property"> = '&lt;error message=&quot;{message}&quot;&gt;&lt;/error&gt;\n'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.error_tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.fail_tag">
+<code class="descname">fail_tag</code><em class="property"> = '&lt;failure message=&quot;{message}&quot;&gt;&lt;/error&gt;\n'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.fail_tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.generic_closing">
+<code class="descname">generic_closing</code><em class="property"> = '&lt;/{tag}&gt;\n'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.generic_closing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.passing_results">
+<code class="descname">passing_results</code><em class="property"> = set([&lt;whimsy._util._EnumVal object&gt;, &lt;whimsy._util._EnumVal object&gt;])</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.passing_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.skipped_tag">
+<code class="descname">skipped_tag</code><em class="property"> = '&lt;skipped/&gt;'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.skipped_tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.system_err_opening">
+<code class="descname">system_err_opening</code><em class="property"> = '&lt;system-err&gt;'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.system_err_opening" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.system_out_opening">
+<code class="descname">system_out_opening</code><em class="property"> = '&lt;system-out&gt;'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.system_out_opening" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.testcase_opening">
+<code class="descname">testcase_opening</code><em class="property"> = '&lt;testcase name=&quot;{name}&quot; classname=&quot;{classname}&quot; status=&quot;{status}&quot; time=&quot;{time}&quot;&gt;\n'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.testcase_opening" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.testsuite_opening">
+<code class="descname">testsuite_opening</code><em class="property"> = '&lt;testsuite name=&quot;{name}&quot; tests=&quot;{numtests}&quot; errors=&quot;{errors}&quot; failures=&quot;{failures}&quot; skipped=&quot;{skipped}&quot; id={suitenum} time=&quot;{time}&quot;&gt;\n'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.testsuite_opening" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.testsuites_opening">
+<code class="descname">testsuites_opening</code><em class="property"> = '&lt;testsuites errors=&quot;{errors}&quot; failures=&quot;{failures}&quot; tests=&quot;{tests}&quot; time=&quot;{time}&quot;&gt;\n'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.testsuites_opening" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.JUnitFormatter.xml_header">
+<code class="descname">xml_header</code><em class="property"> = '&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;\n'</em><a class="headerlink" href="#whimsy.result.JUnitFormatter.xml_header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.result.JUnitLogger">
+<em class="property">class </em><code class="descclassname">whimsy.result.</code><code class="descname">JUnitLogger</code><span class="sig-paren">(</span><em>junit_fstream</em>, <em>internal_fstream</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#JUnitLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.JUnitLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.result.InternalLogger" title="whimsy.result.InternalLogger"><code class="xref py py-class docutils literal"><span class="pre">whimsy.result.InternalLogger</span></code></a></p>
+<p>Logger which uses the internal logger to collect streaming results to the
+internal_fstream, and on completion of testing writes the results out to
+a junit_fstream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>junit_fstream</strong> – File stream to write junit formatted results to.</li>
+<li><strong>internal_fstream</strong> – File stream to write internal formatted results
+to.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#whimsy.result.InternalLogger" title="whimsy.result.InternalLogger"><code class="xref py py-class docutils literal"><span class="pre">InternalLogger</span></code></a></p>
+</div>
+<dl class="method">
+<dt id="whimsy.result.JUnitLogger.end_testing">
+<code class="descname">end_testing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#JUnitLogger.end_testing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.JUnitLogger.end_testing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Signal the end of writing to the file stream. We will write all our
+results to our junit_fstream.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.result.ResultLogger">
+<em class="property">class </em><code class="descclassname">whimsy.result.</code><code class="descname">ResultLogger</code><a class="reference internal" href="_modules/whimsy/result.html#ResultLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ResultLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Interface which allows writing of streaming results to a file stream.</p>
+<dl class="attribute">
+<dt id="whimsy.result.ResultLogger.bad_item">
+<code class="descname">bad_item</code><em class="property"> = 'Result formatter can only handle test cases and test suites'</em><a class="headerlink" href="#whimsy.result.ResultLogger.bad_item" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ResultLogger.begin">
+<code class="descname">begin</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ResultLogger.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ResultLogger.begin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Signal the beginning of the given item.
+:param item: The test item which is about to begin running</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ResultLogger.begin_testing">
+<code class="descname">begin_testing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ResultLogger.begin_testing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ResultLogger.begin_testing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Signal the beginning of writing to the file stream. Indicates that
+results are about to be logged.</p>
+<p>This is garunteed to be called before any results are added.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ResultLogger.delegate_instance">
+<code class="descname">delegate_instance</code><span class="sig-paren">(</span><em>function</em>, <em>instance</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ResultLogger.delegate_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ResultLogger.delegate_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to delegate a method for the given function based on
+the type of the given instance.</p>
+<p>Effectively is shorthand for:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">TestSuite</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="bp">self</span><span class="o">.</span><span class="n">_call_this_testsuite</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="bp">self</span><span class="o">.</span><span class="n">_call_this_testsuite</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">elif</span> <span class="n">__debug__</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">raise</span> <span class="ne">AssertionError</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ResultLogger.end">
+<code class="descname">end</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ResultLogger.end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ResultLogger.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Signal the end of the current item.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – The test item which is finished running</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ResultLogger.end_testing">
+<code class="descname">end_testing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ResultLogger.end_testing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ResultLogger.end_testing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates that results are done being collected.</p>
+<p>This is guaranteed to be called after all results are added.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.result.ResultLogger.not_supplied">
+<code class="descname">not_supplied</code><em class="property"> = &lt;object object&gt;</em><a class="headerlink" href="#whimsy.result.ResultLogger.not_supplied" title="Permalink to this definition">¶</a></dt>
+<dd><p>A sentinel value indicating that the kwarg wasn’t supplied.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.result.ResultLogger.set_outcome">
+<code class="descname">set_outcome</code><span class="sig-paren">(</span><em>item</em>, <em>outcome</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#ResultLogger.set_outcome"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.ResultLogger.set_outcome" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the outcome of the given item.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>item</strong> – The test item which we are setting the outcome of</li>
+<li><strong>outcome</strong> – The outcome the test item will be set to</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>TestCase Only kwargs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>reason</strong> – Reason for the test case outcome.</li>
+<li><strong>fstdout_name</strong> – Name of the file stdout is available at.</li>
+<li><strong>fstderr_name</strong> – Name of the file stdout is available at.</li>
+<li><strong>ff_skipped</strong> – Indicates that the test was skipped due to
+a fail_fast condition.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.result.TestCaseResult">
+<em class="property">class </em><code class="descclassname">whimsy.result.</code><code class="descname">TestCaseResult</code><span class="sig-paren">(</span><em>fstdout_name=None</em>, <em>fstderr_name=None</em>, <em>reason=None</em>, <em>ff_skipped=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#TestCaseResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.TestCaseResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.result.TestResult" title="whimsy.result.TestResult"><code class="xref py py-class docutils literal"><span class="pre">whimsy.result.TestResult</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.result.TestResult">
+<em class="property">class </em><code class="descclassname">whimsy.result.</code><code class="descname">TestResult</code><span class="sig-paren">(</span><em>item</em>, <em>outcome</em>, <em>runtime=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#TestResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.TestResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.result.TestSuiteResult">
+<em class="property">class </em><code class="descclassname">whimsy.result.</code><code class="descname">TestSuiteResult</code><span class="sig-paren">(</span><em>test_case_results</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#TestSuiteResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.TestSuiteResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.result.TestResult" title="whimsy.result.TestResult"><code class="xref py py-class docutils literal"><span class="pre">whimsy.result.TestResult</span></code></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.result.test_results_output_path">
+<code class="descclassname">whimsy.result.</code><code class="descname">test_results_output_path</code><span class="sig-paren">(</span><em>test_case</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/result.html#test_results_output_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.result.test_results_output_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the path which results for a specific test case should be
+stored.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.logger">
+<span id="whimsy-logger-module"></span><h3>whimsy.logger module<a class="headerlink" href="#module-whimsy.logger" title="Permalink to this headline">¶</a></h3>
+<p>Provides a common logging system. With ability to add additional logging
+levels.</p>
+<dl class="class">
+<dt id="whimsy.logger.ConsoleLogFormatter">
+<em class="property">class </em><code class="descclassname">whimsy.logger.</code><code class="descname">ConsoleLogFormatter</code><a class="reference internal" href="_modules/whimsy/logger.html#ConsoleLogFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.logger.ConsoleLogFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Formats output to be sent to an interactive terminal. Colors may be added
+based on logging level.</p>
+<dl class="attribute">
+<dt id="whimsy.logger.ConsoleLogFormatter.color">
+<code class="descname">color</code><em class="property"> = &lt;whimsy.terminal.ColorStrings object&gt;</em><a class="headerlink" href="#whimsy.logger.ConsoleLogFormatter.color" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.logger.ConsoleLogFormatter.format">
+<code class="descname">format</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/logger.html#ConsoleLogFormatter.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.logger.ConsoleLogFormatter.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.logger.ConsoleLogFormatter.level_colormap">
+<code class="descname">level_colormap</code><em class="property"> = {1000: '\x1b[37m\x1b[1m', 50: '\x1b[31m', 30: '\x1b[33m'}</em><a class="headerlink" href="#whimsy.logger.ConsoleLogFormatter.level_colormap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.logger.ConsoleLogFormatter.reset">
+<code class="descname">reset</code><em class="property"> = '\x1b(B\x1b[m'</em><a class="headerlink" href="#whimsy.logger.ConsoleLogFormatter.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.logger.add_logging_level">
+<code class="descclassname">whimsy.logger.</code><code class="descname">add_logging_level</code><span class="sig-paren">(</span><em>name</em>, <em>val</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/logger.html#add_logging_level"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.logger.add_logging_level" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="whimsy.logger.set_logging_verbosity">
+<code class="descclassname">whimsy.logger.</code><code class="descname">set_logging_verbosity</code><span class="sig-paren">(</span><em>verbosity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/logger.html#set_logging_verbosity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.logger.set_logging_verbosity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the logging level based on the number of verbosity flags given.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.config">
+<span id="whimsy-config-module"></span><h3>whimsy.config module<a class="headerlink" href="#module-whimsy.config" title="Permalink to this headline">¶</a></h3>
+<p>Global configuration module which exposes two types of configuration
+variables:</p>
+<ol class="arabic simple">
+<li>config</li>
+<li>constants (Also attached to the config variable as an attribute)</li>
+</ol>
+<p>The main motivation for this module is to have a centralized location for
+defaults and configuration by command line and files for the test framework.</p>
+<p>A secondary goal is to reduce programming errors by providing common constant
+strings and values as python attributes to simplify detection of typos.
+A simple typo in a string can take a lot of debugging to uncover the issue,
+attribute errors are easier to notice and most autocompletion systems detect
+them.</p>
+<p>The config variable is initialzed by callling <a class="reference internal" href="#whimsy.config.initialize_config" title="whimsy.config.initialize_config"><code class="xref py py-func docutils literal"><span class="pre">initialize_config()</span></code></a>.
+Before this point only <code class="docutils literal"><span class="pre">constants</span></code> will be availaible. This is to ensure
+that library function writers never accidentally get stale config attributes.</p>
+<p>Program arguments/flag arguments are available from the config as attributes.
+If a attribute was not set by the command line or the optional config file,
+then it will fallback to the <cite>_defaults</cite> value, if still the value is not
+found an AttributeError will be raised.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">func define_defaults:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">Provided by the config if the attribute is not found in the config or
+commandline. For instance, if we are using the list command fixtures might
+not be able to count on the build_dir being provided since we aren’t going
+to build anything.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">var constants:</th><td class="field-body">Values not directly exposed by the config, but are attached to the object
+for centralized access. I.E. you can reach them with
+<code class="code docutils literal"><span class="pre">config.constants.attribute</span></code>. These should be used for setting
+common string names used across the test framework.
+<code class="code docutils literal"><span class="pre">_defaults.build_dir</span> <span class="pre">=</span> <span class="pre">None</span></code> Once this module has been imported
+constants should not be modified and their base attributes are frozen.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="whimsy.config.ArgParser">
+<em class="property">class </em><code class="descclassname">whimsy.config.</code><code class="descname">ArgParser</code><span class="sig-paren">(</span><em>parser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#ArgParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.ArgParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.config.Argument">
+<em class="property">class </em><code class="descclassname">whimsy.config.</code><code class="descname">Argument</code><span class="sig-paren">(</span><em>*flags</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#Argument"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.Argument" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Class represents a cli argument/flag for a argparse parser.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Attr name:</th><td class="field-body">The long name of this object that will be stored in the arg
+output by the final parser.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="whimsy.config.Argument.add_to">
+<code class="descname">add_to</code><span class="sig-paren">(</span><em>parser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#Argument.add_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.Argument.add_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add this argument to the given parser.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.config.Argument.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#Argument.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.Argument.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy this argument so you might modify any of its kwargs.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.config.ClientParser">
+<em class="property">class </em><code class="descclassname">whimsy.config.</code><code class="descname">ClientParser</code><span class="sig-paren">(</span><em>subparser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#ClientParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.ClientParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.config.ArgParser" title="whimsy.config.ArgParser"><code class="xref py py-class docutils literal"><span class="pre">whimsy.config.ArgParser</span></code></a></p>
+<p>Parser for the ‘client’ command.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.config.CommandParser">
+<em class="property">class </em><code class="descclassname">whimsy.config.</code><code class="descname">CommandParser</code><a class="reference internal" href="_modules/whimsy/config.html#CommandParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.CommandParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.config.ArgParser" title="whimsy.config.ArgParser"><code class="xref py py-class docutils literal"><span class="pre">whimsy.config.ArgParser</span></code></a></p>
+<p>Main parser which parses command strings and uses those to direct to
+a subparser.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.config.ListParser">
+<em class="property">class </em><code class="descclassname">whimsy.config.</code><code class="descname">ListParser</code><span class="sig-paren">(</span><em>subparser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#ListParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.ListParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.config.ArgParser" title="whimsy.config.ArgParser"><code class="xref py py-class docutils literal"><span class="pre">whimsy.config.ArgParser</span></code></a></p>
+<p>Parser for the ‘list’ command.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.config.RerunParser">
+<em class="property">class </em><code class="descclassname">whimsy.config.</code><code class="descname">RerunParser</code><span class="sig-paren">(</span><em>subparser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#RerunParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.RerunParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.config.ArgParser" title="whimsy.config.ArgParser"><code class="xref py py-class docutils literal"><span class="pre">whimsy.config.ArgParser</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.config.RunParser">
+<em class="property">class </em><code class="descclassname">whimsy.config.</code><code class="descname">RunParser</code><span class="sig-paren">(</span><em>subparser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#RunParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.RunParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.config.ArgParser" title="whimsy.config.ArgParser"><code class="xref py py-class docutils literal"><span class="pre">whimsy.config.ArgParser</span></code></a></p>
+<p>Parser for the ‘run’ command.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="whimsy.config.UninitializedConfigException">
+<em class="property">exception </em><code class="descclassname">whimsy.config.</code><code class="descname">UninitializedConfigException</code><a class="reference internal" href="_modules/whimsy/config.html#UninitializedConfigException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.UninitializedConfigException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+<p>Signals that the config was not initialized before trying to access an
+attribute.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="whimsy.config.UninitialzedAttributeException">
+<em class="property">exception </em><code class="descclassname">whimsy.config.</code><code class="descname">UninitialzedAttributeException</code><a class="reference internal" href="_modules/whimsy/config.html#UninitialzedAttributeException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.UninitialzedAttributeException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+<p>Signals that an attribute in the config file was not initialized.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.config.config">
+<code class="descclassname">whimsy.config.</code><code class="descname">config</code><a class="headerlink" href="#whimsy.config.config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="whimsy.config.constants">
+<code class="descclassname">whimsy.config.</code><code class="descname">constants</code><em class="property"> = &lt;whimsy._util.FrozenAttrDict object&gt;</em><a class="headerlink" href="#whimsy.config.constants" title="Permalink to this definition">¶</a></dt>
+<dd><p>This config object is the singleton config object available throughtout the
+framework.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.config.define_common_args">
+<code class="descclassname">whimsy.config.</code><code class="descname">define_common_args</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#define_common_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.define_common_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Common args are arguments which are likely to be simular between different
+subcommands, so they are available to all by placing their definitions
+here.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.config.define_constants">
+<code class="descclassname">whimsy.config.</code><code class="descname">define_constants</code><span class="sig-paren">(</span><em>constants</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#define_constants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.define_constants" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘constants’ are values not directly exposed by the config, but are attached
+to the object for centralized access. These should be used for setting
+common string names used across the test framework. A simple typo in
+a string can take a lot of debugging to uncover the issue, attribute errors
+are easier to notice and most autocompletion systems detect them.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.config.define_defaults">
+<code class="descclassname">whimsy.config.</code><code class="descname">define_defaults</code><span class="sig-paren">(</span><em>defaults</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#define_defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.define_defaults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defaults are provided by the config if the attribute is not found in the
+config or commandline. For instance, if we are using the list command
+fixtures might not be able to count on the build_dir being provided since we
+aren’t going to build anything.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.config.define_post_processors">
+<code class="descclassname">whimsy.config.</code><code class="descname">define_post_processors</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#define_post_processors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.define_post_processors" title="Permalink to this definition">¶</a></dt>
+<dd><p>post_processors are used to do final configuration of variables. This is
+useful if there is a dynamically set default, or some function that needs
+to be applied after parsing in order to set a configration value.</p>
+<p>Post processors must accept a single argument that will either be a tuple
+containing the already set config value or <code class="docutils literal"><span class="pre">None</span></code> if the config value
+has not been set to anything. They must return the modified value in the
+same format.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.config.initialize_config">
+<code class="descclassname">whimsy.config.</code><code class="descname">initialize_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/config.html#initialize_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.config.initialize_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the commandline arguments and setup the config varibles.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.helper">
+<span id="whimsy-helper-module"></span><h3>whimsy.helper module<a class="headerlink" href="#module-whimsy.helper" title="Permalink to this headline">¶</a></h3>
+<p>Helper classes for writing tests with this test library.</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#whimsy.helper.log_call" title="whimsy.helper.log_call"><code class="xref py py-func docutils literal"><span class="pre">log_call()</span></code></a></dt>
+<dd>A wrappper around Popen which behaves like
+<cite>subprocess.check_call()</cite> but will pipe output to the
+log at a low verbosity level.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#whimsy.helper.cacheresult" title="whimsy.helper.cacheresult"><code class="xref py py-func docutils literal"><span class="pre">cacheresult()</span></code></a></dt>
+<dd>A function decorator which will cache results for a function given the
+same arguments. (A poor man’s python3 <cite>lru_cache</cite>.)</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#whimsy.helper.OrderedSet" title="whimsy.helper.OrderedSet"><code class="xref py py-class docutils literal"><span class="pre">OrderedSet</span></code></a></dt>
+<dd>A set which maintains object insertion order.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#whimsy.helper.absdirpath" title="whimsy.helper.absdirpath"><code class="xref py py-func docutils literal"><span class="pre">absdirpath()</span></code></a></dt>
+<dd><code class="code docutils literal"><span class="pre">dirname(abspath())</span></code></dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#whimsy.helper.joinpath" title="whimsy.helper.joinpath"><code class="xref py py-func docutils literal"><span class="pre">joinpath()</span></code></a></dt>
+<dd><code class="code docutils literal"><span class="pre">os.path.join()</span></code></dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#whimsy.helper.mkdir_p" title="whimsy.helper.mkdir_p"><code class="xref py py-func docutils literal"><span class="pre">mkdir_p()</span></code></a></dt>
+<dd>Same thing as mkdir -p</dd>
+</dl>
+</li>
+</ul>
+<dl class="function">
+<dt id="whimsy.helper.log_call">
+<code class="descclassname">whimsy.helper.</code><code class="descname">log_call</code><span class="sig-paren">(</span><em>command</em>, <em>*popenargs</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/helper.html#log_call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.log_call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the given process and automatically logs the command and output.</p>
+<p>If stdout or stderr are provided output will also be piped into those
+streams as well.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Params stdout:</th><td class="field-body">Iterable of items to write to as we read from the
+subprocess.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Params stderr:</th><td class="field-body">Iterable of items to write to as we read from the
+subprocess.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="exception">
+<dt id="whimsy.helper.CalledProcessError">
+<em class="property">exception </em><code class="descclassname">whimsy.helper.</code><code class="descname">CalledProcessError</code><span class="sig-paren">(</span><em>returncode</em>, <em>cmd</em>, <em>output=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/subprocess.html#CalledProcessError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.CalledProcessError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+<p>This exception is raised when a process run by check_call() or
+check_output() returns a non-zero exit status.</p>
+<dl class="docutils">
+<dt>Attributes:</dt>
+<dd>cmd, returncode, output</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.helper.mkdir_p">
+<code class="descclassname">whimsy.helper.</code><code class="descname">mkdir_p</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/helper.html#mkdir_p"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.mkdir_p" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same thing as mkdir -p</p>
+<p><a class="reference external" href="https://stackoverflow.com/a/600612">https://stackoverflow.com/a/600612</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.helper.cacheresult">
+<code class="descclassname">whimsy.helper.</code><code class="descname">cacheresult</code><span class="sig-paren">(</span><em>function</em>, <em>typed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/helper.html#cacheresult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.cacheresult" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>typed</strong> – If typed is True, arguments of different types will be
+cached separately. I.e. f(3.0) and f(3) will be treated as distinct
+calls with distinct results.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">From cpython 3.7</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.helper.OrderedSet">
+<em class="property">class </em><code class="descclassname">whimsy.helper.</code><code class="descname">OrderedSet</code><span class="sig-paren">(</span><em>iterable=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/helper.html#OrderedSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">_abcoll.MutableSet</span></code></p>
+<p>Maintain ordering of insertion in items to the set with quick iteration.</p>
+<p><a class="reference external" href="http://code.activestate.com/recipes/576694/">http://code.activestate.com/recipes/576694/</a></p>
+<dl class="method">
+<dt id="whimsy.helper.OrderedSet.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/helper.html#OrderedSet.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedSet.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedSet.discard">
+<code class="descname">discard</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/helper.html#OrderedSet.discard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedSet.discard" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedSet.pop">
+<code class="descname">pop</code><span class="sig-paren">(</span><em>last=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/helper.html#OrderedSet.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedSet.pop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedSet.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/helper.html#OrderedSet.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedSet.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.helper.absdirpath">
+<code class="descclassname">whimsy.helper.</code><code class="descname">absdirpath</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/helper.html#absdirpath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.absdirpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the directory component of the absolute path of the given path.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.helper.joinpath">
+<code class="descclassname">whimsy.helper.</code><code class="descname">joinpath</code><span class="sig-paren">(</span><em>a</em>, <em>*p</em><span class="sig-paren">)</span><a class="headerlink" href="#whimsy.helper.joinpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Join two or more pathname components, inserting ‘/’ as needed.
+If any component is an absolute path, all previous path components
+will be discarded.  An empty last part will result in a path that
+ends with a separator.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.helper.OrderedDict">
+<em class="property">class </em><code class="descclassname">whimsy.helper.</code><code class="descname">OrderedDict</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/collections.html#OrderedDict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">dict</span></code></p>
+<p>Dictionary that remembers insertion order</p>
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None.  Remove all items from od.<a class="reference internal" href="_modules/collections.html#OrderedDict.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; a shallow copy of od<a class="reference internal" href="_modules/collections.html#OrderedDict.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="whimsy.helper.OrderedDict.fromkeys">
+<em class="property">classmethod </em><code class="descname">fromkeys</code><span class="sig-paren">(</span><em>S</em><span class="optional">[</span>, <em>v</em><span class="optional">]</span><span class="sig-paren">)</span> &#x2192; New ordered dictionary with keys from S.<a class="reference internal" href="_modules/collections.html#OrderedDict.fromkeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.fromkeys" title="Permalink to this definition">¶</a></dt>
+<dd><p>If not specified, the value defaults to None.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.items">
+<code class="descname">items</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list of (key, value) pairs in od<a class="reference internal" href="_modules/collections.html#OrderedDict.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.iteritems">
+<code class="descname">iteritems</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/collections.html#OrderedDict.iteritems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.iteritems" title="Permalink to this definition">¶</a></dt>
+<dd><p>od.iteritems -&gt; an iterator over the (key, value) pairs in od</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.iterkeys">
+<code class="descname">iterkeys</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; an iterator over the keys in od<a class="reference internal" href="_modules/collections.html#OrderedDict.iterkeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.iterkeys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.itervalues">
+<code class="descname">itervalues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/collections.html#OrderedDict.itervalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.itervalues" title="Permalink to this definition">¶</a></dt>
+<dd><p>od.itervalues -&gt; an iterator over the values in od</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.keys">
+<code class="descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list of keys in od<a class="reference internal" href="_modules/collections.html#OrderedDict.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.pop">
+<code class="descname">pop</code><span class="sig-paren">(</span><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><span class="sig-paren">)</span> &#x2192; v, remove specified key and return the corresponding<a class="reference internal" href="_modules/collections.html#OrderedDict.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>value.  If key is not found, d is returned if given, otherwise KeyError
+is raised.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.popitem">
+<code class="descname">popitem</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; (k, v), return and remove a (key, value) pair.<a class="reference internal" href="_modules/collections.html#OrderedDict.popitem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.popitem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pairs are returned in LIFO order if last is true or FIFO order if false.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.setdefault">
+<code class="descname">setdefault</code><span class="sig-paren">(</span><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><span class="sig-paren">)</span> &#x2192; od.get(k,d), also set od[k]=d if k not in od<a class="reference internal" href="_modules/collections.html#OrderedDict.setdefault"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.setdefault" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.update">
+<code class="descname">update</code><span class="sig-paren">(</span><span class="optional">[</span><em>E</em>, <span class="optional">]</span><em>**F</em><span class="sig-paren">)</span> &#x2192; None.  Update D from mapping/iterable E and F.<a class="headerlink" href="#whimsy.helper.OrderedDict.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>If E present and has a .keys() method, does:     for k in E: D[k] = E[k]
+If E present and lacks .keys() method, does:     for (k, v) in E: D[k] = v
+In either case, this is followed by: for k, v in F.items(): D[k] = v</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.values">
+<code class="descname">values</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list of values in od<a class="reference internal" href="_modules/collections.html#OrderedDict.values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.viewitems">
+<code class="descname">viewitems</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; a set-like object providing a view on od's items<a class="reference internal" href="_modules/collections.html#OrderedDict.viewitems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.viewitems" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.viewkeys">
+<code class="descname">viewkeys</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; a set-like object providing a view on od's keys<a class="reference internal" href="_modules/collections.html#OrderedDict.viewkeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.viewkeys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.helper.OrderedDict.viewvalues">
+<code class="descname">viewvalues</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; an object providing a view on od's values<a class="reference internal" href="_modules/collections.html#OrderedDict.viewvalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.helper.OrderedDict.viewvalues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.query">
+<span id="whimsy-query-module"></span><h3>whimsy.query module<a class="headerlink" href="#module-whimsy.query" title="Permalink to this headline">¶</a></h3>
+<p>File which implements querying and display logic for metadata about loaded
+items.</p>
+<dl class="function">
+<dt id="whimsy.query.list_fixtures">
+<code class="descclassname">whimsy.query.</code><code class="descname">list_fixtures</code><span class="sig-paren">(</span><em>loader</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/query.html#list_fixtures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.query.list_fixtures" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="whimsy.query.list_suites">
+<code class="descclassname">whimsy.query.</code><code class="descname">list_suites</code><span class="sig-paren">(</span><em>loader</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/query.html#list_suites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.query.list_suites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="whimsy.query.list_tags">
+<code class="descclassname">whimsy.query.</code><code class="descname">list_tags</code><span class="sig-paren">(</span><em>loader</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/query.html#list_tags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.query.list_tags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="whimsy.query.list_tests">
+<code class="descclassname">whimsy.query.</code><code class="descname">list_tests</code><span class="sig-paren">(</span><em>loader</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/query.html#list_tests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.query.list_tests" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="whimsy.query.list_tests_with_tags">
+<code class="descclassname">whimsy.query.</code><code class="descname">list_tests_with_tags</code><span class="sig-paren">(</span><em>loader</em>, <em>tags</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/query.html#list_tests_with_tags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.query.list_tests_with_tags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.runner.parallel">
+<span id="whimsy-runner-parallel-module"></span><h3>whimsy.runner.parallel module<a class="headerlink" href="#module-whimsy.runner.parallel" title="Permalink to this headline">¶</a></h3>
+<p>Implements a base <a class="reference internal" href="#whimsy.runner.parallel.WorkerPool" title="whimsy.runner.parallel.WorkerPool"><code class="xref py py-class docutils literal"><span class="pre">WorkerPool</span></code></a> which will execute a serial or parallel
+implementation of imap_unordered depending on the number of threads requested
+on subclass <cite>__init__</cite>. A single instance of imap_unordered may be active at
+one time. Additional executions will require that the previous imap have
+finished.</p>
+<dl class="class">
+<dt id="whimsy.runner.parallel.ComplexMulticorePool">
+<em class="property">class </em><code class="descclassname">whimsy.runner.parallel.</code><code class="descname">ComplexMulticorePool</code><span class="sig-paren">(</span><em>threads=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#ComplexMulticorePool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.ComplexMulticorePool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.runner.parallel.WorkerPool" title="whimsy.runner.parallel.WorkerPool"><code class="xref py py-class docutils literal"><span class="pre">whimsy.runner.parallel.WorkerPool</span></code></a></p>
+<p>Class implements the server container for a multi-client remote and local
+multiprocessing pool. Exposes an <code class="xref py py-meth docutils literal"><span class="pre">imap_unordered()</span></code> method which will
+either execute serially if only initialized with a single thread, or will
+exececute in parallel if more given.</p>
+<p>Additionally, if more than one thread is given will allow remote clients to
+connect and join the pool.</p>
+<dl class="attribute">
+<dt id="whimsy.runner.parallel.ComplexMulticorePool.pool">
+<code class="descname">pool</code><a class="headerlink" href="#whimsy.runner.parallel.ComplexMulticorePool.pool" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.runner.parallel.MulticoreWorkerPool">
+<em class="property">class </em><code class="descclassname">whimsy.runner.parallel.</code><code class="descname">MulticoreWorkerPool</code><span class="sig-paren">(</span><em>threads=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#MulticoreWorkerPool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.MulticoreWorkerPool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#whimsy.runner.parallel.WorkerPool" title="whimsy.runner.parallel.WorkerPool"><code class="xref py py-class docutils literal"><span class="pre">whimsy.runner.parallel.WorkerPool</span></code></a></p>
+<p>A worker takes jobs of its queue used to initalize it and sends them to
+the process which it wraps to execute.</p>
+<dl class="attribute">
+<dt id="whimsy.runner.parallel.MulticoreWorkerPool.pool">
+<code class="descname">pool</code><a class="headerlink" href="#whimsy.runner.parallel.MulticoreWorkerPool.pool" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="whimsy.runner.parallel.SubprocessException">
+<em class="property">exception </em><code class="descclassname">whimsy.runner.parallel.</code><code class="descname">SubprocessException</code><a class="reference internal" href="_modules/whimsy/runner/parallel.html#SubprocessException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.SubprocessException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+<p>Exception represents an exception that occured in a child python
+process.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.runner.parallel.WorkClient">
+<em class="property">class </em><code class="descclassname">whimsy.runner.parallel.</code><code class="descname">WorkClient</code><span class="sig-paren">(</span><em>hostname</em>, <em>port</em>, <em>passkey</em>, <em>as_client=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkClient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">multiprocessing.process.Process</span></code></p>
+<dl class="staticmethod">
+<dt id="whimsy.runner.parallel.WorkClient.imap_task">
+<em class="property">static </em><code class="descname">imap_task</code><span class="sig-paren">(</span><em>wq</em>, <em>rq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkClient.imap_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkClient.imap_task" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="whimsy.runner.parallel.WorkClient.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkClient.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkClient.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects to the server and gathers its work and result queues. Also
+the majority of the config of the server process. (Allowing flags like
+<cite>fail_fast</cite> to be passed to us.)</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Exectued on the client process.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.runner.parallel.WorkQueueClient">
+<em class="property">class </em><code class="descclassname">whimsy.runner.parallel.</code><code class="descname">WorkQueueClient</code><span class="sig-paren">(</span><em>hostname</em>, <em>port</em>, <em>passkey</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkQueueClient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkQueueClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">multiprocessing.managers.SyncManager</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.runner.parallel.WorkQueueServer">
+<em class="property">class </em><code class="descclassname">whimsy.runner.parallel.</code><code class="descname">WorkQueueServer</code><span class="sig-paren">(</span><em>hostname</em>, <em>port</em>, <em>passkey</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkQueueServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkQueueServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">multiprocessing.managers.SyncManager</span></code></p>
+<p>Implements a server which clients can connect to get work and result queues
+as well as the server’s config setup.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.runner.parallel.WorkServer">
+<em class="property">class </em><code class="descclassname">whimsy.runner.parallel.</code><code class="descname">WorkServer</code><span class="sig-paren">(</span><em>hostname</em>, <em>port</em>, <em>passkey</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Implements a server object which creates work queues and result queues
+which clients can connect to to assist in work. Additionally in order to
+implement an imap_unordered function that does not block, a separate client
+is spawned with the server.</p>
+<dl class="method">
+<dt id="whimsy.runner.parallel.WorkServer.imap_unordered">
+<code class="descname">imap_unordered</code><span class="sig-paren">(</span><em>function</em>, <em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkServer.imap_unordered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkServer.imap_unordered" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides functional equivalence of:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">return</span> <span class="p">(</span><span class="n">function</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This will not block since we also spawn a <cite>work_client</cite> to
+assist this process.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.runner.parallel.WorkServer.shutdown">
+<code class="descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkServer.shutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkServer.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shutdown the server, the client will close asynchronosly since it
+will block in its own process waiting for the socket to close.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="whimsy.runner.parallel.WorkServer.start">
+<code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkServer.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkServer.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the server and the helping work_client.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="whimsy.runner.parallel.WorkerPool">
+<em class="property">class </em><code class="descclassname">whimsy.runner.parallel.</code><code class="descname">WorkerPool</code><span class="sig-paren">(</span><em>threads</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkerPool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkerPool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Will execute a serial or parallel implementation of imap_unordered
+depending on the number of threads requested on subclass <cite>__init__</cite>.
+A single instance of imap_unordered may be active at one time. Additional
+executions will require that the previous imap have finished.</p>
+<dl class="method">
+<dt id="whimsy.runner.parallel.WorkerPool.imap_unordered">
+<code class="descname">imap_unordered</code><span class="sig-paren">(</span><em>map_function</em>, <em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#WorkerPool.imap_unordered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.WorkerPool.imap_unordered" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>function</strong> – A module level function to supply jobs to. (Note: Must
+be exposed globaly by a module.</li>
+<li><strong>args</strong> – An iterable containing arguments provided to members of
+the pool which the function will take.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Effectively this function performs:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">return</span> <span class="p">(</span><span class="n">map_function</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="whimsy.runner.parallel.WorkerPool.pool">
+<code class="descname">pool</code><a class="headerlink" href="#whimsy.runner.parallel.WorkerPool.pool" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.runner.parallel.log_if_client">
+<code class="descclassname">whimsy.runner.parallel.</code><code class="descname">log_if_client</code><span class="sig-paren">(</span><em>callback</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#log_if_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.log_if_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the given callback if the client command was given at program startup.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.runner.parallel.subprocess_exception_wrapper">
+<code class="descclassname">whimsy.runner.parallel.</code><code class="descname">subprocess_exception_wrapper</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/runner/parallel.html#subprocess_exception_wrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.runner.parallel.subprocess_exception_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps a python child process with a function that will enable tracebacks
+to be printed from child python processes.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.tee">
+<span id="whimsy-tee-module"></span><h3>whimsy.tee module<a class="headerlink" href="#module-whimsy.tee" title="Permalink to this headline">¶</a></h3>
+<p>Contains two implementations of the classic unix tee command to tee output
+from this python process (and all of its subprocesses) into a file and keep
+directing output to stdout and stderr.</p>
+<dl class="function">
+<dt id="whimsy.tee.python_tee">
+<code class="descclassname">whimsy.tee.</code><code class="descname">python_tee</code><span class="sig-paren">(</span><em>filepath</em>, <em>append=False</em>, <em>stdout=True</em>, <em>stderr=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/tee.html#python_tee"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.tee.python_tee" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python implementation of tee.</p>
+<p>Spawns a multiprocessing python process, a full flegged python process to
+avoid the GIL problem since the subprocess will likely spend a lot of time
+spinning while reading single char bytes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.tee.system_tee">
+<code class="descclassname">whimsy.tee.</code><code class="descname">system_tee</code><span class="sig-paren">(</span><em>filepath</em>, <em>append=False</em>, <em>stdout=True</em>, <em>stderr=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/tee.html#system_tee"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.tee.system_tee" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of tee using the system available program tee as
+a subprocess.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.tee.tee">
+<code class="descclassname">whimsy.tee.</code><code class="descname">tee</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/tee.html#tee"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.tee.tee" title="Permalink to this definition">¶</a></dt>
+<dd><p>A context manager for the tee command. Tries to default to the tee program
+for the system for performance reasons, but if it is unavailable, will
+use a pure python implementaion.</p>
+<p>An example of usage:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tee</span><span class="p">(</span><span class="s1">&#39;stdout&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;This is going to both the file and stdout&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-whimsy.terminal">
+<span id="whimsy-terminal-module"></span><h3>whimsy.terminal module<a class="headerlink" href="#module-whimsy.terminal" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="whimsy.terminal.ColorStrings">
+<em class="property">class </em><code class="descclassname">whimsy.terminal.</code><code class="descname">ColorStrings</code><span class="sig-paren">(</span><em>cap_string</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/terminal.html#ColorStrings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.terminal.ColorStrings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.terminal.cap_string">
+<code class="descclassname">whimsy.terminal.</code><code class="descname">cap_string</code><span class="sig-paren">(</span><em>s</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/terminal.html#cap_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.terminal.cap_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="whimsy.terminal.get_termcap">
+<code class="descclassname">whimsy.terminal.</code><code class="descname">get_termcap</code><span class="sig-paren">(</span><em>use_colors=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/terminal.html#get_termcap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.terminal.get_termcap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="whimsy.terminal.insert_separator">
+<code class="descclassname">whimsy.terminal.</code><code class="descname">insert_separator</code><span class="sig-paren">(</span><em>inside</em>, <em>char='='</em>, <em>min_barrier=3</em>, <em>color=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/terminal.html#insert_separator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.terminal.insert_separator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Place the given string inside of the separator. If it does not fit inside,
+expand the separator to fit it with at least min_barrier.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#whimsy.terminal.separator" title="whimsy.terminal.separator"><code class="xref py py-func docutils literal"><span class="pre">separator()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.terminal.null_cap_string">
+<code class="descclassname">whimsy.terminal.</code><code class="descname">null_cap_string</code><span class="sig-paren">(</span><em>s</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/terminal.html#null_cap_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.terminal.null_cap_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="whimsy.terminal.separator">
+<code class="descclassname">whimsy.terminal.</code><code class="descname">separator</code><span class="sig-paren">(</span><em>char='='</em>, <em>color=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/terminal.html#separator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.terminal.separator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a separator of the given character that is the length of the full
+width of the terminal screen.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="whimsy.terminal.terminal_size">
+<code class="descclassname">whimsy.terminal.</code><code class="descname">terminal_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/whimsy/terminal.html#terminal_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#whimsy.terminal.terminal_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the (width, heigth) of the terminal screen.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="whimsy.gem5.html" class="btn btn-neutral float-right" title="whimsy.gem5 package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="features.html" class="btn btn-neutral" title="Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

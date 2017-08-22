@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Migrating an Existing Test &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Migrating an Existing Test</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/migrating.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="migrating-an-existing-test">
+<h1>Migrating an Existing Test<a class="headerlink" href="#migrating-an-existing-test" title="Permalink to this headline">¶</a></h1>
+<p>Migrating an old test to whimsy takes a minor amount of work. We can use the
+same <a class="reference internal" href="whimsy.gem5.html#whimsy.gem5.suite.gem5_verify_config" title="whimsy.gem5.suite.gem5_verify_config"><code class="xref py py-func docutils literal"><span class="pre">whimsy.gem5.suite.gem5_verify_config()</span></code></a> function and
+<a class="reference internal" href="whimsy.gem5.html#whimsy.gem5.verifier.Verifier" title="whimsy.gem5.verifier.Verifier"><code class="xref py py-class docutils literal"><span class="pre">whimsy.gem5.verifier.Verifier</span></code></a> subclasses we used to create our own
+tests. Optionally we could add an additional utility function to make this even
+easier, but I would prefer we keep consistency and not port many of the legacy
+tests, since most legacy tests serve limited utility.</p>
+<p>As an example we’ll migrate the old
+<cite>quick/se/00.hello/arm/linux/simple-atomic-dummychecker</cite> test. All paths assume
+the current working directory is the gem5 base path (i.e., …/gem5/).</p>
+<p>Here are the steps:</p>
+<ol class="arabic simple">
+<li>Look in the directory the old test expects a <code class="docutils literal"><span class="pre">test.py</span></code> file to be located in.</li>
+<li>Move that file and copy it into the slightly different test location
+<code class="docutils literal"><span class="pre">tests/gem5/se/00.hello</span></code>  and change the name to <code class="docutils literal"><span class="pre">config.py</span></code>.</li>
+<li>Move the reference files to
+<code class="docutils literal"><span class="pre">tests/gem5/se/00.hello/ARM/simple-atomic-dummychecker</span></code></li>
+<li>Assuming that the additional config files which set up the old test are not
+ported, we need to do so.<ul>
+<li>To do this copy over the old config
+<code class="docutils literal"><span class="pre">tests/configs/simple-atomic-dummychecker.py</span></code> to
+<code class="docutils literal"><span class="pre">tests/legacy-configs/simple-atomic-dummychecker.py</span></code> (We know this is
+the legacy config name because it is the final name of the old test path.)</li>
+</ul>
+</li>
+<li>Create a <code class="docutils literal"><span class="pre">test-hello.py</span></code> file in <code class="docutils literal"><span class="pre">quick/se/00.hello/</span></code> and use
+<code class="docutils literal"><span class="pre">gem5_verify_config</span></code> and verifiers to create a suite that will compare
+gem5 execution to golden standards.</li>
+</ol>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">testlib</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="n">ref_path</span> <span class="o">=</span> <span class="n">joinpath</span><span class="p">(</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;ARM&#39;</span><span class="p">,</span> <span class="s1">&#39;simple-atomic-dummychecker&#39;</span><span class="p">)</span>
+
+<span class="n">verifiers</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">verifier</span><span class="o">.</span><span class="n">MatchStdout</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="n">ref_path</span><span class="p">,</span> <span class="s1">&#39;simout&#39;</span><span class="p">)),</span>
+        <span class="n">verifier</span><span class="o">.</span><span class="n">MatchStderr</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="n">ref_path</span><span class="p">,</span> <span class="s1">&#39;simerr&#39;</span><span class="p">)),</span>
+        <span class="n">verifier</span><span class="o">.</span><span class="n">MatchStats</span><span class="p">(</span><span class="n">joinpath</span><span class="p">(</span><span class="n">ref_path</span><span class="p">,</span> <span class="s1">&#39;stats.txt&#39;</span><span class="p">)),</span>
+        <span class="n">verifier</span><span class="o">.</span><span class="n">VerifyReturncode</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<span class="c1"># The test program still fits, only the path is changed from &#39;arm&#39; to &#39;ARM&#39;</span>
+<span class="n">hello_program</span> <span class="o">=</span> <span class="n">TestProgram</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;ARM&#39;</span><span class="p">,</span> <span class="s1">&#39;linux&#39;</span><span class="p">)</span>
+
+<span class="c1"># This is the path of legacy-configs that share the same base config.</span>
+<span class="n">dummychecker</span> <span class="o">=</span> <span class="n">joinpath</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">base_dir</span><span class="p">,</span>
+                        <span class="s1">&#39;tests&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;legacy-configs&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;simple-atomic-dummychecker.py&#39;</span><span class="p">)</span>
+
+<span class="n">gem5_verify_config</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;test_hello&#39;</span><span class="p">,</span>
+        <span class="n">fixtures</span><span class="o">=</span><span class="p">(</span><span class="n">hello_program</span><span class="p">,),</span>
+        <span class="n">verifiers</span><span class="o">=</span><span class="n">verifiers</span><span class="p">,</span>
+
+        <span class="c1"># All legacy configs rely on using the run.py script. It has been slightly</span>
+        <span class="c1"># updated to make it more generic with less assumptions.</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">joinpath</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">base_dir</span><span class="p">,</span> <span class="s1">&#39;tests&#39;</span><span class="p">,</span> <span class="s1">&#39;legacy-configs&#39;</span><span class="p">,</span> <span class="s1">&#39;run.py&#39;</span><span class="p">),</span>
+
+        <span class="c1"># Notice that the legacy run.py arguments have changed. It now forces users</span>
+        <span class="c1"># to specify config files exactly rather than making assumptions on path.</span>
+        <span class="n">config_args</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;--executable&#39;</span><span class="p">,</span> <span class="n">hello_program</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="s1">&#39;--config&#39;</span><span class="p">,</span> <span class="n">dummychecker</span><span class="p">,</span>
+            <span class="s1">&#39;--config&#39;</span><span class="p">,</span> <span class="n">joinpath</span><span class="p">(</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;config.py&#39;</span><span class="p">)],</span>
+        <span class="n">valid_isas</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;ARM&#39;</span><span class="p">,)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

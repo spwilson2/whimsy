@@ -1,0 +1,1544 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>subprocess &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">Whimsy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>subprocess</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for subprocess</h1><div class="highlight"><pre>
+<span></span><span class="c1"># subprocess - Subprocesses with accessible I/O streams</span>
+<span class="c1">#</span>
+<span class="c1"># For more information about this module, see PEP 324.</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2003-2005 by Peter Astrand &lt;astrand@lysator.liu.se&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed to PSF under a Contributor Agreement.</span>
+<span class="c1"># See http://www.python.org/2.4/license for licensing details.</span>
+
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;Subprocesses with accessible I/O streams</span>
+
+<span class="sd">This module allows you to spawn processes, connect to their</span>
+<span class="sd">input/output/error pipes, and obtain their return codes.</span>
+
+<span class="sd">For a complete description of this module see the Python documentation.</span>
+
+<span class="sd">Main API</span>
+<span class="sd">========</span>
+<span class="sd">call(...): Runs a command, waits for it to complete, then returns</span>
+<span class="sd">    the return code.</span>
+<span class="sd">check_call(...): Same as call() but raises CalledProcessError()</span>
+<span class="sd">    if return code is not 0</span>
+<span class="sd">check_output(...): Same as check_call() but returns the contents of</span>
+<span class="sd">    stdout instead of a return code</span>
+<span class="sd">Popen(...): A class for flexibly executing a command in a new process</span>
+
+<span class="sd">Constants</span>
+<span class="sd">---------</span>
+<span class="sd">PIPE:    Special value that indicates a pipe should be created</span>
+<span class="sd">STDOUT:  Special value that indicates that stderr should go to stdout</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">mswindows</span> <span class="o">=</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;win32&quot;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">errno</span>
+
+<span class="c1"># Exception classes used by this module.</span>
+<div class="viewcode-block" id="CalledProcessError"><a class="viewcode-back" href="../whimsy.html#whimsy.helper.CalledProcessError">[docs]</a><span class="k">class</span> <span class="nc">CalledProcessError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This exception is raised when a process run by check_call() or</span>
+<span class="sd">    check_output() returns a non-zero exit status.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">      cmd, returncode, output</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">returncode</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="n">returncode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cmd</span> <span class="o">=</span> <span class="n">cmd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">output</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Command &#39;</span><span class="si">%s</span><span class="s2">&#39; returned non-zero exit status </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cmd</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="n">mswindows</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">threading</span>
+    <span class="kn">import</span> <span class="nn">msvcrt</span>
+    <span class="kn">import</span> <span class="nn">_subprocess</span>
+    <span class="k">class</span> <span class="nc">STARTUPINFO</span><span class="p">:</span>
+        <span class="n">dwFlags</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">hStdInput</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">hStdOutput</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">hStdError</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">wShowWindow</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">class</span> <span class="nc">pywintypes</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="ne">IOError</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">select</span>
+    <span class="n">_has_poll</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">select</span><span class="p">,</span> <span class="s1">&#39;poll&#39;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">fcntl</span>
+    <span class="kn">import</span> <span class="nn">pickle</span>
+
+    <span class="c1"># When select or poll has indicated that the file is writable,</span>
+    <span class="c1"># we can write up to _PIPE_BUF bytes without risk of blocking.</span>
+    <span class="c1"># POSIX defines PIPE_BUF as &gt;= 512.</span>
+    <span class="n">_PIPE_BUF</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">select</span><span class="p">,</span> <span class="s1">&#39;PIPE_BUF&#39;</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Popen&quot;</span><span class="p">,</span> <span class="s2">&quot;PIPE&quot;</span><span class="p">,</span> <span class="s2">&quot;STDOUT&quot;</span><span class="p">,</span> <span class="s2">&quot;call&quot;</span><span class="p">,</span> <span class="s2">&quot;check_call&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;check_output&quot;</span><span class="p">,</span> <span class="s2">&quot;CalledProcessError&quot;</span><span class="p">]</span>
+
+<span class="k">if</span> <span class="n">mswindows</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">_subprocess</span> <span class="k">import</span> <span class="p">(</span><span class="n">CREATE_NEW_CONSOLE</span><span class="p">,</span> <span class="n">CREATE_NEW_PROCESS_GROUP</span><span class="p">,</span>
+                             <span class="n">STD_INPUT_HANDLE</span><span class="p">,</span> <span class="n">STD_OUTPUT_HANDLE</span><span class="p">,</span>
+                             <span class="n">STD_ERROR_HANDLE</span><span class="p">,</span> <span class="n">SW_HIDE</span><span class="p">,</span>
+                             <span class="n">STARTF_USESTDHANDLES</span><span class="p">,</span> <span class="n">STARTF_USESHOWWINDOW</span><span class="p">)</span>
+
+    <span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;CREATE_NEW_CONSOLE&quot;</span><span class="p">,</span> <span class="s2">&quot;CREATE_NEW_PROCESS_GROUP&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;STD_INPUT_HANDLE&quot;</span><span class="p">,</span> <span class="s2">&quot;STD_OUTPUT_HANDLE&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;STD_ERROR_HANDLE&quot;</span><span class="p">,</span> <span class="s2">&quot;SW_HIDE&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;STARTF_USESTDHANDLES&quot;</span><span class="p">,</span> <span class="s2">&quot;STARTF_USESHOWWINDOW&quot;</span><span class="p">])</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">MAXFD</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sysconf</span><span class="p">(</span><span class="s2">&quot;SC_OPEN_MAX&quot;</span><span class="p">)</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">MAXFD</span> <span class="o">=</span> <span class="mi">256</span>
+
+<span class="n">_active</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">def</span> <span class="nf">_cleanup</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">_active</span><span class="p">[:]:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">_internal_poll</span><span class="p">(</span><span class="n">_deadstate</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">maxint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_active</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="c1"># This can happen if two threads create a new Popen instance.</span>
+                <span class="c1"># It&#39;s harmless that it was already removed, so ignore.</span>
+                <span class="k">pass</span>
+
+<span class="n">PIPE</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">STDOUT</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
+
+
+<span class="k">def</span> <span class="nf">_eintr_retry_call</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">raise</span>
+
+
+<span class="c1"># XXX This function is only used by multiprocessing and the test suite,</span>
+<span class="c1"># but it&#39;s here so that it can be imported when Python is compiled without</span>
+<span class="c1"># threads.</span>
+
+<span class="k">def</span> <span class="nf">_args_from_interpreter_flags</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of command-line arguments reproducing the current</span>
+<span class="sd">    settings in sys.flags and sys.warnoptions.&quot;&quot;&quot;</span>
+    <span class="n">flag_opt_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;debug&#39;</span><span class="p">:</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span>
+        <span class="c1"># &#39;inspect&#39;: &#39;i&#39;,</span>
+        <span class="c1"># &#39;interactive&#39;: &#39;i&#39;,</span>
+        <span class="s1">&#39;optimize&#39;</span><span class="p">:</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;dont_write_bytecode&#39;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;no_user_site&#39;</span><span class="p">:</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;no_site&#39;</span><span class="p">:</span> <span class="s1">&#39;S&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;ignore_environment&#39;</span><span class="p">:</span> <span class="s1">&#39;E&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;verbose&#39;</span><span class="p">:</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;bytes_warning&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;py3k_warning&#39;</span><span class="p">:</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">flag</span><span class="p">,</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">flag_opt_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">flags</span><span class="p">,</span> <span class="n">flag</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">opt</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">flags</span><span class="p">,</span> <span class="s1">&#39;hash_randomization&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-R&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">warnoptions</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-W&#39;</span> <span class="o">+</span> <span class="n">opt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">args</span>
+
+
+<span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="o">*</span><span class="n">popenargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run command with arguments.  Wait for command to complete, then</span>
+<span class="sd">    return the returncode attribute.</span>
+
+<span class="sd">    The arguments are the same as for the Popen constructor.  Example:</span>
+
+<span class="sd">    retcode = call([&quot;ls&quot;, &quot;-l&quot;])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Popen</span><span class="p">(</span><span class="o">*</span><span class="n">popenargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">check_call</span><span class="p">(</span><span class="o">*</span><span class="n">popenargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run command with arguments.  Wait for command to complete.  If</span>
+<span class="sd">    the exit code was zero then return, otherwise raise</span>
+<span class="sd">    CalledProcessError.  The CalledProcessError object will have the</span>
+<span class="sd">    return code in the returncode attribute.</span>
+
+<span class="sd">    The arguments are the same as for the Popen constructor.  Example:</span>
+
+<span class="sd">    check_call([&quot;ls&quot;, &quot;-l&quot;])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">retcode</span> <span class="o">=</span> <span class="n">call</span><span class="p">(</span><span class="o">*</span><span class="n">popenargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">retcode</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cmd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="n">popenargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="n">CalledProcessError</span><span class="p">(</span><span class="n">retcode</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="k">def</span> <span class="nf">check_output</span><span class="p">(</span><span class="o">*</span><span class="n">popenargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run command with arguments and return its output as a byte string.</span>
+
+<span class="sd">    If the exit code was non-zero it raises a CalledProcessError.  The</span>
+<span class="sd">    CalledProcessError object will have the return code in the returncode</span>
+<span class="sd">    attribute and output in the output attribute.</span>
+
+<span class="sd">    The arguments are the same as for the Popen constructor.  Example:</span>
+
+<span class="sd">    &gt;&gt;&gt; check_output([&quot;ls&quot;, &quot;-l&quot;, &quot;/dev/null&quot;])</span>
+<span class="sd">    &#39;crw-rw-rw- 1 root root 1, 3 Oct 18  2007 /dev/null\n&#39;</span>
+
+<span class="sd">    The stdout argument is not allowed as it is used internally.</span>
+<span class="sd">    To capture standard error in the result, use stderr=STDOUT.</span>
+
+<span class="sd">    &gt;&gt;&gt; check_output([&quot;/bin/sh&quot;, &quot;-c&quot;,</span>
+<span class="sd">    ...               &quot;ls -l non_existent_file ; exit 0&quot;],</span>
+<span class="sd">    ...              stderr=STDOUT)</span>
+<span class="sd">    &#39;ls: non_existent_file: No such file or directory\n&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;stdout&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;stdout argument not allowed, it will be overridden.&#39;</span><span class="p">)</span>
+    <span class="n">process</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="o">*</span><span class="n">popenargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">,</span> <span class="n">unused_err</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="n">retcode</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">retcode</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cmd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="n">popenargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="n">CalledProcessError</span><span class="p">(</span><span class="n">retcode</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">def</span> <span class="nf">list2cmdline</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translate a sequence of arguments into a command line</span>
+<span class="sd">    string, using the same rules as the MS C runtime:</span>
+
+<span class="sd">    1) Arguments are delimited by white space, which is either a</span>
+<span class="sd">       space or a tab.</span>
+
+<span class="sd">    2) A string surrounded by double quotation marks is</span>
+<span class="sd">       interpreted as a single argument, regardless of white space</span>
+<span class="sd">       contained within.  A quoted string can be embedded in an</span>
+<span class="sd">       argument.</span>
+
+<span class="sd">    3) A double quotation mark preceded by a backslash is</span>
+<span class="sd">       interpreted as a literal double quotation mark.</span>
+
+<span class="sd">    4) Backslashes are interpreted literally, unless they</span>
+<span class="sd">       immediately precede a double quotation mark.</span>
+
+<span class="sd">    5) If backslashes immediately precede a double quotation mark,</span>
+<span class="sd">       every pair of backslashes is interpreted as a literal</span>
+<span class="sd">       backslash.  If the number of backslashes is odd, the last</span>
+<span class="sd">       backslash escapes the next double quotation mark as</span>
+<span class="sd">       described in rule 3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># See</span>
+    <span class="c1"># http://msdn.microsoft.com/en-us/library/17w5ykft.aspx</span>
+    <span class="c1"># or search http://msdn.microsoft.com for</span>
+    <span class="c1"># &quot;Parsing C++ Command-Line Arguments&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">needquote</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">:</span>
+        <span class="n">bs_buf</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Add a space to separate this argument from the others</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+        <span class="n">needquote</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">arg</span>
+        <span class="k">if</span> <span class="n">needquote</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="c1"># Don&#39;t know if we need to double yet.</span>
+                <span class="n">bs_buf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">:</span>
+                <span class="c1"># Double backslashes.</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">bs_buf</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">bs_buf</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Normal char</span>
+                <span class="k">if</span> <span class="n">bs_buf</span><span class="p">:</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">bs_buf</span><span class="p">)</span>
+                    <span class="n">bs_buf</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+        <span class="c1"># Add remaining backslashes, if any.</span>
+        <span class="k">if</span> <span class="n">bs_buf</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">bs_buf</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">needquote</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">bs_buf</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Popen</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Execute a child program in a new process.</span>
+
+<span class="sd">    For a complete description of the arguments see the Python documentation.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      args: A string, or a sequence of program arguments.</span>
+
+<span class="sd">      bufsize: supplied as the buffering argument to the open() function when</span>
+<span class="sd">          creating the stdin/stdout/stderr pipe file objects</span>
+
+<span class="sd">      executable: A replacement program to execute.</span>
+
+<span class="sd">      stdin, stdout and stderr: These specify the executed programs&#39; standard</span>
+<span class="sd">          input, standard output and standard error file handles, respectively.</span>
+
+<span class="sd">      preexec_fn: (POSIX only) An object to be called in the child process</span>
+<span class="sd">          just before the child is executed.</span>
+
+<span class="sd">      close_fds: Controls closing or inheriting of file descriptors.</span>
+
+<span class="sd">      shell: If true, the command will be executed through the shell.</span>
+
+<span class="sd">      cwd: Sets the current directory before the child is executed.</span>
+
+<span class="sd">      env: Defines the environment variables for the new process.</span>
+
+<span class="sd">      universal_newlines: If true, use universal line endings for file</span>
+<span class="sd">          objects stdin, stdout and stderr.</span>
+
+<span class="sd">      startupinfo and creationflags (Windows only)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        stdin, stdout, stderr, pid, returncode</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_child_created</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Set here since __del__ checks it</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">bufsize</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">executable</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">stdin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">preexec_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">close_fds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">cwd</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">startupinfo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">creationflags</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create new Popen instance.&quot;&quot;&quot;</span>
+        <span class="n">_cleanup</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bufsize</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">long</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;bufsize must be an integer&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mswindows</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">preexec_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;preexec_fn is not supported on Windows &quot;</span>
+                                 <span class="s2">&quot;platforms&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">close_fds</span> <span class="ow">and</span> <span class="p">(</span><span class="n">stdin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">stdout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span>
+                              <span class="n">stderr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;close_fds is not supported on Windows &quot;</span>
+                                 <span class="s2">&quot;platforms if you redirect stdin/stdout/stderr&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># POSIX</span>
+            <span class="k">if</span> <span class="n">startupinfo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;startupinfo is only supported on Windows &quot;</span>
+                                 <span class="s2">&quot;platforms&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">creationflags</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;creationflags is only supported on Windows &quot;</span>
+                                 <span class="s2">&quot;platforms&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">universal_newlines</span> <span class="o">=</span> <span class="n">universal_newlines</span>
+
+        <span class="c1"># Input and output objects. The general principle is like</span>
+        <span class="c1"># this:</span>
+        <span class="c1">#</span>
+        <span class="c1"># Parent                   Child</span>
+        <span class="c1"># ------                   -----</span>
+        <span class="c1"># p2cwrite   ---stdin---&gt;  p2cread</span>
+        <span class="c1"># c2pread    &lt;--stdout---  c2pwrite</span>
+        <span class="c1"># errread    &lt;--stderr---  errwrite</span>
+        <span class="c1">#</span>
+        <span class="c1"># On POSIX, the child objects are file descriptors.  On</span>
+        <span class="c1"># Windows, these are Windows file handles.  The parent objects</span>
+        <span class="c1"># are file descriptors on both platforms.  The parent objects</span>
+        <span class="c1"># are None when not using PIPEs. The child objects are None</span>
+        <span class="c1"># when not redirecting.</span>
+
+        <span class="p">(</span><span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span><span class="p">,</span>
+         <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span><span class="p">,</span>
+         <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span><span class="p">),</span> <span class="n">to_close</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_handles</span><span class="p">(</span><span class="n">stdin</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_execute_child</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="n">preexec_fn</span><span class="p">,</span> <span class="n">close_fds</span><span class="p">,</span>
+                                <span class="n">cwd</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">universal_newlines</span><span class="p">,</span>
+                                <span class="n">startupinfo</span><span class="p">,</span> <span class="n">creationflags</span><span class="p">,</span> <span class="n">shell</span><span class="p">,</span> <span class="n">to_close</span><span class="p">,</span>
+                                <span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span><span class="p">,</span>
+                                <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span><span class="p">,</span>
+                                <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># Preserve original exception in case os.close raises.</span>
+            <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_trace</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">fd</span> <span class="ow">in</span> <span class="n">to_close</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">mswindows</span><span class="p">:</span>
+                        <span class="n">fd</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">EnvironmentError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+            <span class="k">raise</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_trace</span>
+
+        <span class="k">if</span> <span class="n">mswindows</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p2cwrite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">p2cwrite</span> <span class="o">=</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">open_osfhandle</span><span class="p">(</span><span class="n">p2cwrite</span><span class="o">.</span><span class="n">Detach</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">c2pread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">c2pread</span> <span class="o">=</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">open_osfhandle</span><span class="p">(</span><span class="n">c2pread</span><span class="o">.</span><span class="n">Detach</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">errread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">errread</span> <span class="o">=</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">open_osfhandle</span><span class="p">(</span><span class="n">errread</span><span class="o">.</span><span class="n">Detach</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">p2cwrite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">p2cwrite</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">,</span> <span class="n">bufsize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">c2pread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">universal_newlines</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">c2pread</span><span class="p">,</span> <span class="s1">&#39;rU&#39;</span><span class="p">,</span> <span class="n">bufsize</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">c2pread</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">,</span> <span class="n">bufsize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">errread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">universal_newlines</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">errread</span><span class="p">,</span> <span class="s1">&#39;rU&#39;</span><span class="p">,</span> <span class="n">bufsize</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">errread</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">,</span> <span class="n">bufsize</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">_translate_newlines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_maxint</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">maxint</span><span class="p">):</span>
+        <span class="c1"># If __init__ hasn&#39;t had a chance to execute (e.g. if it</span>
+        <span class="c1"># was passed an undeclared keyword argument), we don&#39;t</span>
+        <span class="c1"># have a _child_created attribute at all.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_child_created</span><span class="p">:</span>
+            <span class="c1"># We didn&#39;t get to successfully create a child process.</span>
+            <span class="k">return</span>
+        <span class="c1"># In case the child hasn&#39;t been waited on, check if it&#39;s done.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_internal_poll</span><span class="p">(</span><span class="n">_deadstate</span><span class="o">=</span><span class="n">_maxint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_active</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Child is still running, keep us alive until we can wait on it.</span>
+            <span class="n">_active</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">communicate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Interact with process: Send data to stdin.  Read data from</span>
+<span class="sd">        stdout and stderr, until end-of-file is reached.  Wait for</span>
+<span class="sd">        process to terminate.  The optional input argument should be a</span>
+<span class="sd">        string to be sent to the child process, or None, if no data</span>
+<span class="sd">        should be sent to the child.</span>
+
+<span class="sd">        communicate() returns a tuple (stdout, stderr).&quot;&quot;&quot;</span>
+
+        <span class="c1"># Optimization: If we are only using one pipe, or no pipe at</span>
+        <span class="c1"># all, using select() or threads is unnecessary.</span>
+        <span class="k">if</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">stdout</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">stderr</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">input</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">errno</span><span class="o">.</span><span class="n">EPIPE</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINVAL</span><span class="p">:</span>
+                            <span class="k">raise</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
+                <span class="n">stdout</span> <span class="o">=</span> <span class="n">_eintr_retry_call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+                <span class="n">stderr</span> <span class="o">=</span> <span class="n">_eintr_retry_call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">read</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_communicate</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">poll</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if child process has terminated. Set and return returncode</span>
+<span class="sd">        attribute.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_poll</span><span class="p">()</span>
+
+
+    <span class="k">if</span> <span class="n">mswindows</span><span class="p">:</span>
+        <span class="c1">#</span>
+        <span class="c1"># Windows methods</span>
+        <span class="c1">#</span>
+        <span class="k">def</span> <span class="nf">_get_handles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stdin</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Construct and return tuple with IO objects:</span>
+<span class="sd">            p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">to_close</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">stdin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">stdout</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">stderr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">to_close</span>
+
+            <span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">stdin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">p2cread</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">GetStdHandle</span><span class="p">(</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">STD_INPUT_HANDLE</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">p2cread</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">p2cread</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">CreatePipe</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">stdin</span> <span class="o">==</span> <span class="n">PIPE</span><span class="p">:</span>
+                <span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">CreatePipe</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stdin</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">p2cread</span> <span class="o">=</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">get_osfhandle</span><span class="p">(</span><span class="n">stdin</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Assuming file-like object</span>
+                <span class="n">p2cread</span> <span class="o">=</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">get_osfhandle</span><span class="p">(</span><span class="n">stdin</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+            <span class="n">p2cread</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_inheritable</span><span class="p">(</span><span class="n">p2cread</span><span class="p">)</span>
+            <span class="c1"># We just duplicated the handle, it has to be closed at the end</span>
+            <span class="n">to_close</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p2cread</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stdin</span> <span class="o">==</span> <span class="n">PIPE</span><span class="p">:</span>
+                <span class="n">to_close</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p2cwrite</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">c2pwrite</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">GetStdHandle</span><span class="p">(</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">STD_OUTPUT_HANDLE</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">c2pwrite</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">c2pwrite</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">CreatePipe</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">stdout</span> <span class="o">==</span> <span class="n">PIPE</span><span class="p">:</span>
+                <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">CreatePipe</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">c2pwrite</span> <span class="o">=</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">get_osfhandle</span><span class="p">(</span><span class="n">stdout</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Assuming file-like object</span>
+                <span class="n">c2pwrite</span> <span class="o">=</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">get_osfhandle</span><span class="p">(</span><span class="n">stdout</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+            <span class="n">c2pwrite</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_inheritable</span><span class="p">(</span><span class="n">c2pwrite</span><span class="p">)</span>
+            <span class="c1"># We just duplicated the handle, it has to be closed at the end</span>
+            <span class="n">to_close</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">c2pwrite</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stdout</span> <span class="o">==</span> <span class="n">PIPE</span><span class="p">:</span>
+                <span class="n">to_close</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">c2pread</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">stderr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">errwrite</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">GetStdHandle</span><span class="p">(</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">STD_ERROR_HANDLE</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">errwrite</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">errwrite</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">CreatePipe</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">stderr</span> <span class="o">==</span> <span class="n">PIPE</span><span class="p">:</span>
+                <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">CreatePipe</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">stderr</span> <span class="o">==</span> <span class="n">STDOUT</span><span class="p">:</span>
+                <span class="n">errwrite</span> <span class="o">=</span> <span class="n">c2pwrite</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">errwrite</span> <span class="o">=</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">get_osfhandle</span><span class="p">(</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Assuming file-like object</span>
+                <span class="n">errwrite</span> <span class="o">=</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">get_osfhandle</span><span class="p">(</span><span class="n">stderr</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+            <span class="n">errwrite</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_inheritable</span><span class="p">(</span><span class="n">errwrite</span><span class="p">)</span>
+            <span class="c1"># We just duplicated the handle, it has to be closed at the end</span>
+            <span class="n">to_close</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">errwrite</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stderr</span> <span class="o">==</span> <span class="n">PIPE</span><span class="p">:</span>
+                <span class="n">to_close</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">errread</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span><span class="p">,</span>
+                    <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span><span class="p">,</span>
+                    <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span><span class="p">),</span> <span class="n">to_close</span>
+
+
+        <span class="k">def</span> <span class="nf">_make_inheritable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handle</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Return a duplicate of handle, which is inheritable&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">DuplicateHandle</span><span class="p">(</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">GetCurrentProcess</span><span class="p">(),</span>
+                                <span class="n">handle</span><span class="p">,</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">GetCurrentProcess</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+                                <span class="n">_subprocess</span><span class="o">.</span><span class="n">DUPLICATE_SAME_ACCESS</span><span class="p">)</span>
+
+
+        <span class="k">def</span> <span class="nf">_find_w9xpopen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Find and return absolut path to w9xpopen.exe&quot;&quot;&quot;</span>
+            <span class="n">w9xpopen</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">GetModuleFileName</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+                                    <span class="s2">&quot;w9xpopen.exe&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">w9xpopen</span><span class="p">):</span>
+                <span class="c1"># Eeek - file-not-found - possibly an embedding</span>
+                <span class="c1"># situation - see if we can locate it in sys.exec_prefix</span>
+                <span class="n">w9xpopen</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">exec_prefix</span><span class="p">),</span>
+                                        <span class="s2">&quot;w9xpopen.exe&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">w9xpopen</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot locate w9xpopen.exe, which is &quot;</span>
+                                       <span class="s2">&quot;needed for Popen to work with your &quot;</span>
+                                       <span class="s2">&quot;shell or platform.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">w9xpopen</span>
+
+
+        <span class="k">def</span> <span class="nf">_execute_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="n">preexec_fn</span><span class="p">,</span> <span class="n">close_fds</span><span class="p">,</span>
+                           <span class="n">cwd</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">universal_newlines</span><span class="p">,</span>
+                           <span class="n">startupinfo</span><span class="p">,</span> <span class="n">creationflags</span><span class="p">,</span> <span class="n">shell</span><span class="p">,</span> <span class="n">to_close</span><span class="p">,</span>
+                           <span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span><span class="p">,</span>
+                           <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span><span class="p">,</span>
+                           <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Execute program (MS Windows version)&quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">StringTypes</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="n">list2cmdline</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+            <span class="c1"># Process startup details</span>
+            <span class="k">if</span> <span class="n">startupinfo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">startupinfo</span> <span class="o">=</span> <span class="n">STARTUPINFO</span><span class="p">()</span>
+            <span class="k">if</span> <span class="kc">None</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">p2cread</span><span class="p">,</span> <span class="n">c2pwrite</span><span class="p">,</span> <span class="n">errwrite</span><span class="p">):</span>
+                <span class="n">startupinfo</span><span class="o">.</span><span class="n">dwFlags</span> <span class="o">|=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">STARTF_USESTDHANDLES</span>
+                <span class="n">startupinfo</span><span class="o">.</span><span class="n">hStdInput</span> <span class="o">=</span> <span class="n">p2cread</span>
+                <span class="n">startupinfo</span><span class="o">.</span><span class="n">hStdOutput</span> <span class="o">=</span> <span class="n">c2pwrite</span>
+                <span class="n">startupinfo</span><span class="o">.</span><span class="n">hStdError</span> <span class="o">=</span> <span class="n">errwrite</span>
+
+            <span class="k">if</span> <span class="n">shell</span><span class="p">:</span>
+                <span class="n">startupinfo</span><span class="o">.</span><span class="n">dwFlags</span> <span class="o">|=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">STARTF_USESHOWWINDOW</span>
+                <span class="n">startupinfo</span><span class="o">.</span><span class="n">wShowWindow</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">SW_HIDE</span>
+                <span class="n">comspec</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;COMSPEC&quot;</span><span class="p">,</span> <span class="s2">&quot;cmd.exe&quot;</span><span class="p">)</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> /c &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span> <span class="p">(</span><span class="n">comspec</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">GetVersion</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mh">0x80000000</span> <span class="ow">or</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">comspec</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;command.com&quot;</span><span class="p">):</span>
+                    <span class="c1"># Win9x, or using command.com on NT. We need to</span>
+                    <span class="c1"># use the w9xpopen intermediate program. For more</span>
+                    <span class="c1"># information, see KB Q150956</span>
+                    <span class="c1"># (http://web.archive.org/web/20011105084002/http://support.microsoft.com/support/kb/articles/Q150/9/56.asp)</span>
+                    <span class="n">w9xpopen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_w9xpopen</span><span class="p">()</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot; </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">w9xpopen</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+                    <span class="c1"># Not passing CREATE_NEW_CONSOLE has been known to</span>
+                    <span class="c1"># cause random failures on win9x.  Specifically a</span>
+                    <span class="c1"># dialog: &quot;Your program accessed mem currently in</span>
+                    <span class="c1"># use at xxx&quot; and a hopeful warning about the</span>
+                    <span class="c1"># stability of your system.  Cost is Ctrl+C wont</span>
+                    <span class="c1"># kill children.</span>
+                    <span class="n">creationflags</span> <span class="o">|=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">CREATE_NEW_CONSOLE</span>
+
+            <span class="k">def</span> <span class="nf">_close_in_parent</span><span class="p">(</span><span class="n">fd</span><span class="p">):</span>
+                <span class="n">fd</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+                <span class="n">to_close</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+            <span class="c1"># Start the process</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">hp</span><span class="p">,</span> <span class="n">ht</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">tid</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">CreateProcess</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span>
+                                         <span class="c1"># no special security</span>
+                                         <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+                                         <span class="nb">int</span><span class="p">(</span><span class="ow">not</span> <span class="n">close_fds</span><span class="p">),</span>
+                                         <span class="n">creationflags</span><span class="p">,</span>
+                                         <span class="n">env</span><span class="p">,</span>
+                                         <span class="n">cwd</span><span class="p">,</span>
+                                         <span class="n">startupinfo</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">pywintypes</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Translate pywintypes.error to WindowsError, which is</span>
+                <span class="c1"># a subclass of OSError.  FIXME: We should really</span>
+                <span class="c1"># translate errno using _sys_errlist (or similar), but</span>
+                <span class="c1"># how can this be done from Python?</span>
+                <span class="k">raise</span> <span class="ne">WindowsError</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="c1"># Child is launched. Close the parent&#39;s copy of those pipe</span>
+                <span class="c1"># handles that only the child should have open.  You need</span>
+                <span class="c1"># to make sure that no handles to the write end of the</span>
+                <span class="c1"># output pipe are maintained in this process or else the</span>
+                <span class="c1"># pipe will not close when the child process exits and the</span>
+                <span class="c1"># ReadFile will hang.</span>
+                <span class="k">if</span> <span class="n">p2cread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_close_in_parent</span><span class="p">(</span><span class="n">p2cread</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">c2pwrite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_close_in_parent</span><span class="p">(</span><span class="n">c2pwrite</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">errwrite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_close_in_parent</span><span class="p">(</span><span class="n">errwrite</span><span class="p">)</span>
+
+            <span class="c1"># Retain the process handle, but close the thread handle</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_child_created</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span> <span class="o">=</span> <span class="n">hp</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pid</span> <span class="o">=</span> <span class="n">pid</span>
+            <span class="n">ht</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">_internal_poll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_deadstate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">_WaitForSingleObject</span><span class="o">=</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">WaitForSingleObject</span><span class="p">,</span>
+                <span class="n">_WAIT_OBJECT_0</span><span class="o">=</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">WAIT_OBJECT_0</span><span class="p">,</span>
+                <span class="n">_GetExitCodeProcess</span><span class="o">=</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">GetExitCodeProcess</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Check if child process has terminated.  Returns returncode</span>
+<span class="sd">            attribute.</span>
+
+<span class="sd">            This method is called by __del__, so it can only refer to objects</span>
+<span class="sd">            in its local scope.</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_WaitForSingleObject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="n">_WAIT_OBJECT_0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="n">_GetExitCodeProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span>
+
+
+        <span class="k">def</span> <span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Wait for child process to terminate.  Returns returncode</span>
+<span class="sd">            attribute.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_subprocess</span><span class="o">.</span><span class="n">WaitForSingleObject</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span>
+                                                <span class="n">_subprocess</span><span class="o">.</span><span class="n">INFINITE</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">GetExitCodeProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span>
+
+
+        <span class="k">def</span> <span class="nf">_readerthread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fh</span><span class="p">,</span> <span class="n">buffer</span><span class="p">):</span>
+            <span class="n">buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+
+        <span class="k">def</span> <span class="nf">_communicate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+            <span class="n">stdout</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Return</span>
+            <span class="n">stderr</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Return</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
+                <span class="n">stdout</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">stdout_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_readerthread</span><span class="p">,</span>
+                                                 <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stdout</span><span class="p">))</span>
+                <span class="n">stdout_thread</span><span class="o">.</span><span class="n">setDaemon</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">stdout_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+                <span class="n">stderr</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">stderr_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_readerthread</span><span class="p">,</span>
+                                                 <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">stderr</span><span class="p">))</span>
+                <span class="n">stderr_thread</span><span class="o">.</span><span class="n">setDaemon</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">stderr_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">input</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EPIPE</span><span class="p">:</span>
+                            <span class="c1"># communicate() should ignore broken pipe error</span>
+                            <span class="k">pass</span>
+                        <span class="k">elif</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINVAL</span>
+                              <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+                            <span class="c1"># Issue #19612: stdin.write() fails with EINVAL</span>
+                            <span class="c1"># if the process already exited before the write</span>
+                            <span class="k">pass</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">raise</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
+                <span class="n">stdout_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+                <span class="n">stderr_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+            <span class="c1"># All data exchanged.  Translate lists into strings.</span>
+            <span class="k">if</span> <span class="n">stdout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">stderr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stderr</span> <span class="o">=</span> <span class="n">stderr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># Translate newlines, if requested.  We cannot let the file</span>
+            <span class="c1"># object do the translation: It is based on stdio, which is</span>
+            <span class="c1"># impossible to combine with select (unless forcing no</span>
+            <span class="c1"># buffering).</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">universal_newlines</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;newlines&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">stdout</span><span class="p">:</span>
+                    <span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_translate_newlines</span><span class="p">(</span><span class="n">stdout</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">stderr</span><span class="p">:</span>
+                    <span class="n">stderr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_translate_newlines</span><span class="p">(</span><span class="n">stderr</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">send_signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sig</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Send a signal to the process</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">sig</span> <span class="o">==</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">sig</span> <span class="o">==</span> <span class="n">signal</span><span class="o">.</span><span class="n">CTRL_C_EVENT</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">CTRL_C_EVENT</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">sig</span> <span class="o">==</span> <span class="n">signal</span><span class="o">.</span><span class="n">CTRL_BREAK_EVENT</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">CTRL_BREAK_EVENT</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported signal: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sig</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">terminate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Terminates the process</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_subprocess</span><span class="o">.</span><span class="n">TerminateProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># ERROR_ACCESS_DENIED (winerror 5) is received when the</span>
+                <span class="c1"># process already died.</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">winerror</span> <span class="o">!=</span> <span class="mi">5</span><span class="p">:</span>
+                    <span class="k">raise</span>
+                <span class="n">rc</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">GetExitCodeProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">rc</span> <span class="o">==</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">STILL_ACTIVE</span><span class="p">:</span>
+                    <span class="k">raise</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="n">rc</span>
+
+        <span class="n">kill</span> <span class="o">=</span> <span class="n">terminate</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#</span>
+        <span class="c1"># POSIX methods</span>
+        <span class="c1">#</span>
+        <span class="k">def</span> <span class="nf">_get_handles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stdin</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Construct and return tuple with IO objects:</span>
+<span class="sd">            p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">to_close</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">stdin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">stdin</span> <span class="o">==</span> <span class="n">PIPE</span><span class="p">:</span>
+                <span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_cloexec</span><span class="p">()</span>
+                <span class="n">to_close</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stdin</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">p2cread</span> <span class="o">=</span> <span class="n">stdin</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Assuming file-like object</span>
+                <span class="n">p2cread</span> <span class="o">=</span> <span class="n">stdin</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">stdout</span> <span class="o">==</span> <span class="n">PIPE</span><span class="p">:</span>
+                <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_cloexec</span><span class="p">()</span>
+                <span class="n">to_close</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">c2pwrite</span> <span class="o">=</span> <span class="n">stdout</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Assuming file-like object</span>
+                <span class="n">c2pwrite</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">stderr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">stderr</span> <span class="o">==</span> <span class="n">PIPE</span><span class="p">:</span>
+                <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_cloexec</span><span class="p">()</span>
+                <span class="n">to_close</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">stderr</span> <span class="o">==</span> <span class="n">STDOUT</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">c2pwrite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">errwrite</span> <span class="o">=</span> <span class="n">c2pwrite</span>
+                <span class="k">else</span><span class="p">:</span> <span class="c1"># child&#39;s stdout is not set, use parent&#39;s stdout</span>
+                    <span class="n">errwrite</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">__stdout__</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">errwrite</span> <span class="o">=</span> <span class="n">stderr</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Assuming file-like object</span>
+                <span class="n">errwrite</span> <span class="o">=</span> <span class="n">stderr</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span><span class="p">,</span>
+                    <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span><span class="p">,</span>
+                    <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span><span class="p">),</span> <span class="n">to_close</span>
+
+
+        <span class="k">def</span> <span class="nf">_set_cloexec_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">cloexec</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cloexec_flag</span> <span class="o">=</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">FD_CLOEXEC</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">cloexec_flag</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="n">old</span> <span class="o">=</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">fcntl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">F_GETFD</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cloexec</span><span class="p">:</span>
+                <span class="n">fcntl</span><span class="o">.</span><span class="n">fcntl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">F_SETFD</span><span class="p">,</span> <span class="n">old</span> <span class="o">|</span> <span class="n">cloexec_flag</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fcntl</span><span class="o">.</span><span class="n">fcntl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">F_SETFD</span><span class="p">,</span> <span class="n">old</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">cloexec_flag</span><span class="p">)</span>
+
+
+        <span class="k">def</span> <span class="nf">pipe_cloexec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Create a pipe with FDs set CLOEXEC.&quot;&quot;&quot;</span>
+            <span class="c1"># Pipes&#39; FDs are set CLOEXEC by default because we don&#39;t want them</span>
+            <span class="c1"># to be inherited by other subprocesses: the CLOEXEC flag is removed</span>
+            <span class="c1"># from the child&#39;s FDs by _dup2(), between fork() and exec().</span>
+            <span class="c1"># This is not atomic: we would need the pipe2() syscall for that.</span>
+            <span class="n">r</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">pipe</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_cloexec_flag</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_cloexec_flag</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">r</span><span class="p">,</span> <span class="n">w</span>
+
+
+        <span class="k">def</span> <span class="nf">_close_fds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">but</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s1">&#39;closerange&#39;</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">closerange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">but</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">closerange</span><span class="p">(</span><span class="n">but</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">MAXFD</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">MAXFD</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">but</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+
+        <span class="k">def</span> <span class="nf">_execute_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="n">preexec_fn</span><span class="p">,</span> <span class="n">close_fds</span><span class="p">,</span>
+                           <span class="n">cwd</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">universal_newlines</span><span class="p">,</span>
+                           <span class="n">startupinfo</span><span class="p">,</span> <span class="n">creationflags</span><span class="p">,</span> <span class="n">shell</span><span class="p">,</span> <span class="n">to_close</span><span class="p">,</span>
+                           <span class="n">p2cread</span><span class="p">,</span> <span class="n">p2cwrite</span><span class="p">,</span>
+                           <span class="n">c2pread</span><span class="p">,</span> <span class="n">c2pwrite</span><span class="p">,</span>
+                           <span class="n">errread</span><span class="p">,</span> <span class="n">errwrite</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Execute program (POSIX version)&quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">StringTypes</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">shell</span><span class="p">:</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;/bin/sh&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">args</span>
+                <span class="k">if</span> <span class="n">executable</span><span class="p">:</span>
+                    <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">executable</span>
+
+            <span class="k">if</span> <span class="n">executable</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">executable</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">def</span> <span class="nf">_close_in_parent</span><span class="p">(</span><span class="n">fd</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                <span class="n">to_close</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+            <span class="c1"># For transferring possible exec failure from child to parent</span>
+            <span class="c1"># The first char specifies the exception type: 0 means</span>
+            <span class="c1"># OSError, 1 means some other error.</span>
+            <span class="n">errpipe_read</span><span class="p">,</span> <span class="n">errpipe_write</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_cloexec</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">gc_was_enabled</span> <span class="o">=</span> <span class="n">gc</span><span class="o">.</span><span class="n">isenabled</span><span class="p">()</span>
+                    <span class="c1"># Disable gc to avoid bug where gc -&gt; file_dealloc -&gt;</span>
+                    <span class="c1"># write to stderr -&gt; hang.  http://bugs.python.org/issue1336</span>
+                    <span class="n">gc</span><span class="o">.</span><span class="n">disable</span><span class="p">()</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">gc_was_enabled</span><span class="p">:</span>
+                            <span class="n">gc</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span>
+                        <span class="k">raise</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_child_created</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="c1"># Child</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="c1"># Close parent&#39;s pipe ends</span>
+                            <span class="k">if</span> <span class="n">p2cwrite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">p2cwrite</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">c2pread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">c2pread</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">errread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">errread</span><span class="p">)</span>
+                            <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">errpipe_read</span><span class="p">)</span>
+
+                            <span class="c1"># When duping fds, if there arises a situation</span>
+                            <span class="c1"># where one of the fds is either 0, 1 or 2, it</span>
+                            <span class="c1"># is possible that it is overwritten (#12607).</span>
+                            <span class="k">if</span> <span class="n">c2pwrite</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">c2pwrite</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">dup</span><span class="p">(</span><span class="n">c2pwrite</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">errwrite</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">errwrite</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">errwrite</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">dup</span><span class="p">(</span><span class="n">errwrite</span><span class="p">)</span>
+
+                            <span class="c1"># Dup fds for child</span>
+                            <span class="k">def</span> <span class="nf">_dup2</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+                                <span class="c1"># dup2() removes the CLOEXEC flag but</span>
+                                <span class="c1"># we must do it ourselves if dup2()</span>
+                                <span class="c1"># would be a no-op (issue #10806).</span>
+                                <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">_set_cloexec_flag</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                                <span class="k">elif</span> <span class="n">a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                    <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+                            <span class="n">_dup2</span><span class="p">(</span><span class="n">p2cread</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                            <span class="n">_dup2</span><span class="p">(</span><span class="n">c2pwrite</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                            <span class="n">_dup2</span><span class="p">(</span><span class="n">errwrite</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+                            <span class="c1"># Close pipe fds.  Make sure we don&#39;t close the</span>
+                            <span class="c1"># same fd more than once, or standard fds.</span>
+                            <span class="n">closed</span> <span class="o">=</span> <span class="p">{</span> <span class="kc">None</span> <span class="p">}</span>
+                            <span class="k">for</span> <span class="n">fd</span> <span class="ow">in</span> <span class="p">[</span><span class="n">p2cread</span><span class="p">,</span> <span class="n">c2pwrite</span><span class="p">,</span> <span class="n">errwrite</span><span class="p">]:</span>
+                                <span class="k">if</span> <span class="n">fd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">closed</span> <span class="ow">and</span> <span class="n">fd</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                                    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                                    <span class="n">closed</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+                            <span class="k">if</span> <span class="n">cwd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+
+                            <span class="k">if</span> <span class="n">preexec_fn</span><span class="p">:</span>
+                                <span class="n">preexec_fn</span><span class="p">()</span>
+
+                            <span class="c1"># Close all other fds, if asked for - after</span>
+                            <span class="c1"># preexec_fn(), which may open FDs.</span>
+                            <span class="k">if</span> <span class="n">close_fds</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_close_fds</span><span class="p">(</span><span class="n">but</span><span class="o">=</span><span class="n">errpipe_write</span><span class="p">)</span>
+
+                            <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">execvp</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">execvpe</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+
+                        <span class="k">except</span><span class="p">:</span>
+                            <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">tb</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+                            <span class="c1"># Save the traceback and attach it to the exception object</span>
+                            <span class="n">exc_lines</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exception</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span>
+                                                                   <span class="n">exc_value</span><span class="p">,</span>
+                                                                   <span class="n">tb</span><span class="p">)</span>
+                            <span class="n">exc_value</span><span class="o">.</span><span class="n">child_traceback</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">exc_lines</span><span class="p">)</span>
+                            <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">errpipe_write</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">exc_value</span><span class="p">))</span>
+
+                        <span class="c1"># This exitcode won&#39;t be reported to applications, so it</span>
+                        <span class="c1"># really doesn&#39;t matter what we return.</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
+
+                    <span class="c1"># Parent</span>
+                    <span class="k">if</span> <span class="n">gc_was_enabled</span><span class="p">:</span>
+                        <span class="n">gc</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="c1"># be sure the FD is closed no matter what</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">errpipe_write</span><span class="p">)</span>
+
+                <span class="c1"># Wait for exec to fail or succeed; possibly raising exception</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">_eintr_retry_call</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">read</span><span class="p">,</span> <span class="n">errpipe_read</span><span class="p">,</span> <span class="mi">1048576</span><span class="p">)</span>
+                <span class="n">pickle_bits</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">while</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="n">pickle_bits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">_eintr_retry_call</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">read</span><span class="p">,</span> <span class="n">errpipe_read</span><span class="p">,</span> <span class="mi">1048576</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pickle_bits</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">p2cread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">p2cwrite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_close_in_parent</span><span class="p">(</span><span class="n">p2cread</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">c2pwrite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">c2pread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_close_in_parent</span><span class="p">(</span><span class="n">c2pwrite</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">errwrite</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">errread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_close_in_parent</span><span class="p">(</span><span class="n">errwrite</span><span class="p">)</span>
+
+                <span class="c1"># be sure the FD is closed no matter what</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">errpipe_read</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">data</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">_eintr_retry_call</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">waitpid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">errno</span><span class="o">.</span><span class="n">ECHILD</span><span class="p">:</span>
+                        <span class="k">raise</span>
+                <span class="n">child_exception</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">child_exception</span>
+
+
+        <span class="k">def</span> <span class="nf">_handle_exitstatus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sts</span><span class="p">,</span> <span class="n">_WIFSIGNALED</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">WIFSIGNALED</span><span class="p">,</span>
+                <span class="n">_WTERMSIG</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">WTERMSIG</span><span class="p">,</span> <span class="n">_WIFEXITED</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">WIFEXITED</span><span class="p">,</span>
+                <span class="n">_WEXITSTATUS</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">WEXITSTATUS</span><span class="p">):</span>
+            <span class="c1"># This method is called (indirectly) by __del__, so it cannot</span>
+            <span class="c1"># refer to anything outside of its local scope.</span>
+            <span class="k">if</span> <span class="n">_WIFSIGNALED</span><span class="p">(</span><span class="n">sts</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="o">-</span><span class="n">_WTERMSIG</span><span class="p">(</span><span class="n">sts</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">_WIFEXITED</span><span class="p">(</span><span class="n">sts</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="n">_WEXITSTATUS</span><span class="p">(</span><span class="n">sts</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Should never happen</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unknown child exit status!&quot;</span><span class="p">)</span>
+
+
+        <span class="k">def</span> <span class="nf">_internal_poll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_deadstate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_waitpid</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">waitpid</span><span class="p">,</span>
+                <span class="n">_WNOHANG</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">WNOHANG</span><span class="p">,</span> <span class="n">_os_error</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">_ECHILD</span><span class="o">=</span><span class="n">errno</span><span class="o">.</span><span class="n">ECHILD</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Check if child process has terminated.  Returns returncode</span>
+<span class="sd">            attribute.</span>
+
+<span class="sd">            This method is called by __del__, so it cannot reference anything</span>
+<span class="sd">            outside of the local scope (nor can any methods it calls).</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">pid</span><span class="p">,</span> <span class="n">sts</span> <span class="o">=</span> <span class="n">_waitpid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">_WNOHANG</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">pid</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_handle_exitstatus</span><span class="p">(</span><span class="n">sts</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">_os_error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">_deadstate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="n">_deadstate</span>
+                    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">_ECHILD</span><span class="p">:</span>
+                        <span class="c1"># This happens if SIGCLD is set to be ignored or</span>
+                        <span class="c1"># waiting for child processes has otherwise been</span>
+                        <span class="c1"># disabled for our process.  This child is dead, we</span>
+                        <span class="c1"># can&#39;t get the status.</span>
+                        <span class="c1"># http://bugs.python.org/issue15756</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span>
+
+
+        <span class="k">def</span> <span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Wait for child process to terminate.  Returns returncode</span>
+<span class="sd">            attribute.&quot;&quot;&quot;</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">pid</span><span class="p">,</span> <span class="n">sts</span> <span class="o">=</span> <span class="n">_eintr_retry_call</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">waitpid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">errno</span><span class="o">.</span><span class="n">ECHILD</span><span class="p">:</span>
+                        <span class="k">raise</span>
+                    <span class="c1"># This happens if SIGCLD is set to be ignored or waiting</span>
+                    <span class="c1"># for child processes has otherwise been disabled for our</span>
+                    <span class="c1"># process.  This child is dead, we can&#39;t get the status.</span>
+                    <span class="n">pid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid</span>
+                    <span class="n">sts</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="c1"># Check the pid and loop as waitpid has been known to return</span>
+                <span class="c1"># 0 even without WNOHANG in odd situations.  issue14396.</span>
+                <span class="k">if</span> <span class="n">pid</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_handle_exitstatus</span><span class="p">(</span><span class="n">sts</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span>
+
+
+        <span class="k">def</span> <span class="nf">_communicate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="p">:</span>
+                <span class="c1"># Flush stdio buffer.  This might block, if the user has</span>
+                <span class="c1"># been writing to .stdin in an uncontrolled fashion.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">input</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">_has_poll</span><span class="p">:</span>
+                <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_communicate_with_poll</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_communicate_with_select</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+            <span class="c1"># All data exchanged.  Translate lists into strings.</span>
+            <span class="k">if</span> <span class="n">stdout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stdout</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stdout</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stderr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stderr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stderr</span><span class="p">)</span>
+
+            <span class="c1"># Translate newlines, if requested.  We cannot let the file</span>
+            <span class="c1"># object do the translation: It is based on stdio, which is</span>
+            <span class="c1"># impossible to combine with select (unless forcing no</span>
+            <span class="c1"># buffering).</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">universal_newlines</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;newlines&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">stdout</span><span class="p">:</span>
+                    <span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_translate_newlines</span><span class="p">(</span><span class="n">stdout</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">stderr</span><span class="p">:</span>
+                    <span class="n">stderr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_translate_newlines</span><span class="p">(</span><span class="n">stderr</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span>
+
+
+        <span class="k">def</span> <span class="nf">_communicate_with_poll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+            <span class="n">stdout</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Return</span>
+            <span class="n">stderr</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Return</span>
+            <span class="n">fd2file</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">fd2output</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="n">poller</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span>
+            <span class="k">def</span> <span class="nf">register_and_append</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">eventmask</span><span class="p">):</span>
+                <span class="n">poller</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">file_obj</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="n">eventmask</span><span class="p">)</span>
+                <span class="n">fd2file</span><span class="p">[</span><span class="n">file_obj</span><span class="o">.</span><span class="n">fileno</span><span class="p">()]</span> <span class="o">=</span> <span class="n">file_obj</span>
+
+            <span class="k">def</span> <span class="nf">close_unregister_and_remove</span><span class="p">(</span><span class="n">fd</span><span class="p">):</span>
+                <span class="n">poller</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                <span class="n">fd2file</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">fd2file</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span> <span class="ow">and</span> <span class="nb">input</span><span class="p">:</span>
+                <span class="n">register_and_append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="n">select</span><span class="o">.</span><span class="n">POLLOUT</span><span class="p">)</span>
+
+            <span class="n">select_POLLIN_POLLPRI</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">POLLIN</span> <span class="o">|</span> <span class="n">select</span><span class="o">.</span><span class="n">POLLPRI</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
+                <span class="n">register_and_append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">select_POLLIN_POLLPRI</span><span class="p">)</span>
+                <span class="n">fd2output</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">fileno</span><span class="p">()]</span> <span class="o">=</span> <span class="n">stdout</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+                <span class="n">register_and_append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="n">select_POLLIN_POLLPRI</span><span class="p">)</span>
+                <span class="n">fd2output</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">fileno</span><span class="p">()]</span> <span class="o">=</span> <span class="n">stderr</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">input_offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">fd2file</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">ready</span> <span class="o">=</span> <span class="n">poller</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span>
+                <span class="k">except</span> <span class="n">select</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">raise</span>
+
+                <span class="k">for</span> <span class="n">fd</span><span class="p">,</span> <span class="n">mode</span> <span class="ow">in</span> <span class="n">ready</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">mode</span> <span class="o">&amp;</span> <span class="n">select</span><span class="o">.</span><span class="n">POLLOUT</span><span class="p">:</span>
+                        <span class="n">chunk</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="n">input_offset</span> <span class="p">:</span> <span class="n">input_offset</span> <span class="o">+</span> <span class="n">_PIPE_BUF</span><span class="p">]</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">input_offset</span> <span class="o">+=</span> <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">chunk</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EPIPE</span><span class="p">:</span>
+                                <span class="n">close_unregister_and_remove</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">raise</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">input_offset</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+                                <span class="n">close_unregister_and_remove</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">mode</span> <span class="o">&amp;</span> <span class="n">select_POLLIN_POLLPRI</span><span class="p">:</span>
+                        <span class="n">data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">4096</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+                            <span class="n">close_unregister_and_remove</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                        <span class="n">fd2output</span><span class="p">[</span><span class="n">fd</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Ignore hang up or errors.</span>
+                        <span class="n">close_unregister_and_remove</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span>
+
+
+        <span class="k">def</span> <span class="nf">_communicate_with_select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+            <span class="n">read_set</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">write_set</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">stdout</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Return</span>
+            <span class="n">stderr</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Return</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span> <span class="ow">and</span> <span class="nb">input</span><span class="p">:</span>
+                <span class="n">write_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
+                <span class="n">read_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+                <span class="n">stdout</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+                <span class="n">read_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="n">stderr</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">input_offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">read_set</span> <span class="ow">or</span> <span class="n">write_set</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">rlist</span><span class="p">,</span> <span class="n">wlist</span><span class="p">,</span> <span class="n">xlist</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">read_set</span><span class="p">,</span> <span class="n">write_set</span><span class="p">,</span> <span class="p">[])</span>
+                <span class="k">except</span> <span class="n">select</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">raise</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span> <span class="ow">in</span> <span class="n">wlist</span><span class="p">:</span>
+                    <span class="n">chunk</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="n">input_offset</span> <span class="p">:</span> <span class="n">input_offset</span> <span class="o">+</span> <span class="n">_PIPE_BUF</span><span class="p">]</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">bytes_written</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="n">chunk</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EPIPE</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                            <span class="n">write_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">raise</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">input_offset</span> <span class="o">+=</span> <span class="n">bytes_written</span>
+                        <span class="k">if</span> <span class="n">input_offset</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                            <span class="n">write_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdin</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">in</span> <span class="n">rlist</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="mi">1024</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">data</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                        <span class="n">read_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+                    <span class="n">stdout</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">in</span> <span class="n">rlist</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="mi">1024</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">data</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                        <span class="n">read_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                    <span class="n">stderr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span>
+
+
+        <span class="k">def</span> <span class="nf">send_signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sig</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Send a signal to the process</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">terminate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Terminate the process with SIGTERM</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send_signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">kill</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Kill the process with SIGKILL</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send_signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGKILL</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_demo_posix</span><span class="p">():</span>
+    <span class="c1">#</span>
+    <span class="c1"># Example 1: Simple redirection: Get process list</span>
+    <span class="c1">#</span>
+    <span class="n">plist</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;ps&quot;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">)</span><span class="o">.</span><span class="n">communicate</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nb">print</span> <span class="s2">&quot;Process list:&quot;</span>
+    <span class="nb">print</span> <span class="n">plist</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Example 2: Change uid before executing child</span>
+    <span class="c1">#</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getuid</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">preexec_fn</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">setuid</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Example 3: Connecting several subprocesses</span>
+    <span class="c1">#</span>
+    <span class="nb">print</span> <span class="s2">&quot;Looking for &#39;hda&#39;...&quot;</span>
+    <span class="n">p1</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;dmesg&quot;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;grep&quot;</span><span class="p">,</span> <span class="s2">&quot;hda&quot;</span><span class="p">],</span> <span class="n">stdin</span><span class="o">=</span><span class="n">p1</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="nb">repr</span><span class="p">(</span><span class="n">p2</span><span class="o">.</span><span class="n">communicate</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Example 4: Catch execution error</span>
+    <span class="c1">#</span>
+    <span class="nb">print</span>
+    <span class="nb">print</span> <span class="s2">&quot;Trying a weird file...&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;/this/path/does/not/exist&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">ENOENT</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;The file didn&#39;t exist.  I thought so...&quot;</span>
+            <span class="nb">print</span> <span class="s2">&quot;Child traceback:&quot;</span>
+            <span class="nb">print</span> <span class="n">e</span><span class="o">.</span><span class="n">child_traceback</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Error&quot;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="o">&gt;&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="s2">&quot;Gosh.  No error.&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_demo_windows</span><span class="p">():</span>
+    <span class="c1">#</span>
+    <span class="c1"># Example 1: Connecting several subprocesses</span>
+    <span class="c1">#</span>
+    <span class="nb">print</span> <span class="s2">&quot;Looking for &#39;PROMPT&#39; in set output...&quot;</span>
+    <span class="n">p1</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="s2">&quot;set&quot;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="s1">&#39;find &quot;PROMPT&quot;&#39;</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">p1</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="nb">repr</span><span class="p">(</span><span class="n">p2</span><span class="o">.</span><span class="n">communicate</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Example 2: Simple execution of program</span>
+    <span class="c1">#</span>
+    <span class="nb">print</span> <span class="s2">&quot;Executing calc...&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="s2">&quot;calc&quot;</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">mswindows</span><span class="p">:</span>
+        <span class="n">_demo_windows</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_demo_posix</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

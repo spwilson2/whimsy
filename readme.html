@@ -1,0 +1,599 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Whimsy &mdash; whimsy 0.0.0-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="whimsy 0.0.0-dev documentation" href="index.html"/>
+        <link rel="next" title="Test Writing By Example" href="examples.html"/>
+        <link rel="prev" title="&lt;no title&gt;" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> whimsy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Whimsy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#current-framework-issues">Current Framework Issues</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-frameworks-available">Other Frameworks Available</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#definition-of-terms">Definition of Terms</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#test-suite">Test Suite</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test-case">Test Case</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fixture">Fixture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tags">Tags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fail-fast">Fail Fast</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#file-organization">File Organization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-tests">Running Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#typical-runloop">Typical Runloop</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#test-collection-and-discovery">Test Collection and Discovery</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test-running-step">Test Running Step</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Test Writing By Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whimsy.html">The Whimsy Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">whimsy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Whimsy</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/readme.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="whimsy">
+<h1>Whimsy<a class="headerlink" href="#whimsy" title="Permalink to this headline">¶</a></h1>
+<p>Test Framework proposal for <a class="reference external" href="http://gem5.org">gem5</a>.</p>
+<p>This framework is by no means final. I am open to suggestions, criticism, and
+change requests to this framework. This is meant to be a strong starting point
+for the rewrite of the testing system for gem5.</p>
+<p>Please feel free to comment on the gem5-dev-list or create issues on the pull
+request for this patch.</p>
+<p>The development branch for this framework can be found <a class="reference external" href="https://github.com/spwilson2/whimsy">here</a>.</p>
+<div class="section" id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
+<p><strong>Note:</strong> This section is non-normative.</p>
+<div class="section" id="current-framework-issues">
+<h3>Current Framework Issues<a class="headerlink" href="#current-framework-issues" title="Permalink to this headline">¶</a></h3>
+<p>A testing infrastructure already exists for Gem5. Why create a new one? There
+are quite a few issues which exist in the current infrastructure. Just to list
+a couple:</p>
+<ol class="arabic simple">
+<li>The system is scattered across multiple systems.<ul>
+<li>No center location for documentation/information</li>
+<li>Multiple entrypoints to the testing system.</li>
+<li>Massive amounts of indirection between scons, config files, and the
+current framework</li>
+</ul>
+</li>
+<li>There is not a simple way to add requirements for tests. If they need
+something set up, one would need to muck around the gem5 build system.</li>
+<li>Tests do not have a clear reason for failure.<ul>
+<li>Test names give no idication of what they are intended to test</li>
+<li>Large amounts of output spew take time to pour over</li>
+<li>Tests are not written with an explicit goal for test coverage in mind.</li>
+</ul>
+</li>
+<li>There are lots of legacy components.<ul>
+<li>SPARC tests which are not open source</li>
+<li>Broken tests which everyone has to know have been failing forever</li>
+</ul>
+</li>
+</ol>
+<p>On top of this issue, since we use SCons to run them current tests are
+incredibly static and must be formatted in a very specific format. Adding
+additional novel tests such as testing gdb functionality, or unit tests
+requires a rewrite of the framework.</p>
+</div>
+<div class="section" id="other-frameworks-available">
+<h3>Other Frameworks Available<a class="headerlink" href="#other-frameworks-available" title="Permalink to this headline">¶</a></h3>
+<p>We obviously need a new framework, but why write our own again? Before starting
+this project I explored a few other frameworks. Each had their own issues that
+made them feel imperfect for our needs.</p>
+<p><a class="reference external" href="https://github.com/pytest-dev/pytest">Pytest</a> seemed like the best option
+since it is written in python, is relatively popular, and it has deep support
+for objects called <em>Fixtures</em>, essentially an item that can be set up and torn
+down. Fixtures should almost cover our need to specify build targets.
+Unfortunately, these fixtures are not enumerated until the specifc test that
+runs them is started.  So there is no natural way in pytest to specify all
+scons targets and only execute a single scons build.</p>
+<p>Even worse than this issue is the <a class="reference external" href="https://github.com/pytest-dev/pytest/issues/568">bug that exists in their *marks*</a>
+which they use to indicate tests require a fixture. Any test that is derived
+from one another and adds a mark will backpropogate that mark to their child.
+This effectively ruins code reuse, something that is very import for our
+testing since every tests we currently has does the same thing with different
+<em>fixtures</em> or configs.</p>
+<p>There is a posted workaround for this issue, but it is both esoteric and
+requires users to know about the bug or spend hours debugging the strange issue
+to come to discover the workaround.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">See <a class="reference external" href="https://github.com/pytest-dev/pytest/issues/568">here</a> for a simple example of the issue.</p>
+</div>
+<p><a class="reference external" href="https://avocado-framework.github.io/">Avacado/Autotest</a> was another option
+briefly explored. This framework also has the same issue as Pytest in that it
+has no natural way to enumerate all build targets and build them right away
+each test is loaded and ran one at a time so there is no way to gather up all
+<em>fixture</em> elements and build those we want to right away.</p>
+<p>Options that were not deeply explored were those in the ‘acceptance test’
+world. I have personal experience working with the <a class="reference external" href="http://robotframework.org/">RobotFramework</a> and found that working in ‘human’ language is
+more difficult and error prone than modern programming languages.</p>
+<p>One final consideration is Gtest or another compiled testing framework. Besides
+the fact that these systems would either require being plugged into gem5, being
+so low level means writing more code and greater attention to detail when
+writing tests. The hope for a testing system is that it should be (relatively)
+easy to add additional tests.</p>
+</div>
+</div>
+<div class="section" id="definition-of-terms">
+<h2>Definition of Terms<a class="headerlink" href="#definition-of-terms" title="Permalink to this headline">¶</a></h2>
+<p><strong>NOTE:</strong> The remaining sections may contain limited non-normative comments.</p>
+<p>Before introducing the framework with a brief overiew of the run loop, there
+are a few terms used in this documentation that readers may not be familiar
+with. The purpose of this section is to briefly introduce users to these terms.</p>
+<div class="section" id="test-suite">
+<h3>Test Suite<a class="headerlink" href="#test-suite" title="Permalink to this headline">¶</a></h3>
+<p>A <a class="reference internal" href="whimsy.html#whimsy.suite.TestSuite" title="whimsy.suite.TestSuite"><code class="xref py py-class docutils literal"><span class="pre">whimsy.suite.TestSuite</span></code></a> is a completely self-contained unit of
+testing which must contain one or more <a class="reference external" href="#test-case">TestCase</a> instances.
+Test suites can rely on <a class="reference external" href="#fixture">Fixtures</a>, have <a class="reference external" href="#tags">tags</a> (which
+contained test cases will be tagged with), and be marked <a class="reference external" href="#fail-fast">fail_fast</a>. When tests are run, test suites will automatically pass the
+fixtures they require to the their test cases. Additionally, when querying
+based on tags, test cases will be marked with the same tags as their containing
+<code class="docutils literal"><span class="pre">TestSuite</span></code>.</p>
+</div>
+<div class="section" id="test-case">
+<h3>Test Case<a class="headerlink" href="#test-case" title="Permalink to this headline">¶</a></h3>
+<p>A <a class="reference internal" href="whimsy.html#whimsy.test.TestCase" title="whimsy.test.TestCase"><code class="xref py py-class docutils literal"><span class="pre">whimsy.test.TestCase</span></code></a> is a unit of test that is not necessarily
+self-contained. An example of a test which is not self-contained would be
+a test which parses the output of a gem5 run against a gold standard. Since
+this test case relies on gem5 running first, it would no longer pass if ran on
+its own and therfore the test is not self-contained. Test cases have all the
+metadata that a test suite has (Tags and Fixtures). However, they cannot be
+individually marked <a class="reference external" href="#fail-fast">fail_fast</a>.</p>
+</div>
+<div class="section" id="fixture">
+<h3>Fixture<a class="headerlink" href="#fixture" title="Permalink to this headline">¶</a></h3>
+<p>A <a class="reference internal" href="whimsy.html#whimsy.fixture.Fixture" title="whimsy.fixture.Fixture"><code class="xref py py-class docutils literal"><span class="pre">whimsy.fixture.Fixture</span></code></a> is an object that may require setup or
+tearing down before or after a <a class="reference external" href="#test-case">TestCase</a> or <a class="reference external" href="#test-suite">TestSuite</a> has run. When tests are run, they will be handed fixtures from
+their containing TestSuite, and will set up any fixtures that are not already
+built. This allows test cases to incrementally test results from a single gem5
+execution.</p>
+<p>Most importantly Fixtures remove the requirement on SCons to keep track of test
+requirements. TestCases and TestSuites now maintain that information on their
+own and the runner will make an aggregated call to SCons on their behalf.</p>
+</div>
+<div class="section" id="tags">
+<h3>Tags<a class="headerlink" href="#tags" title="Permalink to this headline">¶</a></h3>
+<p>Tags are used to mark groups of related tests. Common examples of tags are ISA
+(<cite>X86</cite>, <cite>ARM</cite>), testing length (<cite>quick</cite>, <cite>long</cite>), and system emulation type
+(<cite>se</cite>, <cite>fs</cite>). Indexes of tags are built by the
+<a class="reference internal" href="whimsy.html#whimsy.loader.TestLoader" title="whimsy.loader.TestLoader"><code class="xref py py-class docutils literal"><span class="pre">whimsy.loader.TestLoader</span></code></a> to query and run tests by specifying command
+line arguments.</p>
+</div>
+<div class="section" id="fail-fast">
+<h3>Fail Fast<a class="headerlink" href="#fail-fast" title="Permalink to this headline">¶</a></h3>
+<p>Fail Fast (written <code class="docutils literal"><span class="pre">fail_fast</span></code> throughout this document) has slightly
+different semantics depending on the use case. In general it means that given
+a <cite>TestCase</cite> failure, refrain from testing some future number of tests.</p>
+<p>The three different semantics of <code class="docutils literal"><span class="pre">fail_fast</span></code> given a test failure are as follows:</p>
+<ol class="arabic simple">
+<li>The <code class="docutils literal"><span class="pre">--fail-fast</span></code> flag will cause all remaining tests to be ignored.  The
+use case for this could be a script that just checks on commit if all tests
+pass or not. If they don’t pass we avoid wasting time running the remaining
+tests.</li>
+<li>If a <code class="docutils literal"><span class="pre">TestCase</span></code> in that suite fails while executing a <code class="docutils literal"><span class="pre">TestSuite</span></code> that
+is marked <code class="docutils literal"><span class="pre">fail_fast</span></code> then the remaining tests in that TestSuite will be
+skipped. If there are any remaining test suites to run, they will continue
+to run one at a time.</li>
+<li>Inside of a <code class="docutils literal"><span class="pre">TestSuite</span></code>, test cases are stored in hierarchical
+<a class="reference internal" href="whimsy.html#whimsy.suite.TestList" title="whimsy.suite.TestList"><code class="xref py py-class docutils literal"><span class="pre">whimsy.suite.TestList</span></code></a> objects. In addition to utility functions
+<code class="docutils literal"><span class="pre">TestList</span></code> instances have a <code class="docutils literal"><span class="pre">fail_fast</span></code> attribute. When a test fails in
+a <code class="docutils literal"><span class="pre">TestList</span></code> the remaining test cases in that <code class="docutils literal"><span class="pre">TestList</span></code> will be
+skipped.  However, if there are any remaining test lists or cases outside of
+the failed one, but inside of the currently executing TestSuite, they will
+still be executed.</li>
+</ol>
+<p>This last case visually:</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>TestList <cite>(Marked fail_fast)</cite></dt>
+<dd><ul class="first last">
+<li>Gem5 Run <cite>(FAILS)</cite></li>
+<li>TestList <cite>(Will all be skipped)</cite><ul>
+<li>TestStdout <cite>(skipped)</cite></li>
+<li>TestStderr <cite>(skipped)</cite></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Again with a failure in one of the output checkers:</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>TestList <cite>(Marked fail_fast)</cite></dt>
+<dd><ul class="first last">
+<li>Gem5 Run <cite>(PASS)</cite></li>
+<li>TestList <cite>(Not marked fail_fast)</cite><ul>
+<li>TestStdout <cite>(FAILS)</cite></li>
+<li>TestStderr <cite>(Still will be run.)</cite></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The use case for the <code class="docutils literal"><span class="pre">TestSuite</span></code> <code class="docutils literal"><span class="pre">fail_fast</span></code> option is more one
+of convinience. Its semantics differ slightly from the <code class="docutils literal"><span class="pre">TestList</span></code> use,
+but in the general case it just allows users to create a TestSuite and
+TestCases without an intermediate <code class="docutils literal"><span class="pre">TestList</span></code>. It might be worth removing,
+as I haven’t found a use case for it.</p>
+</div>
+</div>
+</div>
+<div class="section" id="file-organization">
+<h2>File Organization<a class="headerlink" href="#file-organization" title="Permalink to this headline">¶</a></h2>
+<p>The new layout for tests doesn’t change much from the old one. The first minor
+change is that test cases will be located in a test.py file, and the old
+test.py files will be changed to config.py. This is part of an effor to make
+test cases more explicit and discoverable by users. Rather than have a single
+file that generates all tests, each file can generate their own variants on
+tests.</p>
+<p>So</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">tests</span><span class="o">/</span><span class="n">speed</span><span class="o">/</span><span class="n">system</span><span class="o">-</span><span class="n">mode</span><span class="o">/</span><span class="n">test</span><span class="o">-</span><span class="n">name</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>changes to</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">tests</span><span class="o">/</span><span class="n">gem5</span><span class="o">/</span><span class="n">test</span><span class="o">-</span><span class="n">name</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">py</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">gem5</span><span class="o">/</span><span class="n">test</span><span class="o">-</span><span class="n">name</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>Where test.py will more than likely contain
+a <a class="reference internal" href="whimsy.gem5.html#whimsy.gem5.suite.gem5_verify_config" title="whimsy.gem5.suite.gem5_verify_config"><code class="xref py py-func docutils literal"><span class="pre">whimsy.gem5.suite.gem5_verify_config()</span></code></a> function call.  Reference files
+will be placed in the same directory they already are in. The only other
+difference will be that all ISA names should be capitalized.</p>
+<p>Also as you might have noticed above, the root of all tests is now
+<code class="docutils literal"><span class="pre">tests/gem5</span></code> with no specification being given on the speed of the tests by
+path name. This can now be done with tags. Reference files path names have also
+been trimmed a tiny bit.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference external" href="examples.html#migrating-an-existing-test">Migrating Tests</a></p>
+</div>
+<p><strong>Test Programs</strong></p>
+<p>Test-programs will remain in the same directory. Only the ISA name will now be
+capitalized. I would like to keep it consistent throughout the codebase.  Since
+we are going to be building gem5 using a uppercase name, everywhere else can
+take that standard. With this framework it is possible to build or download
+these test-programs each time rather than storing binaries in the repo.</p>
+<p><strong>Location of the Framework</strong></p>
+<p>Finally, I would suggest that this framework be placed in the <code class="docutils literal"><span class="pre">ext</span></code>
+directory. The gem5 helpers (under <code class="docutils literal"><span class="pre">whimsy/gem5</span></code> in this repo) could be
+placed directly in the <code class="docutils literal"><span class="pre">tests</span></code> dir. The single entrypoint to run tests would
+then be located in <code class="docutils literal"><span class="pre">tests/main.py</span></code>.  This script would set up paths and
+import all the necessary support libraries for testing.</p>
+<p>I would expect there should not be too many changes made to this framework once
+it is solidified. However, I would hope that more gem5 specific <code class="docutils literal"><span class="pre">Fixture</span></code> and
+<code class="docutils literal"><span class="pre">TestCase</span></code> types are created, so the tests dir might fit that more lively
+update pattern.</p>
+</div>
+<div class="section" id="running-tests">
+<h2>Running Tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
+<p>The external interface for whimsy is not too different than the one exposed by
+<code class="docutils literal"><span class="pre">test.py</span></code> right now.</p>
+<p>To run all tests use the <code class="docutils literal"><span class="pre">run</span></code> subcommand:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">main</span><span class="o">.</span><span class="n">py</span> <span class="n">run</span> <span class="o">.</span> <span class="c1"># The &#39;.&#39; is optional.</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">run</span></code> subcommand has some optional flags:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--skip-build</span></code> skip the building of scons targets (like gem5)</li>
+<li><code class="docutils literal"><span class="pre">-v</span></code> increase verbosity level once per flag.</li>
+<li><code class="docutils literal"><span class="pre">--uid</span></code> run the test item with the given uid.</li>
+<li><code class="docutils literal"><span class="pre">-h</span></code> Show help and list more available flags.</li>
+</ul>
+</div>
+<div class="section" id="typical-runloop">
+<h2>Typical Runloop<a class="headerlink" href="#typical-runloop" title="Permalink to this headline">¶</a></h2>
+<p>In a typical run of whimsy using the run subcommand. Whimsy will first parse
+the command line flags. Assuming the run command is given, whimsy will then
+create a <a class="reference internal" href="whimsy.html#whimsy.loader.TestLoader" title="whimsy.loader.TestLoader"><code class="xref py py-class docutils literal"><span class="pre">whimsy.loader.TestLoader</span></code></a> object and use that object to
+collect all tests in the given directory.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">For more info see <a class="reference internal" href="whimsy.html#module-whimsy.main" title="whimsy.main"><code class="xref py py-mod docutils literal"><span class="pre">whimsy.main</span></code></a></p>
+</div>
+<div class="section" id="test-collection-and-discovery">
+<h3>Test Collection and Discovery<a class="headerlink" href="#test-collection-and-discovery" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal"><span class="pre">TestLoader</span></code> will recurse down the directory tree looking for test
+program file names that match the <code class="docutils literal"><span class="pre">default_filepath_regex</span></code>. Python files that
+either begin or end in <code class="docutils literal"><span class="pre">test</span></code> or <code class="docutils literal"><span class="pre">tests</span></code> with a hyphen or underscore will
+match. e.g. <code class="docutils literal"><span class="pre">test-something.py</span></code> or <code class="docutils literal"><span class="pre">special-tests.py</span></code> will match, but
+<code class="docutils literal"><span class="pre">tests.py</span></code> will not.  Additionally, ‘hidden’ files that begin with a <code class="docutils literal"><span class="pre">.</span></code>
+will be ignored.</p>
+<p>Once the <code class="docutils literal"><span class="pre">TestLoader</span></code> has found a file that has a name indicating it
+is a test program, the loader will begin to load tests from that file by
+calling <code class="docutils literal"><span class="pre">execfile</span></code> on it. <code class="docutils literal"><span class="pre">TestCase</span></code> instances and <code class="docutils literal"><span class="pre">TestSuite</span></code>
+objects in the test file will be collected automatically. Any
+<code class="docutils literal"><span class="pre">TestCase</span></code> objects which are not specifically placed into a
+<code class="docutils literal"><span class="pre">TestSuite</span></code> instance will be collected into a <code class="docutils literal"><span class="pre">TestSuite</span></code> created
+for the module.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">For more info on discovery, valid filenames, and collection see
+<a class="reference internal" href="whimsy.html#module-whimsy.loader" title="whimsy.loader"><code class="xref py py-mod docutils literal"><span class="pre">whimsy.loader</span></code></a></p>
+</div>
+</div>
+<div class="section" id="test-running-step">
+<h3>Test Running Step<a class="headerlink" href="#test-running-step" title="Permalink to this headline">¶</a></h3>
+<p>Once the tests have been discovered and collected by the <code class="docutils literal"><span class="pre">TestLoader</span></code>,
+<a class="reference internal" href="whimsy.html#module-whimsy.main" title="whimsy.main"><code class="xref py py-mod docutils literal"><span class="pre">whimsy.main</span></code></a> will create the requested
+<a class="reference internal" href="whimsy.html#whimsy.result.ResultLogger" title="whimsy.result.ResultLogger"><code class="xref py py-class docutils literal"><span class="pre">whimsy.result.ResultLogger</span></code></a> logger objects used to display results
+and/or stream them into a file in a specified format. (Currently
+a <code class="docutils literal"><span class="pre">ConsoleLogger</span></code>, <code class="docutils literal"><span class="pre">InternalLogger</span></code>, <code class="docutils literal"><span class="pre">JUnitLogger</span></code> exist). All loggers
+are designed to minimize the amount of memory used by writing out test
+information as soon as possible rather than storing large strings.</p>
+<p>The <code class="xref py py-class docutils literal"><span class="pre">whimsy.runner.Runner</span></code> is instantiated using suites collected by the
+the <code class="docutils literal"><span class="pre">TestLoader</span></code> in addition to any of the previously mentioned result
+loggers. Once the runner begins, it first sets up any <code class="docutils literal"><span class="pre">Fixture</span></code> objects that
+are not marked <code class="docutils literal"><span class="pre">lazy_init</span></code>. Once all these <code class="docutils literal"><span class="pre">lazy_init</span></code> fixtures have been
+set up the <code class="docutils literal"><span class="pre">Runner</span></code> begins to iterate through its suites.</p>
+<p>The run of a suite takes the following steps:</p>
+<ol class="arabic simple">
+<li>Iterate through each <code class="docutils literal"><span class="pre">TestCase</span></code> passing suite level fixtures to
+them and running them.</li>
+<li>If the <code class="docutils literal"><span class="pre">TestCase</span></code> fails, check <code class="docutils literal"><span class="pre">fail_fast</span></code> conditions and fail
+out if one occurs.<ul>
+<li>A <code class="docutils literal"><span class="pre">TestSuite</span></code> or the containing <code class="docutils literal"><span class="pre">TestList</span></code> was marked
+<code class="docutils literal"><span class="pre">fail_fast</span></code></li>
+<li>The <code class="docutils literal"><span class="pre">--fail-fast</span></code> flag was given as a command line arg.</li>
+</ul>
+</li>
+<li><code class="docutils literal"><span class="pre">teardown</span></code> any built fixtures contained in the <code class="docutils literal"><span class="pre">TestSuite</span></code>
+object.</li>
+</ol>
+<p>The run of a <code class="docutils literal"><span class="pre">TestCase</span></code> follows these steps:</p>
+<ol class="arabic simple">
+<li>Start capturing stdout and stderr logging it into separate files.</li>
+<li>Copy the suites fixtures and override them with any versions we have in this
+test case.</li>
+<li>Build all the fixtures that are required for this test.<ul>
+<li>If any fixture build fails by throwing an exception, mark the test
+as failed.</li>
+</ul>
+</li>
+<li>Execute the actual test function, catching all exceptions.<ul>
+<li>Any exception other than the <a class="reference internal" href="whimsy.html#whimsy.test.TestSkipException" title="whimsy.test.TestSkipException"><code class="xref py py-class docutils literal"><span class="pre">whimsy.test.TestSkipException</span></code></a>
+thrown by the <a class="reference internal" href="whimsy.html#whimsy.test.skip" title="whimsy.test.skip"><code class="xref py py-func docutils literal"><span class="pre">whimsy.test.skip()</span></code></a> function will result in a fail
+status for the test.</li>
+<li>The test passes if no exceptions are thrown and the <code class="docutils literal"><span class="pre">__call__</span></code> returns.</li>
+</ul>
+</li>
+</ol>
+<p>While all of these above steps are executed, calls are made to the result
+loggers to notify them of results.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="whimsy.html#module-whimsy.runner" title="whimsy.runner"><code class="xref py py-mod docutils literal"><span class="pre">whimsy.runner</span></code></a></p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="examples.html" class="btn btn-neutral float-right" title="Test Writing By Example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sean Wilson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.0-dev',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
