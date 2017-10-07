@@ -144,6 +144,13 @@ class _Config(object):
                 raise UninitialzedAttributeException(
                     '%s was not initialzed in the config.' % attr)
 
+    def get_tags(self):
+        d = {typ: set(self.__getattr__(typ))
+            for typ in self.constants.supported_tags}
+        if any(map(lambda vals: bool(vals), d.values())):
+            return d
+        else:
+            return {}
 
 def define_defaults(defaults):
     '''
@@ -168,26 +175,45 @@ def define_constants(constants):
     '''
     constants.system_out_name = 'system-out'
     constants.system_err_name = 'system-err'
+
+    constants.isa_tag_type = 'isa'
     constants.x86_tag = 'X86'
     constants.sparc_tag = 'SPARC'
     constants.alpha_tag = 'ALPHA'
     constants.riscv_tag = 'RISCV'
     constants.arm_tag = 'ARM'
-    constants.supported_isas = (
+
+    constants.variant_tag_type = 'variant'
+    constants.opt_tag = 'opt'
+    constants.debug_tag = 'debug'
+    constants.fast_tag = 'fast'
+
+    constants.length_tag_type = 'length'
+    constants.quick_tag = 'quick'
+    constants.long_tag = 'long'
+
+    constants.supported_tags = {
+        constants.isa_tag_type : (
             constants.x86_tag,
             constants.sparc_tag,
             constants.alpha_tag,
             constants.riscv_tag,
-            constants.arm_tag
-    )
-    constants.opt_tag = 'opt'
-    constants.debug_tag = 'debug'
-    constants.fast_tag = 'fast'
-    constants.supported_optimizations = (
+            constants.arm_tag,
+            ),
+        constants.variant_tag_type: (
             constants.opt_tag,
             constants.debug_tag,
-            constants.fast_tag
-    )
+            constants.fast_tag,
+        ),
+        constants.length_tag_type: (
+            constants.quick_tag,
+            constants.long_tag,
+        ),
+    }
+
+    constants.supported_isas = constants.supported_tags['isa']
+    constants.supported_variants = constants.supported_tags['variant']
+    constants.supported_lengths = constants.supported_tags['length']
 
     constants.tempdir_fixture_name = 'tempdir'
     constants.gem5_simulation_stderr = 'simerr'
@@ -226,8 +252,29 @@ def define_post_processors(config):
         verbose = (verbose[0].val,)
         return verbose
 
+    def default_isa(isa):
+        if not isa[0]:
+            return [constants.supported_tags[constants.isa_tag_type]]
+        else:
+            return isa
+
+    def default_variant(variant):
+        if not variant[0]:
+            return [constants.supported_tags[constants.variant_tag_type]]
+        else:
+            return variant
+
+    def default_length(length):
+        if not length[0]:
+            return [constants.supported_tags[constants.length_tag_type]]
+        else:
+            return length
+
     config._add_post_processor('build_dir', set_default_build_dir)
     config._add_post_processor('verbose', fix_verbosity_hack)
+    config._add_post_processor('isa', default_isa)
+    config._add_post_processor('variant', default_variant)
+    config._add_post_processor('length', default_length)
 
 class Argument(object):
     '''
@@ -305,10 +352,22 @@ def define_common_args(config):
             action='store_true',
             help='Stop running on the first instance of failure'),
         Argument(
-            '--tags',
+            '--isa',
             action='append',
             default=[],
-            help=None),
+            help="Only tests that are valid with one of these ISAs. "
+                 "Comma separated."),
+        Argument(
+            '--variant',
+            action='append',
+            default=[],
+            help="Only tests that are valid with one of these binary variants"
+                 "(e.g., opt, debug). Comma separated."),
+        Argument(
+            '--length',
+            action='append',
+            default=[],
+            help="Only tests that are one of these lengths. Comma separated."),
         Argument(
             '--uid',
             action='store',
@@ -334,6 +393,12 @@ def define_common_args(config):
             dest='verbose',
             default=_StickyInt(),
             help='Increase verbosity'),
+        Argument(
+            '-q',
+            action='store_true',
+            dest='quiet',
+            default=False,
+            help='Supress output (for piping, etc.)'),
         Argument(
             '--config-path',
             action='store',
@@ -382,6 +447,7 @@ class ArgParser(object):
 
         # Argument will be added to all parsers and subparsers.
         common_args.verbose.add_to(parser)
+        common_args.quiet.add_to(parser)
 
 
 class CommandParser(ArgParser):
@@ -415,12 +481,9 @@ class RunParser(ArgParser):
         common_args.fail_fast.add_to(parser)
         common_args.threads.add_to(parser)
         common_args.list_only_failed.add_to(parser)
-
-        # Modify the help statement for the tags common_arg
-        mytags = common_args.tags.copy()
-        mytags.kwargs['help'] = ('Only run items marked with one of the given'
-                                 ' tags.')
-        mytags.add_to(parser)
+        common_args.isa.add_to(parser)
+        common_args.variant.add_to(parser)
+        common_args.length.add_to(parser)
 
 
 class ListParser(ArgParser):
@@ -460,10 +523,9 @@ class ListParser(ArgParser):
         ).add_to(parser)
 
         common_args.directory.add_to(parser)
-        mytags = common_args.tags.copy()
-        mytags.kwargs['help'] = ('Only list items marked with one of the'
-                                 ' given tags.')
-        mytags.add_to(parser)
+        common_args.isa.add_to(parser)
+        common_args.variant.add_to(parser)
+        common_args.length.add_to(parser)
 
 
 class RerunParser(ArgParser):
@@ -481,6 +543,10 @@ class RerunParser(ArgParser):
         common_args.fail_fast.add_to(parser)
         common_args.threads.add_to(parser)
         common_args.list_only_failed.add_to(parser)
+
+        common_args.isa.add_to(parser)
+        common_args.variant.add_to(parser)
+        common_args.length.add_to(parser)
 
 config = _Config()
 define_constants(config.constants)

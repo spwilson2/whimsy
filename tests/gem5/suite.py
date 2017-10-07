@@ -14,10 +14,10 @@ def gem5_verify_config(name,
                        config_args,
                        verifiers,
                        gem5_args=tuple(),
-                       tags=[],
                        fixtures=[],
                        valid_isas=constants.supported_isas,
-                       valid_optimizations=constants.supported_optimizations):
+                       valid_variants=constants.supported_variants,
+                       length=constants.supported_lengths[0]):
     '''
     Helper class to generate common gem5 tests using verifiers.
 
@@ -40,7 +40,7 @@ def gem5_verify_config(name,
     :param valid_isas: An interable with the isas that this test can be ran
         for. If None given, will run for all supported_isas.
 
-    :param valid_optimizations: An interable with the optimization levels that
+    :param valid_variants: An interable with the variant levels that
         this test can be ran for. (E.g. opt, debug)
     '''
     for verifier in verifiers:
@@ -52,7 +52,7 @@ def gem5_verify_config(name,
     original_verifiers = verifiers
 
     testsuites = []
-    for opt in valid_optimizations:
+    for opt in valid_variants:
         for isa in valid_isas:
 
             # Create a tempdir fixture to be shared throughout the test.
@@ -61,7 +61,7 @@ def gem5_verify_config(name,
                     name=constants.gem5_returncode_fixture_name)
 
             # Common name of this generated testcase.
-            _name = '{given_name} [{isa} - {opt}]'.format(
+            _name = '{given_name}-{isa}-{opt}'.format(
                     given_name=name,
                     isa=isa,
                     opt=opt)
@@ -74,7 +74,7 @@ def gem5_verify_config(name,
                     name=_name)
 
             # Create copies of the verifier subtests for this isa and
-            # optimization.
+            # variant.
             verifier_tests = []
             for verifier in original_verifiers:
                 verifier = copy.copy(verifier)
@@ -88,14 +88,17 @@ def gem5_verify_config(name,
             verifier_collection = TestList(verifier_tests, fail_fast=False)
 
             # Create the gem5 target for the specific architecture and
-            # optimization level.
+            # variant.
             fixtures = copy.copy(given_fixtures)
             fixtures.append(Gem5Fixture(isa, opt))
             fixtures.append(tempdir)
             fixtures.append(gem5_returncode)
-            # Add the isa and optimization to tags list.
-            tags = copy.copy(tags)
-            tags.extend((opt, isa))
+            # Add the isa and variant to tags list.
+            tags = {
+                constants.isa_tag_type: set([isa]),
+                constants.variant_tag_type: set([opt]),
+                constants.length_tag_type: set([length]),
+            }
 
             # Place our gem5 run and verifiers into a failfast test
             # collection. We failfast because if a gem5 run fails, there's no
@@ -151,12 +154,6 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         command.append(config)
         # Config_args should set up the program args.
         command.extend(config_args)
-        try:
-            log_call(command)
-        except CalledProcessError as e:
-            returncode.value = e.returncode
-            if e.returncode != 1:
-                raise e
-        else:
-            returncode.value = 0
+        log_call(command)
+
     return test_run_gem5

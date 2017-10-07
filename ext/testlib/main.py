@@ -36,9 +36,10 @@ def load_tests():
     Create a TestLoader and load tests for the directory given by the config.
     '''
     testloader = TestLoader()
-    log.display(separator())
-    log.bold('Loading Tests')
-    log.display('')
+    if not config.config.quiet:
+        log.display(separator())
+        log.bold('Loading Tests')
+        log.display('')
     testloader.load_root(config.config.directory)
     return testloader
 
@@ -47,13 +48,8 @@ def dorun():
     Handle the `run` command.
     '''
     loader = load_tests()
-
-    if config.config.tags:
-        suites = []
-        for tag in config.config.tags:
-            suites.extend(loader.suites_with_tag(tag))
-    else:
-        suites = loader.suites
+    tags = config.config.get_tags()
+    suites = [suite for suite in loader.suites if suite.match_tags(tags)]
 
     # Create directory to save junit and internal results in.
     mkdir_p(config.config.result_path)
@@ -103,16 +99,16 @@ def dolist():
     Handle the `list` command.
     '''
     loader = load_tests()
-    if config.config.tags:
-        query.list_tests_with_tags(loader, config.config.tags)
     if config.config.suites:
         query.list_suites(loader)
-    if config.config.tests:
+    elif config.config.tests:
         query.list_tests(loader)
-    if config.config.fixtures:
+    elif config.config.fixtures:
         query.list_fixtures(loader)
-    if config.config.all_tags:
-        query.list_tags(loader)
+    elif config.config.all_tags:
+        query.list_tags()
+    elif config.config.get_tags():
+        query.list_suites_with_tags(loader, config.config.get_tags())
 
 def main():
     # Start logging verbosity at its minimum

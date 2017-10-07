@@ -2,6 +2,7 @@
 File which implements querying and display logic for metadata about loaded
 items.
 '''
+from config import constants, config
 from logger import log
 from terminal import separator
 
@@ -26,18 +27,22 @@ def list_suites(loader):
     for suite in loader.suites:
         log.display(suite.uid)
 
-def list_tags(loader):
+def list_tags():
     log.display(separator())
     log.display('Listing all Tags.')
     log.display(separator())
-    for tag in loader.tags:
-        log.display(tag)
+    for typ,vals in constants.supported_tags.iteritems():
+        log.display("%s: %s" % (typ, ', '.join(vals)))
 
 def list_tests_with_tags(loader, tags):
     log.display('Listing tests based on tags.')
-    for tag in tags:
+    log.display(separator())
+    for uid in [test.uid for test in loader.tests if test.match_tags(tags)]:
+        log.display(uid)
+
+def list_suites_with_tags(loader, tags):
+    if not config.quiet:
+        log.display('Listing tests based on tags.')
         log.display(separator())
-        log.display("Tests marked with tag '%s':" % tag)
-        log.display(separator())
-        for test in loader.tag_index(tag):
-            log.display(test.uid)
+    for uid in [suite.uid for suite in loader.suites if suite.match_tags(tags)]:
+        log.display(uid)

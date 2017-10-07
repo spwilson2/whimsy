@@ -13,6 +13,15 @@ class Verifier(test.TestFunction):
         name = name if name is not None else self.__class__.__name__
         super(Verifier, self).__init__(self.test, name, **kwargs)
 
+    def failed(self, fixtures):
+        '''
+        Called if this verifier fails to cleanup (or not) as needed.
+        '''
+        try:
+            fixtures[constants.tempdir_fixture_name].skip_cleanup()
+        except KeyError:
+            pass # No need to do anything if the tempdir fixture doesn't exist
+
 
 class MatchGoldStandard(Verifier):
     '''
@@ -46,7 +55,9 @@ class MatchGoldStandard(Verifier):
                                    self.test_filename,
                                    self.ignore_regex)
         if diff is not None:
-            test.fail('Stdout did not match:\n%s' % diff)
+            self.failed(fixtures)
+            test.fail('Stdout did not match:\n%s\nSee %s for full results'
+                      % (diff, tempdir))
 
     def _generic_instance_warning(self, kwargs):
         '''
@@ -89,6 +100,12 @@ class MatchStdout(DerivedGoldStandard):
             re.compile("^info: kernel located at:"),
             re.compile("^Couldn't unlink "),
             re.compile("^Using GPU kernel code file\(s\) "),
+        ]
+
+class MatchStdoutNoPerf(MatchStdout):
+    _file = constants.gem5_simulation_stdout
+    _default_ignore_regex = MatchStdout._default_ignore_regex + [
+            re.compile('^Exiting @ tick'),
         ]
 
 class MatchStderr(DerivedGoldStandard):
@@ -140,18 +157,8 @@ class MatchRegex(Verifier):
             if parse_file(joinpath(tempdir,
                                    constants.gem5_simulation_stderr)):
                 return # Success
+        self.failed(fixtures)
         test.fail('Could not match regex.')
-
-
-class VerifyReturncode(Verifier):
-    def __init__(self, returncode, name=None):
-        self.expected_returncode = returncode
-        super(VerifyReturncode, self).__init__(name)
-
-    def test(self, fixtures):
-        test.assertEquals(self.expected_returncode,
-                fixtures[constants.gem5_returncode_fixture_name].value)
-        pass
 
 _re_type = type(re.compile(''))
 def _iterable_regex(regex):
