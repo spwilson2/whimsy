@@ -28,7 +28,6 @@ class Enum(object):
             self.enums.append(new_enum)
             setattr(self, enum, new_enum)
 
-
 class _EnumVal(object):
     def __init__(self, name, val, enums):
         self.val = val

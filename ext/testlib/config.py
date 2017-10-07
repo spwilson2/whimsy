@@ -522,12 +522,6 @@ class RunParser(ArgParser):
         common_args.length.add_to(parser)
         common_args.credentials_file.add_to(parser)
 
-        # Modify the help statement for the tags common_arg
-        mytags = common_args.tags.copy()
-        mytags.kwargs['help'] = ('Only run items marked with one of the given'
-                                 ' tags.')
-        mytags.add_to(parser)
-
 
 class ListParser(ArgParser):
     '''
@@ -589,6 +583,25 @@ class RerunParser(ArgParser):
         common_args.isa.add_to(parser)
         common_args.variant.add_to(parser)
         common_args.length.add_to(parser)
+
+class ClientParser(ArgParser):
+    '''
+    Parser for the \'client\' command.
+    '''
+    def __init__(self, subparser):
+        parser = subparser.add_parser(
+            'client',
+            help='''Act as a client/helper for a test server instance.'''
+        )
+
+        super(ClientParser, self).__init__(parser)
+
+        common_args.credentials_file.add_to(parser)
+
+        arg = common_args.threads.copy()
+        arg.kwargs['help'] = ('The number of helper instances to spawn on'
+                              ' this client.')
+        arg.add_to(parser)
 
 class ClientParser(ArgParser):
     '''
