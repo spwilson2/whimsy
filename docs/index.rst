@@ -9,5 +9,6 @@
 
    readme
    examples
+   features
    whimsy
 

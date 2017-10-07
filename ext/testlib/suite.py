@@ -1,8 +1,7 @@
 from os import getcwd
 
 from config import constants
-
-from _util import uid
+from uid import uid
 
 class TestSuite(object):
     '''

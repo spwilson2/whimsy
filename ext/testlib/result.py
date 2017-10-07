@@ -3,7 +3,6 @@ Module which contains streaming result loggers. The main goal of these loggers
 is to support large amounts of results and not create large standing pools of
 strings.
 '''
-import abc
 import pickle
 from xml.sax.saxutils import escape as xml_escape
 from string import maketrans
@@ -55,57 +54,91 @@ def test_results_output_path(test_case):
     return joinpath(config.result_path, test_case.uid.replace('/','-'))
 
 
-# TODO: I'd like to re-factor this interface into an explicit callback
-# interface offered by the the Runner class. Right now the Runner needs to
-# know specifics about this interface. Instead the Runner should offer
-# generic enough hooks and loggers could do with them as they please.
 class ResultLogger(object):
     '''
     Interface which allows writing of streaming results to a file stream.
     '''
-    __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
+    not_supplied = object()
+    '''A sentinel value indicating that the kwarg wasn't supplied.'''
+
+    bad_item = ('Result formatter can only handle test cases'
+                ' and test suites')
+
+    def delegate_instance(self, function, instance, *args, **kwargs):
+        '''
+        Helper function to delegate a method for the given function based on
+        the type of the given instance.
+
+        Effectively is shorthand for:
+
+        >>> if isinstance(instance, TestSuite):
+        >>>     self._call_this_testsuite(*args, **kwargs)
+        >>> elif isinstance(instance, TestCase):
+        >>>     self._call_this_testsuite(*args, **kwargs)
+        >>> elif __debug__:
+        >>>     raise AssertionError
+        '''
+
+        for class_ in (TestSuite, TestCase):
+            if isinstance(instance, class_):
+                instance_name = class_.__name__.lower()
+                break
+        else:
+            if __debug__:
+                raise AssertionError(self.bad_item)
+
+        mem_func = getattr(self, '_'.join(('', function.__name__,
+                                           instance_name)),
+                           lambda *args, **kwargs : None)
+        return mem_func(instance, *args, **kwargs)
+
+
     def begin_testing(self):
         '''
         Signal the beginning of writing to the file stream. Indicates that
         results are about to be logged.
-        '''
-        pass
 
-    @abc.abstractmethod
+        This is garunteed to be called before any results are added.
+        '''
+
     def begin(self, item):
-        '''Signal the beginning of the given item.'''
-        pass
-
-    @abc.abstractmethod
-    def skip(self, item, **kwargs):
-        # FIXME I reaally don't like this specific method being forced to be
-        # known in the Runner. There should be a fail_fast callback offered
-        # there instead whenever the refactor is done.
         '''
-        Signal we are forcefully skipping the item due to some circumstance.
+        Signal the beginning of the given item.
+        :param item: The test item which is about to begin running
         '''
 
-    @abc.abstractmethod
-    def set_current_outcome(self, outcome, **kwargs):
-        '''Set the outcome of the current item.'''
+    def set_outcome(self, item, outcome, **kwargs):
+        '''
+        Set the outcome of the given item.
 
-    @abc.abstractmethod
-    def end_current(self):
+        :param item: The test item which we are setting the outcome of
+        :param outcome: The outcome the test item will be set to
+
+
+        TestCase Only kwargs:
+
+        :param reason: Reason for the test case outcome.
+        :param fstdout_name: Name of the file stdout is available at.
+        :param fstderr_name: Name of the file stdout is available at.
+
+        :param ff_skipped: Indicates that the test was skipped due to
+            a fail_fast condition.
+        '''
+
+    def end(self, item):
         '''
         Signal the end of the current item.
-        '''
-        pass
 
-    @abc.abstractmethod
+        :param item: The test item which is finished running
+        '''
+
     def end_testing(self):
         '''
-        Signal the end of writing to the file stream. Indicates that
-        results are done being logged.
-        '''
-        pass
+        Indicates that results are done being collected.
 
+        This is guaranteed to be called after all results are added.
+        '''
 
 class ConsoleLogger(ResultLogger):
     '''
@@ -124,15 +157,10 @@ class ConsoleLogger(ResultLogger):
     sep_fmtkey = 'separator'
     sep_fmtstr = '{%s}' % sep_fmtkey
 
-    bad_item = ('Result formatter can only handle test cases'
-            ' and test suites')
 
     def __init__(self):
         self.outcome_count = {outcome: 0 for outcome in Outcome.enums}
-        self._item_list = []
-        self._current_item = None
         self.timer = Timer()
-
         self._started = False
 
     def begin_testing(self):
@@ -140,80 +168,34 @@ class ConsoleLogger(ResultLogger):
         self._started = True
 
     def begin(self, item):
-        if isinstance(item, TestSuite):
-            self._begin_testsuite(item)
-        elif isinstance(item, TestCase):
-            self._begin_testcase(item)
-        elif __debug__:
-            raise AssertionError(self.bad_item)
-        self._item_list.append(self._current_item)
-        self._current_item = item
-
+        self.delegate_instance(self.begin, item)
     def _begin_testsuite(self, test_suite):
         log.info('Starting TestSuite: %s' % test_suite.name)
     def _begin_testcase(self, test_case):
         log.info('Starting TestCase: %s' % test_case.name)
 
-    def set_current_outcome(self, outcome, **kwargs):
-        '''Set the outcome of the current item.'''
-        if isinstance(self._current_item, TestSuite):
-            pass # TODO, for now we dont' do anything with this.
-        elif isinstance(self._current_item, TestCase):
-            self._set_testcase_outcome(self._current_item, outcome, **kwargs)
-        elif __debug__:
-            raise AssertionError(self.bad_item)
-
-    def _set_testcase_outcome(self, test_case, outcome, reason=None, **kwargs):
-        log.bold(
-                self.colormap[outcome]
-                + test_case.name
-                + self.reset)
+    def set_outcome(self, item, outcome, **kwargs):
+        self.delegate_instance(self.set_outcome, item, outcome, **kwargs)
+    def _set_outcome_testcase(self, item, outcome, reason=None, **kwargs):
         self.outcome_count[outcome] += 1
-
-        if reason is not None:
-            log.info('')
-            log.info('Reason:')
-            log.info(reason)
-            log.info(terminal.separator('-'))
-
-    def _set_testsuite_outcome(self, test_suite, outcome, **kwargs):
-        pass # Do nothing for test suites.
-
-    def skip(self, item, reason):
-        '''Set the outcome of the current item.'''
-        if isinstance(item, TestSuite):
-            pass # TODO, for now we dont' do anything with this.
-        elif isinstance(item, TestCase):
-            self._skip_testcase(item, reason)
-        elif __debug__:
-            raise AssertionError(self.bad_item)
-
-    def _skip_testcase(self, test_case, reason):
-        log.display('{color}Skipping: {name}{reset}'.format(
-            color=self.colormap[Outcome.SKIP],
-            name=test_case.name,
-            reset=self.reset))
-        self.outcome_count[Outcome.SKIP] += 1
-
-    def end_current(self):
-        if isinstance(self._current_item, TestSuite):
-            self._end_testsuite(self._current_item)
-        elif isinstance(self._current_item, TestCase):
-            self._end_testcase(self._current_item)
-        elif __debug__:
-            raise AssertionError(self.bad_item)
-        self._current_item = self._item_list.pop()
-
-    def _end_testcase(self, test_case):
-        pass
-    def _end_testsuite(self, test_suite):
-        pass
+        self._display_outcome(item.name, outcome, reason)
 
     def end_testing(self):
         if self._started:
             self.timer.stop()
             log.display(self._display_summary())
             self._started = False
+
+    def _display_outcome(self, test_case_name, outcome, reason=None):
+        log.bold(self.colormap[outcome]
+                 + test_case_name
+                 + self.reset)
+
+        if reason is not None:
+            log.info('')
+            log.info('Reason:')
+            log.info(reason)
+            log.info(terminal.separator('-'))
 
     def _display_summary(self):
         most_severe_outcome = None
@@ -237,33 +219,34 @@ class ConsoleLogger(ResultLogger):
                 string,
                 color=self.colormap[most_severe_outcome] + self.color.Bold)
 
+    def insert_results(self, internal_results):
+        '''
+        Insert the given results from an :class:`whimsy.result.InternalLogger`
+        into the console logger. (Display them.)
+        '''
+        for result in internal_results.testcases:
+            self._display_outcome(result.name, result.outcome, result.reason)
+            self.outcome_count[result.outcome] += 1
 
 class TestResult(object):
-    def __init__(self, testitem, outcome, runtime, **kwargs):
-        self.name = testitem.name
-        self.uid = testitem.uid
+    def __init__(self, item, outcome, runtime=0):
+        self.name = item.name
+        self.uid = item.uid
         self.outcome = outcome
         self.runtime = runtime
 
-
 class TestCaseResult(TestResult):
-    def __init__(self, testitem, outcome, runtime, fstdout_name,
-                 fstderr_name, reason=None, **kwargs):
-
+    def __init__(self, fstdout_name=None, fstderr_name=None, reason=None,
+            ff_skipped=None, **kwargs):
+        super(TestCaseResult, self).__init__(**kwargs)
         self.fstdout_name = fstdout_name
         self.fstderr_name = fstderr_name
         self.reason = reason
-        super(TestCaseResult, self).__init__(testitem, outcome,
-                                             runtime,
-                                             **kwargs)
-
 
 class TestSuiteResult(TestResult):
-    def __init__(self, testitem, outcome,
-                 runtime, test_case_results,
-                 **kwargs):
+    def __init__(self, test_case_results, **kwargs):
 
-        super(TestSuiteResult, self).__init__(testitem, outcome, runtime)
+        super(TestSuiteResult, self).__init__(**kwargs)
         self.test_case_results = test_case_results
 
 
@@ -278,13 +261,14 @@ class InternalLogger(ResultLogger):
     .. seealso:: :func:`load` :func:`suites`
     '''
     def __init__(self, filestream):
-        self._item_list = []
-        self._current_item = None
         self.timer = Timer()
         self.filestream = filestream
-        self.results = []
 
-        self._current_suite_testcases = []
+        # Dictionaries mapping uid->result
+        self.test_case_results = {}
+        self.test_suite_results = {}
+        # We keep a list to maintain ordering
+        self.results = []
 
     def _write(self, obj):
         pickle.dump(obj, self.filestream)
@@ -292,46 +276,25 @@ class InternalLogger(ResultLogger):
     def begin_testing(self):
         self.timer.start()
 
-    def begin(self, item):
-        self._item_list.append(self._current_item)
-        self._current_item = item
-
-    def skip(self, item, **kwargs):
-        if isinstance(self._current_item, TestSuite):
-            result = TestSuiteResult(self._current_item, Outcome.SKIP, 0,
-                                     self._current_suite_testcases, **kwargs)
-            self._current_suite_testcases = []
-
-        elif isinstance(self._current_item, TestCase):
-            result = TestCaseResult(self._current_item, Outcome.SKIP, 0,
-                                    **kwargs)
-            self._current_suite_testcases.append(result)
-
-        elif __debug__:
-            raise AssertionError(self.bad_item)
+    def set_outcome(self, item, **kwargs):
+        result = self.delegate_instance(self.set_outcome, item, **kwargs)
         self._write(result)
         self.results.append(result)
 
-    def set_current_outcome(self, outcome, runtime, **kwargs):
-        '''Set the outcome of the current item.'''
-        if isinstance(self._current_item, TestSuite):
-            result = TestSuiteResult(self._current_item, outcome, runtime,
-                                     self._current_suite_testcases)
-            self._current_suite_testcases = []
+    def _set_outcome_testcase(self, item, **kwargs):
+        result = TestCaseResult(item=item, **kwargs)
+        self.test_case_results[result.uid] = result
+        return result
 
-        elif isinstance(self._current_item, TestCase):
-            result = TestCaseResult(self._current_item, outcome,
-                                    runtime, **kwargs)
-            self._current_suite_testcases.append(result)
+    def _set_outcome_testsuite(self, item, **kwargs):
+        suite_results = []
+        for tc in item:
+            if tc.uid in self.test_case_results:
+                suite_results.append(self.test_case_results[tc.uid])
 
-        elif __debug__:
-            raise AssertionError(self.bad_item)
-
-        self._write(result)
-        self.results.append(result)
-
-    def end_current(self):
-        self._current_item = self._item_list.pop()
+        result = TestSuiteResult(suite_results, item=item, **kwargs)
+        self.test_suite_results[result.uid] = result
+        return result
 
     def end_testing(self):
         self.timer.stop()
@@ -360,6 +323,14 @@ class InternalLogger(ResultLogger):
             if isinstance(result, TestSuiteResult):
                 yield result
 
+    @property
+    def testcases(self):
+        for result in self.results:
+            if isinstance(result, TestCaseResult):
+                yield result
+
+    def insert_results(self, internal_results):
+        self.results.extend(internal_results.results)
 
 class JUnitLogger(InternalLogger):
     '''
@@ -461,17 +432,19 @@ class JUnitFormatter(object):
         fstream.write(tag)
 
         # Write out systemout and systemerr from their containing files.
-        fstream.write(self.system_out_opening)
-        with open(testcase.fstdout_name, 'r') as testout_stdout:
-            for line in testout_stdout:
-                fstream.write(xml_escape(line))
-        fstream.write(self.generic_closing.format(tag='system-out'))
+        if testcase.fstdout_name is not None:
+            fstream.write(self.system_out_opening)
+            with open(testcase.fstdout_name, 'r') as testout_stdout:
+                for line in testout_stdout:
+                    fstream.write(xml_escape(line))
+            fstream.write(self.generic_closing.format(tag='system-out'))
 
-        fstream.write(self.system_err_opening)
-        with open(testcase.fstderr_name, 'r') as testout_stderr:
-            for line in testout_stderr:
-                fstream.write(xml_escape(line))
-        fstream.write(self.generic_closing.format(tag='system-err'))
+        if testcase.fstderr_name is not None:
+            fstream.write(self.system_err_opening)
+            with open(testcase.fstderr_name, 'r') as testout_stderr:
+                for line in testout_stderr:
+                    fstream.write(xml_escape(line))
+            fstream.write(self.generic_closing.format(tag='system-err'))
 
         fstream.write(self.generic_closing.format(tag='testcase'))
 

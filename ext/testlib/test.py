@@ -6,7 +6,7 @@ from suite import TestList
 from unittest import FunctionTestCase as _Ftc
 from functools import partial
 
-from _util import uid
+from uid import uid
 
 def _steal_unittest_assertions(module):
     '''

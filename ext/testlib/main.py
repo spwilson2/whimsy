@@ -21,10 +21,11 @@ import query
 import result
 
 import config
+from test import TestCase
 from helper import joinpath, mkdir_p
 from loader import TestLoader
 from logger import log
-from runner import Runner
+from runner import Runner, WorkClient
 from terminal import separator
 
 # TODO: Standardize separator usage.
@@ -65,7 +66,13 @@ def dorun():
         log.bold('Running Tests')
         log.display('')
         if config.config.uid:
+
             test_item = loader.get_uid(config.config.uid)
+            if isinstance(test_item, TestCase):
+                log.warn("Running '%s' as a TestCase it is likely not self"
+                         "-contained!" % item.name)
+                log.warn('Recommend running its containing suite instead.')
+
             results = Runner.run_items(test_item)
         else:
             testrunner = Runner(suites, loggers)
@@ -109,6 +116,32 @@ def dolist():
         query.list_tags()
     elif config.config.get_tags():
         query.list_suites_with_tags(loader, config.config.get_tags())
+
+def doclient():
+    '''
+    Handle the `client` command.
+    '''
+    credentials = config.config.credentials
+
+    threads = config.config.threads
+
+    clients = []
+    if threads > 1:
+        log.bold('Starting %s client instances.' % threads)
+        for _ in range(threads):
+            wc = WorkClient(*credentials)
+            log.bold('Starting a client instance.')
+            wc.start()
+            clients.append(wc)
+    else:
+        wc = WorkClient(*credentials)
+        log.bold('Starting a client instance.')
+        wc.start()
+        clients.append(wc)
+    for wc in clients:
+        wc.join()
+
+    # TODO: Spawn other clents based on the number of threads given.
 
 def main():
     # Start logging verbosity at its minimum
