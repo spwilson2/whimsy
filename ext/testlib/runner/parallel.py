@@ -267,7 +267,7 @@ class WorkClient(multiprocessing.Process):
         newconfig = self.queue_client.get_shared_config()
         config_module.config._init_with_dicts(*newconfig._getvalue())
         # In the copied config, don't spawn additional threads.
-        config_module.config._set('threads', 1)
+        config_module.config._set('test_threads', 1)
         if self.as_client:
             config_module.config._set('command', 'client')
 

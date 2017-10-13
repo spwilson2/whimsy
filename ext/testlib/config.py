@@ -45,7 +45,7 @@ from ConfigParser import ConfigParser
 from pickle import HIGHEST_PROTOCOL as highest_pickle_protocol
 
 from helper import absdirpath
-from _util import AttrDict, FrozenAttrDict
+from util import AttrDict, FrozenAttrDict
 
 class UninitialzedAttributeException(Exception):
     '''
@@ -267,12 +267,15 @@ def define_post_processors(config):
         if threads is not None:
             return (int(threads[0]),)
 
+    def test_threads_as_int(test_threads):
+        if test_threads is not None:
+            return (int(test_threads[0]),)
+
     def parse_server_credentials(credentials_file):
         if credentials_file is not None:
             if credentials_file[0] is None:
                 credentials_file = (constants.default_credentials_file,)
 
-            print credentials_file
             parser = ConfigParser()
             parser.read(credentials_file[0])
             hostname = parser.get(constants.credential_header, 'hostname')
@@ -305,6 +308,7 @@ def define_post_processors(config):
     config._add_post_processor('variant', default_variant)
     config._add_post_processor('length', default_length)
     config._add_post_processor('threads', threads_as_int)
+    config._add_post_processor('test_threads', test_threads_as_int)
     config._add_post_processor('credentials_file', parse_server_credentials)
 
 class Argument(object):
@@ -419,6 +423,11 @@ def define_common_args(config):
             default=1,
             help='Number of threads to run SCons with.'),
         Argument(
+            '-t', '--test-threads',
+            action='store',
+            default=1,
+            help='Number of threads to spawn to run concurrent tests with.'),
+        Argument(
             '-v',
             action='count',
             dest='verbose',
@@ -516,6 +525,7 @@ class RunParser(ArgParser):
         common_args.base_dir.add_to(parser)
         common_args.fail_fast.add_to(parser)
         common_args.threads.add_to(parser)
+        common_args.test_threads.add_to(parser)
         common_args.list_only_failed.add_to(parser)
         common_args.isa.add_to(parser)
         common_args.variant.add_to(parser)
@@ -579,6 +589,7 @@ class RerunParser(ArgParser):
         common_args.base_dir.add_to(parser)
         common_args.fail_fast.add_to(parser)
         common_args.threads.add_to(parser)
+        common_args.test_threads.add_to(parser)
         common_args.list_only_failed.add_to(parser)
         common_args.isa.add_to(parser)
         common_args.variant.add_to(parser)
@@ -598,7 +609,7 @@ class ClientParser(ArgParser):
 
         common_args.credentials_file.add_to(parser)
 
-        arg = common_args.threads.copy()
+        arg = common_args.test_threads.copy()
         arg.kwargs['help'] = ('The number of helper instances to spawn on'
                               ' this client.')
         arg.add_to(parser)
@@ -617,7 +628,7 @@ class ClientParser(ArgParser):
 
         common_args.credentials_file.add_to(parser)
 
-        arg = common_args.threads.copy()
+        arg = common_args.test_threads.copy()
         arg.kwargs['help'] = ('The number of helper instances to spawn on'
                               ' this client.')
         arg.add_to(parser)

@@ -1,6 +1,7 @@
 import os
 import tempfile
 
+import testlib.util as util
 from testlib.fixture import Fixture
 from testlib.config import config, constants
 from testlib.helper import log_call, cacheresult, joinpath, absdirpath
@@ -52,7 +53,14 @@ class SConsFixture(Fixture):
         super(SConsFixture, self).setup()
         targets = set(self.required_by)
         command = ['scons', '-C', self.directory, '-j', str(config.threads)]
-        command.extend([target.target for target in targets])
+
+        def target_is_required(target):
+            if target.tags is None:
+                return True
+            return util.match_tags(target, config.get_tags())
+
+        command.extend([target.target for target in targets if
+                        target_is_required(target)])
         log_call(command)
 
     def teardown(self):
@@ -63,7 +71,7 @@ class SConsTarget(Fixture):
     default_scons_invocation = None
 
     def __init__(self, target, build_dir=None, invocation=None,
-                 *args, **kwargs):
+                 tags=None, *args, **kwargs):
         '''
         Represents a target to be built by an 'invocation' of scons.
 
@@ -75,10 +83,15 @@ class SConsTarget(Fixture):
         :param invocation: Represents an invocation of scons which we will
             automatically attach this target to. If None provided, uses the
             main 'scons' invocation.
+
+        :param tags: If tags are specified, the fixture will only be built by
+            scons if those specific tags are set in the config.
         '''
 
         if build_dir is None:
             build_dir = config.build_dir
+
+        self.tags = tags
 
         self.target = os.path.join(build_dir, target)
         super(SConsTarget, self).__init__(self.target, *args, **kwargs)
@@ -100,9 +113,24 @@ class SConsTarget(Fixture):
         return self
 
 class Gem5Fixture(SConsTarget):
-    def __init__(self, isa, variant):
+    def __init__(self, isa, variant, autotag=True, tags=None):
+        '''
+        :param tags: If tags is None, this fixture will be automatically
+            intialize the underlying Gem5Fixture with its isa and variant. If
+            tags is False, no tags will be set. If tags is anything else, the
+            Gem5Fixture will be handed those tags.
+        '''
         target = joinpath(isa.upper(), 'gem5.%s' % variant)
-        super(Gem5Fixture, self).__init__(target)
+
+        if tags is None:
+            tags = {
+                constants.isa_tag_type: set([isa]),
+                constants.variant_tag_type: set([variant]),
+            }
+        elif tags is False: # Explicit check for false here.
+            tags = None
+        super(Gem5Fixture, self).__init__(target, tags=tags)
+
         self.name = constants.gem5_binary_fixture_name
         self.path = self.target
         self.isa = isa

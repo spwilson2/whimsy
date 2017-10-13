@@ -13,7 +13,7 @@ from helper import joinpath
 from test import TestCase
 from suite import TestSuite
 from logger import log
-from _util import Timer, Enum
+from util import Timer, Enum
 
 class InvalidResultException(Exception):
     pass

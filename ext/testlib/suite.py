@@ -1,7 +1,9 @@
 from os import getcwd
 
+import util
 from config import constants
 from uid import uid
+
 
 class TestSuite(object):
     '''
@@ -48,15 +50,7 @@ class TestSuite(object):
 
         self._path = getcwd()
 
-    def match_tags(self, tags):
-        """ True if the supplied tags match our tags.
-            Tag matching means that we have all of the tags of the incoming
-            tag check for each of the tag types.
-        """
-        for typ,vals in tags.iteritems():
-            if not self.tags[typ] & vals:
-                return False
-        return True
+    match_tags = util.match_tags
 
     @property
     def name(self):
@@ -163,7 +157,7 @@ class TestList(object):
 
     def _iter(self, keep_containers):
 
-        # We can't use the _util iter_recursively function to do this since we
+        # We can't use the util iter_recursively function to do this since we
         # have defined a unusual __iter__
         for item in self.items:
             if isinstance(item, TestList):

@@ -74,7 +74,7 @@ import datetime
 from parallel import MulticoreWorkerPool, ComplexMulticorePool
 
 from .. import test
-from .. import _util
+from .. import util
 
 from ..config import config
 from ..helper import mkdir_p, joinpath
@@ -103,7 +103,7 @@ class Runner(object):
         self.suites = suites
 
         if threads is None:
-            threads = config.threads
+            threads = config.test_threads
         self._runner_pool = self._RunnerPool(self, threads)
 
         if loggers is None:
@@ -184,7 +184,7 @@ class Runner(object):
         elif isinstance(test_item, TestSuite):
             return self._run_suite(test_item)
         else:
-            raise AssertionError(_util.unexpected_item_msg)
+            raise AssertionError(util.unexpected_item_msg)
 
     def _run_suite(self, test_suite):
         '''
@@ -399,7 +399,7 @@ class Runner(object):
                         ff_skipped=True
                 )
             elif __debug__:
-                raise AssertionError(_util.unexpected_item_msg)
+                raise AssertionError(util.unexpected_item_msg)
 
     def _setup_unbuilt(self, fixtures, setup_lazy_init=False):
         failures = []

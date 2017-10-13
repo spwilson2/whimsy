@@ -87,18 +87,19 @@ def gem5_verify_config(name,
             # Place the verifier subtests into a collection.
             verifier_collection = TestList(verifier_tests, fail_fast=False)
 
-            # Create the gem5 target for the specific architecture and
-            # variant.
-            fixtures = copy.copy(given_fixtures)
-            fixtures.append(Gem5Fixture(isa, opt))
-            fixtures.append(tempdir)
-            fixtures.append(gem5_returncode)
             # Add the isa and variant to tags list.
             tags = {
                 constants.isa_tag_type: set([isa]),
                 constants.variant_tag_type: set([opt]),
                 constants.length_tag_type: set([length]),
             }
+
+            # Create the gem5 target for the specific architecture and
+            # variant.
+            fixtures = copy.copy(given_fixtures)
+            fixtures.append(Gem5Fixture(isa, opt, tags=tags))
+            fixtures.append(tempdir)
+            fixtures.append(gem5_returncode)
 
             # Place our gem5 run and verifiers into a failfast test
             # collection. We failfast because if a gem5 run fails, there's no

@@ -109,7 +109,7 @@ files for each ``TestCase``. Provides both a ``system_tee``
 implementation as well as a pure ``python_tee`` implementation for
 compatibility.
 
-`\_util.py <_util.py>`__
+`util.py <util.py>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides various utility/common functions used in the testing framework.

@@ -5,7 +5,7 @@ import re
 
 from testlib import test
 from testlib.config import constants
-from testlib._util import diff_out_file
+from testlib.util import diff_out_file
 from testlib.helper import joinpath
 
 class Verifier(test.TestFunction):
